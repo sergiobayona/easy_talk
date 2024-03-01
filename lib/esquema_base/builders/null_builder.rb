@@ -4,8 +4,7 @@ module EsquemaBase
   module Builders
     class NullBuilder < BaseBuilder
       def initialize(name, options = {})
-        schema = { type: 'null' }
-        super(name, schema, options)
+        super(name, { type: 'null' }, options)
       end
     end
   end

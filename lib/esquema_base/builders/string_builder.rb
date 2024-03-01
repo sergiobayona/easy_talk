@@ -4,8 +4,7 @@ module EsquemaBase
   module Builders
     class StringBuilder < BaseBuilder
       def initialize(name, options = {})
-        schema = { type: 'string' }
-        super(name, schema, options)
+        super(name, { type: 'string' }, options)
       end
     end
   end

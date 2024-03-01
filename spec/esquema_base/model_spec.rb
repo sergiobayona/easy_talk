@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe EsquemaBase::Model do # rubocop:disable Metrics/BlockLength
+RSpec.describe EsquemaBase::Model do
   let(:user) do
     Class.new do
       include EsquemaBase::Model

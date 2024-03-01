@@ -4,8 +4,7 @@ module EsquemaBase
   module Builders
     class BooleanBuilder < BaseBuilder
       def initialize(name, options = {})
-        schema = { type: 'boolean' }
-        super(name, schema, options)
+        super(name, { type: 'boolean' }, options)
       end
     end
   end

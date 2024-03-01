@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe EsquemaBase::Property do # rubocop:disable Metrics/BlockLength
+RSpec.describe EsquemaBase::Property do
   it 'returns a type string' do
     prop = described_class.new('name', String).build_property
     expect(prop).to eq(type: 'string')

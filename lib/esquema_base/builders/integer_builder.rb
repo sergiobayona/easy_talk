@@ -4,8 +4,7 @@ module EsquemaBase
   module Builders
     class IntegerBuilder < BaseBuilder
       def initialize(name, options = {})
-        schema = { type: 'integer' }
-        super(name, schema, options)
+        super(name, { type: 'integer' }, options)
       end
     end
   end
