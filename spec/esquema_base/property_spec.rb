@@ -3,42 +3,57 @@
 require 'spec_helper'
 
 RSpec.describe EsquemaBase::Property do
-  it 'returns a type string' do
+  it 'returns a string schema' do
     prop = described_class.new('name', String).build_property
     expect(prop).to eq(type: 'string')
   end
 
-  it 'returns a type integer' do
+  it 'returns an integer schema' do
     prop = described_class.new('name', Integer).build_property
     expect(prop).to eq(type: 'integer')
   end
 
-  it 'returns a type number' do
+  it 'returns a number schema' do
     prop = described_class.new('name', Float).build_property
     expect(prop).to eq(type: 'number')
   end
 
-  it 'returns a type boolean' do
+  it 'returns a boolean schema' do
     prop = described_class.new('name', T::Boolean).build_property
     expect(prop).to eq(type: 'boolean')
   end
 
-  it 'returns a type null' do
+  it 'returns a null schema' do
     prop = described_class.new('name', NilClass).build_property
     expect(prop).to eq(type: 'null')
   end
 
-  it 'returns an array of strings type' do
+  it 'returns an array of strings schema' do
     prop = described_class.new('name', T::Array[String]).build_property
     expect(prop).to eq(type: 'array', items: { type: 'string' })
   end
 
-  it 'returns an array of integers type' do
+  it 'returns an array of integers schema' do
     prop = described_class.new('name', T::Array[Integer]).build_property
     expect(prop).to eq(type: 'array', items: { type: 'integer' })
   end
 
-  context 'array with custom simple class' do
+  it 'returns a date schema' do
+    prop = described_class.new('name', Date).build_property
+    expect(prop).to eq(type: 'string', format: 'date')
+  end
+
+  it 'returns a date-time schema' do
+    prop = described_class.new('name', DateTime).build_property
+    expect(prop).to eq(type: 'string', format: 'date-time')
+  end
+
+  it 'returns a time schema' do
+    prop = described_class.new('name', Time).build_property
+    expect(prop).to eq(type: 'string', format: 'time')
+  end
+
+  context 'array with simple class schema' do
     class CustomClass; end
 
     it 'returns an array of custom class type' do
@@ -47,7 +62,7 @@ RSpec.describe EsquemaBase::Property do
     end
   end
 
-  context 'array with custom class with a schema defined' do
+  context 'array with custom class that has a schema defined' do
     let(:user) do
       Class.new do
         include EsquemaBase::Model
@@ -60,7 +75,7 @@ RSpec.describe EsquemaBase::Property do
       end
     end
 
-    it 'returns an array of custom class type' do
+    it 'returns an array schema' do
       prop = described_class.new('name', T::Array[user]).build_property
       expect(prop[:type]).to eq('array')
       expect(prop[:items]).to include(type: 'object')

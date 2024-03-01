@@ -1,11 +1,14 @@
 require 'json'
-require_relative 'builders/string_builder'
 require_relative 'builders/integer_builder'
 require_relative 'builders/number_builder'
 require_relative 'builders/boolean_builder'
 require_relative 'builders/null_builder'
 require_relative 'builders/array_builder'
 require_relative 'builders/object_builder'
+require_relative 'builders/string_builder'
+require_relative 'builders/date_builder'
+require_relative 'builders/datetime_builder'
+require_relative 'builders/time_builder'
 
 # frozen_string_literal: true
 
@@ -31,6 +34,12 @@ module EsquemaBase
         Builders::BooleanBuilder.build(name, options)
       when 'NilClass'
         Builders::NullBuilder.build(name, options)
+      when 'Date'
+        Builders::DateBuilder.build(name, options)
+      when 'DateTime'
+        Builders::DatetimeBuilder.build(name, options)
+      when 'Time'
+        Builders::TimeBuilder.build(name, options)
       else
         case type.class.name
         when 'T::Types::TypedArray'

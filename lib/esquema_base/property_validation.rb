@@ -2,19 +2,6 @@ module EsquemaBase
   class PropertyValidation
     extend T::Sig
 
-    SUPPORTED_TYPES = {
-      String: 'string',
-      Integer: 'integer',
-      Numeric: 'number',
-      Boolean: 'boolean',
-      Array: 'array',
-      Hash: 'object',
-      nil: 'null',
-      Date: 'date',
-      DateTime: 'datetime',
-      Time: 'time'
-    }.freeze
-
     # These are constraints supported for each property type.
     NUMERIC_TYPE_CONSTRAINTS = %i[minimum maximum exclusiveMinimum exclusiveMaximum multipleOf].freeze
     STRING_TYPE_CONSTRAINTS = %i[maxLength minLength pattern format].freeze
@@ -22,13 +9,21 @@ module EsquemaBase
     OBJECT_TYPE_CONSTRAINTS = %i[required maxProperties minProperties properties patternProperties additionalProperties
                                  dependencies propertyNames].freeze
 
-    TYPE_CONSTRAINTS = {
-      String => STRING_TYPE_CONSTRAINTS,
-      Integer => NUMERIC_TYPE_CONSTRAINTS,
-      Float => NUMERIC_TYPE_CONSTRAINTS,
-      T::Types::TypedArray => ARRAY_TYPE_CONSTRAINTS,
-      'object' => OBJECT_TYPE_CONSTRAINTS
+    SUPPORTED_TYPES = {
+      'String' => STRING_TYPE_CONSTRAINTS,
+      'Integer' => NUMERIC_TYPE_CONSTRAINTS,
+      'Numeric' => NUMERIC_TYPE_CONSTRAINTS,
+      'Float' => NUMERIC_TYPE_CONSTRAINTS,
+      'T::Boolean' => [],
+      'Array' => ARRAY_TYPE_CONSTRAINTS,
+      'Hash' => OBJECT_TYPE_CONSTRAINTS,
+      'NilClass' => [],
+      'Date' => STRING_TYPE_CONSTRAINTS,
+      'DateTime' => STRING_TYPE_CONSTRAINTS,
+      'Time' => STRING_TYPE_CONSTRAINTS,
+      'Object' => OBJECT_TYPE_CONSTRAINTS
     }.freeze
+
     # These are constraints supported for all types.
     GENERIC_KEYWORDS = %i[type default title description enum const].freeze
 
@@ -43,14 +38,16 @@ module EsquemaBase
         validate_constraints!(property_name, type, constraints)
       end
 
-      def validate_type!(property_name, type)
-        type.each do |t|
-          next if SUPPORTED_TYPES.key?(t.to_s.to_sym)
+      def validate_type!(property_name, types)
+        raise EsquemaBase::UnsupportedTypeError, "Property: '#{property_name}' must have a valid type." if types.empty?
 
-          next if t.respond_to?(:underlying_class) && SUPPORTED_TYPES.key?(t.underlying_class.to_s.to_sym)
+        types.each do |type|
+          next if type.respond_to?(:name) && SUPPORTED_TYPES.key?(type.name)
+
+          next if type.respond_to?(:underlying_class) && SUPPORTED_TYPES.key?(type.underlying_class.name)
 
           raise EsquemaBase::UnsupportedTypeError,
-                "Unsupported type for property #{property_name}: #{t}"
+                "Unsupported type: '#{type}' for property: '#{property_name}'."
         end
       end
 
@@ -68,7 +65,7 @@ module EsquemaBase
         return true if GENERIC_KEYWORDS.include?(constraint)
 
         types.any? do |type|
-          TYPE_CONSTRAINTS[type]&.include?(constraint)
+          SUPPORTED_TYPES[type.name]&.include?(constraint)
         end
       end
     end

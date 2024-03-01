@@ -17,7 +17,7 @@ RSpec.describe EsquemaBase::Model do
 
   describe '.json_schema' do
     it 'returns the JSON schema' do
-      expect(user.json_schema).to eq({})
+      expect(user.schema).to eq({})
     end
   end
 
