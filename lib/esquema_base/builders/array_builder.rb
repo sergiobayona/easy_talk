@@ -1,4 +1,5 @@
 require_relative 'base_builder'
+require 'pry-byebug'
 
 module EsquemaBase
   module Builders
@@ -6,11 +7,11 @@ module EsquemaBase
       VALID_OPTIONS = {
         title: { type: T.nilable(String), key: :title },
         description: { type: T.nilable(String), key: :description },
-        min_items: { type: T.nilable(Integer), key: :minItems },
-        max_items: { type: T.nilable(Integer), key: :maxItems },
-        unique_items: { type: T.nilable(T::Boolean), key: :uniqueItems },
-        enum: { type: T.nilable(T::Array[T.untyped]), key: :enum },
-        const: { type: T.nilable(T::Array[T.untyped]), key: :const }
+        min_items: { type: Integer, key: :minItems },
+        max_items: { type: Integer, key: :maxItems },
+        unique_items: { type: T::Boolean, key: :uniqueItems },
+        enum: { type: T::Array[T.untyped], key: :enum },
+        const: { type: T::Array[T.untyped], key: :const }
       }
 
       def initialize(name, inner_type, options = {})
@@ -27,6 +28,10 @@ module EsquemaBase
       end
 
       def build_property
+        # overide the type of the enum and const options to be an array of the inner type
+        VALID_OPTIONS[:enum][:type] = T::Array[inner_type]
+        VALID_OPTIONS[:const][:type] = T::Array[inner_type]
+
         VALID_OPTIONS.each_with_object(schema) do |(key, value), obj|
           next if options[key].nil?
 

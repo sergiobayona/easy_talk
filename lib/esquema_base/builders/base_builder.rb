@@ -3,17 +3,20 @@ module EsquemaBase
     class BaseBuilder
       extend T::Sig
 
-      attr_reader :name, :options, :schema
+      attr_reader :name, :schema, :options, :valid_options
 
-      def initialize(name, schema, options = {})
+      def initialize(name, schema, options = {}, valid_options = {})
         @name = name
-        @options = options
         @schema = schema
+        @options = options
+        @valid_options = valid_options
       end
 
       def build_property
-        options.each_with_object(schema) do |(key, value), obj|
-          obj[key] = value
+        valid_options.each_with_object(schema) do |(key, value), obj|
+          next if options[key].nil?
+
+          obj[value[:key]] = T.let(options[key], value[:type])
         end
       end
 

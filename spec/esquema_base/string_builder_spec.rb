@@ -48,11 +48,16 @@ RSpec.describe EsquemaBase::Builders::StringBuilder do
       prop = described_class.new('name', const: 'one').build_property
       expect(prop).to eq({ type: 'string', const: 'one' })
     end
+
+    it 'includes the default' do
+      prop = described_class.new('name', default: 'default').build_property
+      expect(prop).to eq({ type: 'string', default: 'default' })
+    end
   end
 
   context 'with invalid keys' do
     it 'raises an error' do
-      error_msg = 'Unknown key: :invalid. Valid keys are: :title, :description, :format, :pattern, :min_length, :max_length, :enum, :const'
+      error_msg = 'Unknown key: :invalid. Valid keys are: :title, :description, :format, :pattern, :min_length, :max_length, :enum, :const, :default'
       expect do
         described_class.new('name', invalid: 'invalid').build_property
       end.to raise_error(ArgumentError, error_msg)
@@ -64,6 +69,21 @@ RSpec.describe EsquemaBase::Builders::StringBuilder do
       expect do
         described_class.new('name', min_length: 'invalid').build_property
       end.to raise_error(TypeError)
+    end
+  end
+
+  context 'with empty string value' do
+    it 'raises a type error' do
+      expect do
+        described_class.new('name', min_length: '').build_property
+      end.to raise_error(TypeError)
+    end
+  end
+
+  context 'with nil value' do
+    it 'does not include the key' do
+      prop = described_class.new('name', min_length: nil).build_property
+      expect(prop).to eq({ type: 'string' })
     end
   end
 end
