@@ -16,6 +16,18 @@ module EsquemaBase
   class Property
     attr_reader :name, :type, :options
 
+    TYPE_TO_BUILDER = {
+      'String' => Builders::StringBuilder,
+      'Integer' => Builders::IntegerBuilder,
+      'Float' => Builders::NumberBuilder,
+      'BigDecimal' => Builders::NumberBuilder,
+      'T::Boolean' => Builders::BooleanBuilder,
+      'NilClass' => Builders::NullBuilder,
+      'Date' => Builders::DateBuilder,
+      'DateTime' => Builders::DatetimeBuilder,
+      'Time' => Builders::TimeBuilder
+    }.freeze
+
     def initialize(name, type, options = {})
       @name = name
       @type = type
@@ -23,41 +35,28 @@ module EsquemaBase
     end
 
     def build_property
-      case type.name
-      when 'String'
-        Builders::StringBuilder.build(name, options)
-      when 'Integer'
-        Builders::IntegerBuilder.build(name, options)
-      when 'Float', 'BigDecimal'
-        Builders::NumberBuilder.build(name, options)
-      when 'T::Boolean'
-        Builders::BooleanBuilder.build(name, options)
-      when 'NilClass'
-        Builders::NullBuilder.build(name, options)
-      when 'Date'
-        Builders::DateBuilder.build(name, options)
-      when 'DateTime'
-        Builders::DatetimeBuilder.build(name, options)
-      when 'Time'
-        Builders::TimeBuilder.build(name, options)
+      builder = TYPE_TO_BUILDER[type.name]
+      return builder.build(name, options) if builder
+
+      case type.class.name
+      when 'T::Types::TypedArray'
+        build_array_property
+      when 'T::Types::Hash'
+        Builders::ObjectBuilder.build(name, options)
       else
-        case type.class.name
-        when 'T::Types::TypedArray'
-          inner_type = type.type.raw_type
-          Builders::ArrayBuilder.build(name, inner_type, options)
-        when 'T::Types::Hash'
-          Builders::ObjectBuilder.build(name, options)
-        else
-          case type.respond_to?(:schema)
-          when true
-            type.schema
-          when false
-            Builders::ObjectBuilder.build(name, options)
-          else
-            raise "Type #{type} not supported"
-          end
-        end
+        build_object_property
       end
+    end
+
+    def build_array_property
+      inner_type = type.type.raw_type
+      Builders::ArrayBuilder.build(name, inner_type, options)
+    end
+
+    def build_object_property
+      return type.schema if type.respond_to?(:schema)
+
+      Builders::ObjectBuilder.build(name, options)
     end
 
     def as_json(*_args)
