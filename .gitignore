@@ -1,0 +1,15 @@
+.DS_Store
+*.swp
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+esquema_base*.gem
+
+
+# rspec failure tracking
+.rspec_status

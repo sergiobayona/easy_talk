@@ -18,6 +18,10 @@ module EsquemaBase
         @schema ||= {}
       end
 
+      def self.json_schema
+        @json_schema ||= schema.to_json
+      end
+
       # Define the schema using the provided block.
       def self.define_schema(&block)
         schema_definition

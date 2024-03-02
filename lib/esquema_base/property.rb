@@ -22,7 +22,7 @@ module EsquemaBase
       @options = options
     end
 
-    def build_property # rubocop:disable Metrics/MethodLength,Metrics/AbcSize,Metrics/CyclomaticComplexity
+    def build_property
       case type.name
       when 'String'
         Builders::StringBuilder.build(name, options)

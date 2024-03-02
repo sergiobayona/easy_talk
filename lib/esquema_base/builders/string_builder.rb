@@ -15,7 +15,7 @@ module EsquemaBase
         enum: { type: T::Array[String], key: :enum },
         const: { type: String, key: :const },
         default: { type: String, key: :default }
-      }
+      }.freeze
 
       sig { params(name: String, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})

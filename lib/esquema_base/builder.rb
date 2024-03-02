@@ -19,7 +19,7 @@ module EsquemaBase
     def initialize(schema_definition)
       @schema_definition = schema_definition
       @properties = {}
-      @required = []
+      @required_properties = []
     end
 
     sig { returns(Hash) }
@@ -62,6 +62,7 @@ module EsquemaBase
       properties.each_with_object({}) do |(property_name, options), hash|
         options = OptionsNormalizer.normalize(options)
         type = options.delete(:type)
+        @required_properties << property_name unless options[:optional]
         hash[property_name] = Property.new(property_name, type, options)
       end
     end
@@ -73,7 +74,7 @@ module EsquemaBase
 
     sig { returns(T::Array[String]) }
     def build_required
-      []
+      @required_properties
     end
   end
 end
