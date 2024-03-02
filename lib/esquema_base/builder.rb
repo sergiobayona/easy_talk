@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'property'
-require_relative 'options_normalizer'
 
 module EsquemaBase
   # The Builder class is responsible for building a schema for a class.
@@ -60,7 +59,6 @@ module EsquemaBase
     sig { returns(T::Hash[String, Property]) }
     def build_properties
       properties.each_with_object({}) do |(property_name, options), hash|
-        options = OptionsNormalizer.normalize(options)
         type = options.delete(:type)
         @required_properties << property_name unless options[:optional]
         hash[property_name] = Property.new(property_name, type, options)

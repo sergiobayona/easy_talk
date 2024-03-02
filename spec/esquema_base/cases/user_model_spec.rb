@@ -34,7 +34,7 @@ RSpec.describe 'json for user model' do
         property 'email', String, format: 'email', title: "Person's email"
         property 'dob', Date, title: 'Date of Birth'
         property 'group', Integer, enum: [1, 2, 3], default: 1
-        property 'phones', T::Array[Phone], title: 'Phones'
+        property 'phones', T::Array[Phone], title: 'Phones', min_items: 1
         property 'tags', T::Array[String], title: 'Tags'
       end
       puts user.json_schema
@@ -49,7 +49,7 @@ RSpec.describe 'json for user model' do
                                                    },
                                                    "email": {
                                                      "type": 'string',
-                                                     "title": "Person's Mailing Address",
+                                                     "title": "Person's email",
                                                      "format": 'email'
                                                    },
                                                    "dob": {
@@ -88,7 +88,8 @@ RSpec.describe 'json for user model' do
                                                          type
                                                        ]
                                                      },
-                                                     "title": 'Phones'
+                                                     "title": 'Phones',
+                                                     "minItems": 1
                                                    },
                                                    "tags": {
                                                      "type": 'array',
