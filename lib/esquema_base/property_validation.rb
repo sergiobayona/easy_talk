@@ -31,14 +31,14 @@ module EsquemaBase
 
     class << self
       def validate!(property_name, type, constraints)
-        type = Array.wrap(type)
         validate_type!(property_name, type)
         return if constraints.nil?
 
         validate_constraints!(property_name, type, constraints)
       end
 
-      def validate_type!(property_name, types)
+      def validate_type!(property_name, type)
+        types = Array.wrap(type)
         raise EsquemaBase::UnsupportedTypeError, "Property: '#{property_name}' must have a valid type." if types.empty?
 
         types.each do |type|
@@ -51,7 +51,8 @@ module EsquemaBase
         end
       end
 
-      def validate_constraints!(property_name, types, constraints)
+      def validate_constraints!(property_name, type, constraints)
+        types = Array.wrap(type)
         constraints.each_key do |constraint|
           applicable_types = types.select { |_type| type_constraint_applicable?(types, constraint) }
           if applicable_types.empty?
@@ -60,6 +61,8 @@ module EsquemaBase
           end
         end
       end
+
+      private
 
       def type_constraint_applicable?(types, constraint)
         return true if GENERIC_KEYWORDS.include?(constraint)
