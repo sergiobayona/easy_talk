@@ -5,7 +5,6 @@ module EsquemaBase
   require 'esquema_base/builder'
   require 'esquema_base/property'
   require 'esquema_base/schema_definition'
-  require 'esquema_base/property_validation'
   require 'esquema_base/version'
 
   class UnsupportedTypeError < ArgumentError; end

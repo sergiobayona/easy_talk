@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'property'
-require_relative 'property_validation'
 require_relative 'options_normalizer'
 
 module EsquemaBase
@@ -63,7 +62,6 @@ module EsquemaBase
       properties.each_with_object({}) do |(property_name, options), hash|
         options = OptionsNormalizer.normalize(options)
         type = options.delete(:type)
-        PropertyValidation.validate!(property_name, type, options)
         hash[property_name] = Property.new(property_name, type, options)
       end
     end
