@@ -5,18 +5,17 @@ module EsquemaBase
     class BooleanBuilder < BaseBuilder
       extend T::Sig
 
-      VALID_OPTIONS = {
-        title: { type: T.nilable(String), key: :title },
-        description: { type: T.nilable(String), key: :description },
-        enum: { type: T::Array[T::Boolean], key: :enum },
-        const: { type: T::Boolean, key: :const },
-        default: { type: T::Boolean, key: :default }
-      }
+      VALID_OPTIONS = COMMON_OPTIONS.merge({
+                                             enum: { type: T::Array[T::Boolean], key: :enum },
+                                             const: { type: T::Boolean, key: :const },
+                                             default: { type: T::Boolean, key: :default }
+                                           }).freeze
 
       def initialize(name, options = {})
         options.assert_valid_keys(VALID_OPTIONS.keys)
         @name = name
         @options = options
+        @valid_options = VALID_OPTIONS
         @schema = { type: 'boolean' }
       end
     end

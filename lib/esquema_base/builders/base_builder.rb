@@ -3,6 +3,12 @@ module EsquemaBase
     class BaseBuilder
       extend T::Sig
 
+      COMMON_OPTIONS = {
+        title: { type: T.nilable(String), key: :title },
+        description: { type: T.nilable(String), key: :description },
+        optional: { type: T::Boolean } # special option to skip from including in required array. Does not get printed.
+      }.freeze
+
       attr_reader :name, :schema, :options, :valid_options
 
       def initialize(name, schema, options = {}, valid_options = {})
