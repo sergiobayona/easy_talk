@@ -53,6 +53,40 @@ RSpec.describe EsquemaBase::Property do
     expect(prop).to eq(type: 'string', format: 'time')
   end
 
+  describe 'with missing type' do
+    it 'raises an error' do
+      expect { described_class.new('name').build_property }.to raise_error(ArgumentError, 'property type is missing')
+    end
+
+    it 'raises an error when type is not supported' do
+      expect { described_class.new('name', Something) }.to raise_error(NameError, 'uninitialized constant Something')
+    end
+
+    it 'raises an error when type is empty' do
+      expect do
+        described_class.new('name', '').build_property
+      end.to raise_error(ArgumentError, 'property type is missing')
+    end
+
+    it 'raises an error when type is nil' do
+      expect do
+        described_class.new('name', nil).build_property
+      end.to raise_error(ArgumentError, 'property type is missing')
+    end
+
+    it 'raises an error when type is blank' do
+      expect do
+        described_class.new('name', ' ').build_property
+      end.to raise_error(ArgumentError, 'property type is missing')
+    end
+
+    it 'raises an error when type is an empty array' do
+      expect do
+        described_class.new('name', []).build_property
+      end.to raise_error(ArgumentError, 'property type is missing')
+    end
+  end
+
   context 'array with simple class schema' do
     class CustomClass; end
 
