@@ -94,7 +94,7 @@ RSpec.describe EsquemaBase::Builders::ArrayBuilder do
       expect do
         described_class.new('name', String, invalid: 'key').build_property
       end.to raise_error(ArgumentError,
-                         'Unknown key: :invalid. Valid keys are: :title, :description, :min_items, :max_items, :unique_items, :enum, :const')
+                         'Unknown key: :invalid. Valid keys are: :title, :description, :optional, :min_items, :max_items, :unique_items, :enum, :const')
     end
   end
 end
