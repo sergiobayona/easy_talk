@@ -28,10 +28,11 @@ module EsquemaBase
       'Time' => Builders::TimeBuilder
     }.freeze
 
-    def initialize(name, type, options = {})
+    def initialize(name, type = nil, options = {})
       @name = name
       @type = type
       @options = options
+      raise ArgumentError, 'property type is missing' if type.blank?
     end
 
     def build_property
