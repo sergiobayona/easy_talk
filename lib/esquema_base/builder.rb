@@ -28,7 +28,7 @@ module EsquemaBase
 
     sig { returns(String) }
     def json_schema
-      schema_document.to_json
+      @json_schema ||= schema_document.to_json
     end
 
     sig { returns(Hash) }
