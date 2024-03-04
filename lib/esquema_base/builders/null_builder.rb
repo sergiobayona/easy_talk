@@ -3,14 +3,10 @@ require_relative 'base_builder'
 module EsquemaBase
   module Builders
     class NullBuilder < BaseBuilder
-      VALID_OPTIONS = COMMON_OPTIONS.merge({})
+      VALID_OPTIONS = {}
 
       def initialize(name, options = {})
-        options.assert_valid_keys(VALID_OPTIONS.keys)
-        @name = name
-        @options = options
-        @valid_options = VALID_OPTIONS
-        @schema = { type: 'null' }
+        super(name, { type: 'null' }, options, VALID_OPTIONS)
       end
     end
   end

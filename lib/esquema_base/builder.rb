@@ -6,7 +6,7 @@ module EsquemaBase
   # The Builder class is responsible for building a schema for a class.
   class Builder
     extend T::Sig
-    OBJECT_KEYWORDS = %i[title description type properties required].freeze
+    OBJECT_KEYWORDS = %i[title description type properties additional_properties required].freeze
 
     sig { params(schema_definition: T::Hash[Symbol, T.untyped]).returns(Hash) }
     def self.build_schema(schema_definition)
@@ -35,7 +35,7 @@ module EsquemaBase
     def schema_document
       OBJECT_KEYWORDS.each_with_object({}) do |keyword, hash|
         value = send("build_#{keyword}")
-        next if value.blank?
+        next if value.nil?
 
         hash[keyword] = value
       end.compact
@@ -49,6 +49,11 @@ module EsquemaBase
     sig { returns(T.nilable(String)) }
     def build_description
       @schema_definition[:description]
+    end
+
+    sig { returns(T.nilable(T::Boolean)) }
+    def build_additional_properties
+      @schema_definition[:additionalProperties]
     end
 
     sig { returns(String) }

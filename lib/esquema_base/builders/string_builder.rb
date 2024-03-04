@@ -6,8 +6,6 @@ module EsquemaBase
     class StringBuilder < BaseBuilder
       extend T::Sig
       VALID_OPTIONS = {
-        title: { type: T.nilable(String), key: :title },
-        description: { type: T.nilable(String), key: :description },
         format: { type: String, key: :format },
         pattern: { type: String, key: :pattern },
         min_length: { type: Integer, key: :minLength },
@@ -19,11 +17,7 @@ module EsquemaBase
 
       sig { params(name: String, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})
-        options.assert_valid_keys(VALID_OPTIONS.keys)
-        @name = name
-        @options = options
-        @valid_options = VALID_OPTIONS
-        @schema = { type: 'string' }
+        super(name, { type: 'string' }, options, VALID_OPTIONS)
       end
     end
   end

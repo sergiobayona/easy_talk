@@ -1,49 +1,34 @@
 require_relative 'base_builder'
-require 'pry-byebug'
 
 module EsquemaBase
   module Builders
     class ArrayBuilder < BaseBuilder
-      VALID_OPTIONS = COMMON_OPTIONS.merge({
-                                             min_items: { type: Integer, key: :minItems },
-                                             max_items: { type: Integer, key: :maxItems },
-                                             unique_items: { type: T::Boolean, key: :uniqueItems },
-                                             enum: { type: T::Array[T.untyped], key: :enum },
-                                             const: { type: T::Array[T.untyped], key: :const }
-                                           })
+      VALID_OPTIONS = {
+        min_items: { type: Integer, key: :minItems },
+        max_items: { type: Integer, key: :maxItems },
+        unique_items: { type: T::Boolean, key: :uniqueItems },
+        enum: { type: T::Array[T.untyped], key: :enum },
+        const: { type: T::Array[T.untyped], key: :const }
+      }.freeze
 
-      def initialize(name, inner_type, options = {})
-        options.assert_valid_keys(VALID_OPTIONS.keys)
-        @name = name
-        @inner_type = inner_type
-        @options = options
-        @schema = { type: 'array' }
-      end
-
-      def self.build(name, inner_type, options)
-        builder = new(name, inner_type, options)
-        builder.build_property
-      end
-
-      def build_property # rubocop:disable Metrics/AbcSize
-        # overide the type of the enum and const options to be an array of the inner type
-        VALID_OPTIONS[:enum][:type] = T::Array[inner_type]
-        VALID_OPTIONS[:const][:type] = T::Array[inner_type]
-
-        VALID_OPTIONS.each_with_object(schema) do |(key, value), obj|
-          next if options[key].nil?
-
-          obj[value[:key]] = T.let(options[key], value[:type])
-        end
+      def initialize(name, type, options = {})
+        @inner_type = type.respond_to?(:raw_type) ? type.raw_type : type
+        update_option_types
+        super(name, { type: 'array' }, options, VALID_OPTIONS)
       end
 
       def schema
         super.tap do |schema|
-          schema[:items] = Property.new(name, inner_type).build_property
+          schema[:items] = Property.new(name, @inner_type).build
         end
       end
 
-      attr_reader :inner_type
+      private
+
+      def update_option_types
+        VALID_OPTIONS[:enum][:type] = T::Array[@inner_type]
+        VALID_OPTIONS[:const][:type] = T::Array[@inner_type]
+      end
     end
   end
 end

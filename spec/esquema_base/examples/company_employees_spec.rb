@@ -10,7 +10,7 @@ RSpec.describe 'json for user model' do
   end
 
   describe '.json_schema' do
-    class Address # rubocop:disable Lint/ConstantDefinitionInBlock
+    class Address
       include EsquemaBase::Model
 
       define_schema do
@@ -21,7 +21,7 @@ RSpec.describe 'json for user model' do
       end
     end
 
-    class Employee # rubocop:disable Lint/ConstantDefinitionInBlock
+    class Employee
       include EsquemaBase::Model
       define_schema do
         title 'Employee'
@@ -41,7 +41,7 @@ RSpec.describe 'json for user model' do
         property 'name', String
         property 'employees', T::Array[Employee]
       end
-      puts company.json_schema
+
       expect(company.json_schema).to include_json({
                                                     "title": 'Company',
                                                     "type": 'object',

@@ -4,7 +4,6 @@ require_relative 'builders/number_builder'
 require_relative 'builders/boolean_builder'
 require_relative 'builders/null_builder'
 require_relative 'builders/array_builder'
-require_relative 'builders/object_builder'
 require_relative 'builders/string_builder'
 require_relative 'builders/date_builder'
 require_relative 'builders/datetime_builder'
@@ -35,33 +34,45 @@ module EsquemaBase
       raise ArgumentError, 'property type is missing' if type.blank?
     end
 
-    def build_property
+    def build # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
       builder = TYPE_TO_BUILDER[type.name]
-      return builder.build(name, options) if builder
+      return builder.new(name, options).build if builder
 
       case type.class.name
       when 'T::Types::TypedArray'
         build_array_property
-      when 'T::Types::Hash'
-        Builders::ObjectBuilder.build(name, options)
+      when 'T::Private::Types::SimplePairUnion', 'T::Types::Union'
+        build_union_property
+      when 'T::Types::Simple'
+        Property.new(name, type.raw_type, options)
       else
         build_object_property
       end
     end
 
+    def as_json(*_args)
+      build.as_json
+    end
+
+    private
+
     def build_array_property
-      inner_type = type.type.raw_type
-      Builders::ArrayBuilder.build(name, inner_type, options)
+      Builders::ArrayBuilder.new(name, type.type, options).build
+    end
+
+    def build_union_property
+      type.types.each_with_object({ anyOf: [] }) do |type, hash|
+        hash[:anyOf] << Property.new(name, type, options)
+      end
     end
 
     def build_object_property
-      return type.schema if type.respond_to?(:schema)
-
-      Builders::ObjectBuilder.build(name, options)
-    end
-
-    def as_json(*_args)
-      build_property.as_json
+      case type.class
+      when Class
+        type.respond_to?(:schema) ? type.schema : { type: 'object' }
+      else
+        raise ArgumentError, "unsupported type: #{type.class.name}"
+      end
     end
   end
 end
