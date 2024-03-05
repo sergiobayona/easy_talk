@@ -4,57 +4,57 @@ require 'spec_helper'
 
 RSpec.describe EasyTalk::Property do
   it 'returns a string schema' do
-    prop = described_class.new('name', String).build
+    prop = described_class.new(:name, String).build
     expect(prop).to eq(type: 'string')
   end
 
   it 'returns an integer schema' do
-    prop = described_class.new('name', Integer).build
+    prop = described_class.new(:name, Integer).build
     expect(prop).to eq(type: 'integer')
   end
 
   it 'returns a number schema' do
-    prop = described_class.new('name', Float).build
+    prop = described_class.new(:name, Float).build
     expect(prop).to eq(type: 'number')
   end
 
   it 'returns a boolean schema' do
-    prop = described_class.new('name', T::Boolean).build
+    prop = described_class.new(:name, T::Boolean).build
     expect(prop).to eq(type: 'boolean')
   end
 
   it 'returns a null schema' do
-    prop = described_class.new('name', NilClass).build
+    prop = described_class.new(:name, NilClass).build
     expect(prop).to eq(type: 'null')
   end
 
   it 'returns an array of strings schema' do
-    prop = described_class.new('name', T::Array[String]).build
+    prop = described_class.new(:name, T::Array[String]).build
     expect(prop).to eq(type: 'array', items: { type: 'string' })
   end
 
   it 'returns an array of integers schema' do
-    prop = described_class.new('name', T::Array[Integer]).build
+    prop = described_class.new(:name, T::Array[Integer]).build
     expect(prop).to eq(type: 'array', items: { type: 'integer' })
   end
 
   it 'returns a date schema' do
-    prop = described_class.new('name', Date).build
+    prop = described_class.new(:name, Date).build
     expect(prop).to eq(type: 'string', format: 'date')
   end
 
   it 'returns a date-time schema' do
-    prop = described_class.new('name', DateTime).build
+    prop = described_class.new(:name, DateTime).build
     expect(prop).to eq(type: 'string', format: 'date-time')
   end
 
   it 'returns a time schema' do
-    prop = described_class.new('name', Time).build
+    prop = described_class.new(:name, Time).build
     expect(prop).to eq(type: 'string', format: 'time')
   end
 
   describe 'with a union type' do
-    prop = described_class.new('name', T.any(Integer, String)).build
+    prop = described_class.new(:name, T.any(Integer, String)).build
     it "returns a schema with 'anyOf' property" do
       expect(prop.keys).to include(:anyOf)
       expect(prop[:anyOf].size).to eq(2)
@@ -66,34 +66,34 @@ RSpec.describe EasyTalk::Property do
 
   describe 'with missing type' do
     it 'raises an error' do
-      expect { described_class.new('name').build }.to raise_error(ArgumentError, 'property type is missing')
+      expect { described_class.new(:name).build }.to raise_error(ArgumentError, 'property type is missing')
     end
 
     it 'raises an error when type is not supported' do
-      expect { described_class.new('name', Something) }.to raise_error(NameError, 'uninitialized constant Something')
+      expect { described_class.new(:name, Something) }.to raise_error(NameError, 'uninitialized constant Something')
     end
 
     it 'raises an error when type is empty' do
       expect do
-        described_class.new('name', '').build
+        described_class.new(:name, '').build
       end.to raise_error(ArgumentError, 'property type is missing')
     end
 
     it 'raises an error when type is nil' do
       expect do
-        described_class.new('name', nil).build
+        described_class.new(:name, nil).build
       end.to raise_error(ArgumentError, 'property type is missing')
     end
 
     it 'raises an error when type is blank' do
       expect do
-        described_class.new('name', ' ').build
+        described_class.new(:name, ' ').build
       end.to raise_error(ArgumentError, 'property type is missing')
     end
 
     it 'raises an error when type is an empty array' do
       expect do
-        described_class.new('name', []).build
+        described_class.new(:name, []).build
       end.to raise_error(ArgumentError, 'property type is missing')
     end
   end
@@ -102,7 +102,7 @@ RSpec.describe EasyTalk::Property do
     class CustomClass; end
 
     it 'returns an array of custom class type' do
-      prop = described_class.new('name', T::Array[CustomClass]).build
+      prop = described_class.new(:name, T::Array[CustomClass]).build
       expect(prop).to eq(type: 'array', items: { type: 'object' })
     end
   end
@@ -121,7 +121,7 @@ RSpec.describe EasyTalk::Property do
     end
 
     it 'returns an array schema' do
-      prop = described_class.new('name', T::Array[user]).build
+      prop = described_class.new(:name, T::Array[user]).build
       expect(prop[:type]).to eq('array')
       expect(prop[:items]).to include(type: 'object')
       expect(prop[:items][:properties].keys).to eq(%i[name email age])
@@ -130,28 +130,28 @@ RSpec.describe EasyTalk::Property do
   end
 
   # it 'returns an object type' do
-  #   prop = described_class.new('name', T::Hash[Symbol, String]).build
+  #   prop = described_class.new(:name, T::Hash[Symbol, String]).build
   #   expect(prop).to eq(type: 'object')
   # end
 
   # it 'raises an error when type is not supported' do
-  #   expect { described_class.new('name', Object).build }.to raise_error('Type Object not supported')
+  #   expect { described_class.new(:name, Object).build }.to raise_error('Type Object not supported')
   # end
   #
   context 'as_json' do
     it 'returns a json schema' do
-      prop = described_class.new('name', String).as_json
+      prop = described_class.new(:name, String).as_json
       expect(prop).to include_json(type: 'string')
     end
 
     it 'returns a json schema with options' do
-      prop = described_class.new('email', String, title: 'Email Address', format: 'email').as_json
+      prop = described_class.new(:email, String, title: 'Email Address', format: 'email').as_json
       expect(prop).to include_json(type: 'string', title: 'Email Address', format: 'email')
     end
 
     context 'with a union type' do
       it 'returns a json schema with anyOf property' do
-        prop = described_class.new('name', T.any(Integer, String)).as_json
+        prop = described_class.new(:name, T.any(Integer, String)).as_json
         expect(prop).to include_json(anyOf: [{ type: 'integer' }, { type: 'string' }])
       end
     end

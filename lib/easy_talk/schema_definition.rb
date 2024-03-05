@@ -18,7 +18,7 @@ module EasyTalk
       end
     end
 
-    # sig { params(name: Symbol, type: T.untyped, constraints: T::Hash[Symbol, T.untyped]).void }
+    sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
     def property(name, type, **constraints)
       @schema_definition[:properties] ||= {}
       @schema_definition[:properties].merge!(name => constraints.merge!(type:))

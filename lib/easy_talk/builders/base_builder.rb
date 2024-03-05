@@ -13,6 +13,14 @@ module EasyTalk
 
       attr_reader :name, :schema
 
+      sig do
+        params(
+          name: Symbol,
+          schema: T::Hash[Symbol, T.untyped],
+          options: T::Hash[Symbol, String],
+          valid_options: T::Hash[Symbol, T.untyped]
+        ).void
+      end
       def initialize(name, schema, options = {}, valid_options = {})
         @valid_options = COMMON_OPTIONS.merge(valid_options)
         options.assert_valid_keys(@valid_options.keys)

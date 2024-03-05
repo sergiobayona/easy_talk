@@ -26,7 +26,7 @@ RSpec.describe EasyTalk::Model do
       user.define_schema do
         title 'User'
         description 'A user of the system'
-        property :name, String, title: "Person's Name"
+        property :name, String, title: 'Persons Name'
         property :tags, T::Array[String], min_items: 1, title: 'Tags'
       end
 

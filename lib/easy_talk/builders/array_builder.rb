@@ -11,6 +11,7 @@ module EasyTalk
         const: { type: T::Array[T.untyped], key: :const }
       }.freeze
 
+      sig { params(name: Symbol, type: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, type, options = {})
         @inner_type = type.respond_to?(:raw_type) ? type.raw_type : type
         update_option_types
