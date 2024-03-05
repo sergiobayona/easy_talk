@@ -79,12 +79,12 @@ Calling `User.json_schema` will return the JSON Schema for the User class:
 
 ## Usage
 
-Simply include the `EasyTalk::Model` module in your Ruby class, define your schema using and call the `json_schema` method to generate the JSON Schema for the model.
+Simply include the `EasyTalk::Model` module in your Ruby class, define the schema using the `define_schema` block and call the `json_schema` class method to generate the JSON Schema document.
 
 
 ## Schema Definition
 
-In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property and a hash of options.
+In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property as a string, the type, which can be a generic Ruby type or a [Sorbet type](https://sorbet.org/docs/stdlib-generics), and a hash of constraints as options.
 
 ## Type Checking and Schema Constraints
 
