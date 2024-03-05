@@ -21,8 +21,8 @@ RSpec.describe 'json for user model' do
       define_schema do
         title 'Phone'
         description 'A phone number'
-        property 'number', String, title: 'Phone Number', format: 'phone'
-        property 'type', String, title: 'Phone Type'
+        property :number, String, title: 'Phone Number', format: 'phone'
+        property :type, String, title: 'Phone Type'
       end
     end
 
@@ -30,12 +30,12 @@ RSpec.describe 'json for user model' do
       user.define_schema do
         title 'User'
         description 'A user of the system'
-        property 'name', String, title: "Person's Name"
-        property 'email', String, format: 'email', title: "Person's email"
-        property 'dob', Date, title: 'Date of Birth'
-        property 'group', Integer, enum: [1, 2, 3], default: 1
-        property 'phones', T::Array[Phone], title: 'Phones', min_items: 1
-        property 'tags', T::Array[String], title: 'Tags'
+        property :name, String, title: "Person's Name"
+        property :email, String, format: 'email', title: "Person's email"
+        property :dob, Date, title: 'Date of Birth'
+        property :group, Integer, enum: [1, 2, 3], default: 1
+        property :phones, T::Array[Phone], title: 'Phones', min_items: 1
+        property :tags, T::Array[String], title: 'Tags'
       end
 
       expect(user.json_schema).to include_json({

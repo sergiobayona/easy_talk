@@ -15,7 +15,7 @@ module EasyTalk
         default: { type: Integer, key: :default }
       }.freeze
 
-      sig { params(name: String, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
+      sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})
         super(name, { type: 'integer' }, options, VALID_OPTIONS)
       end

@@ -7,11 +7,11 @@ RSpec.describe 'Payment object example' do
     include EasyTalk::Model
 
     define_schema do
-      property 'CardNumber', String
-      property 'CardType', String, enum: %w[Visa MasterCard AmericanExpress]
-      property 'CardExpMonth', Integer, minimum: 1, maximum: 12
-      property 'CardExpYear', Integer, minimum: Date.today.year, maximum: Date.today.year + 10
-      property 'CardCVV', String, pattern: '^[0-9]{3,4}$'
+      property :CardNumber, String
+      property :CardType, String, enum: %w[Visa MasterCard AmericanExpress]
+      property :CardExpMonth, Integer, minimum: 1, maximum: 12
+      property :CardExpYear, Integer, minimum: Date.today.year, maximum: Date.today.year + 10
+      property :CardCVV, String, pattern: '^[0-9]{3,4}$'
       additional_properties false
     end
   end
@@ -20,8 +20,8 @@ RSpec.describe 'Payment object example' do
     include EasyTalk::Model
 
     define_schema do
-      property 'PaypalEmail', String, format: 'email'
-      property 'PaypalPasswordEncrypted', String
+      property :PaypalEmail, String, format: 'email'
+      property :PaypalPasswordEncrypted, String
       additional_properties false
     end
   end
@@ -30,10 +30,10 @@ RSpec.describe 'Payment object example' do
     include EasyTalk::Model
 
     define_schema do
-      property 'BankName', String
-      property 'AccountNumber', String
-      property 'RoutingNumber', String
-      property 'AccountType', String, enum: %w[Checking Savings]
+      property :BankName, String
+      property :AccountNumber, String
+      property :RoutingNumber, String
+      property :AccountType, String, enum: %w[Checking Savings]
       additional_properties false
     end
   end
@@ -44,8 +44,8 @@ RSpec.describe 'Payment object example' do
     define_schema do
       title 'Payment'
       description 'Payment info'
-      property 'PaymentMethod', String, enum: %w[CreditCard Paypal BankTransfer]
-      property 'Details', T.any(CreditCard, Paypal, BankTransfer)
+      property :PaymentMethod, String, enum: %w[CreditCard Paypal BankTransfer]
+      property :Details, T.any(CreditCard, Paypal, BankTransfer)
     end
   end
 
