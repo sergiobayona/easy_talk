@@ -8,7 +8,7 @@
 /pkg/
 /spec/reports/
 /tmp/
-esquema_base*.gem
+easy_talk*.gem
 
 
 # rspec failure tracking

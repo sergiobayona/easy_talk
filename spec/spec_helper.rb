@@ -2,7 +2,7 @@
 
 require 'rake'
 require 'rspec'
-require 'esquema_base'
+require 'easy_talk'
 require 'pry-byebug'
 require 'rspec/json_expectations'
 

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    esquema_base (0.1.0)
+    easy_talk (0.1.0)
       activesupport (~> 6.0)
       sorbet-runtime
 
@@ -79,7 +79,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  esquema_base!
+  easy_talk!
   pry-byebug (>= 3.10.1)
   rake (~> 13.1)
   rspec (~> 3.13)
