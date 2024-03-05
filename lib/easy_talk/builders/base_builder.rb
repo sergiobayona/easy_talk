@@ -25,6 +25,11 @@ module EasyTalk
         @valid_options.each_with_object(schema) do |(key, value), obj|
           next if @options[key].nil?
 
+          # Work around for Sorbet's default inability to type check the items inside an array
+          if value[:type].respond_to?(:recursively_valid?) && !value[:type].recursively_valid?(@options[key])
+            raise TypeError, "Invalid type for #{key}"
+          end
+
           obj[value[:key]] = T.let(@options[key], value[:type])
         end
       end

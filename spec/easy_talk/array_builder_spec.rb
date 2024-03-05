@@ -46,7 +46,7 @@ RSpec.describe EasyTalk::Builders::ArrayBuilder do
       end
 
       context 'with an invalid constraint value' do
-        pending 'raises an error' do # unclear why this does not throw an error
+        it 'raises an error' do # unclear why this does not throw an error
           expect do
             described_class.new('name', String, enum: [1, 2, 3]).build
           end.to raise_error(TypeError)
@@ -96,7 +96,7 @@ RSpec.describe EasyTalk::Builders::ArrayBuilder do
       end
 
       context 'with invalid constraint value' do
-        pending 'raises an error' do # unclear why this does not throw an error
+        it 'raises an error' do # unclear why this does not throw an error
           expect do
             described_class.new('name', Integer, enum: %w[one two three]).build
           end.to raise_error(TypeError)
