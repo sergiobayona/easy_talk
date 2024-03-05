@@ -86,6 +86,26 @@ Simply include the `EasyTalk::Model` module in your Ruby class, define your sche
 
 In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property and a hash of options.
 
+## Type Checking and Schema Constraints
+
+EasyTalk uses [Sorbet](https://sorbet.org/) to perform type checking on the property constraint values. The `property` method accepts a type as the second argument. The type can be a Ruby class or a Sorbet type. For example, `String`, `Integer`, `T::Array[String]`, etc.
+
+EasyTalk raises an error if the constraint values do not match the property type. For example, if you specify the `enum` constraint with the values [1,2,3], but the property type is `String`, EasyTalk will raise a type error.
+
+EasyTalk also raises an error if the constraints are not valid for the property type. For example, if you define a property with a `minimum` or a `maximum` constraint, but the type is `String`, EasyTalk will raise an error.
+
+## Schema Validation
+
+EasyTalk does not yet perform JSON validation. So far, it only aims to generate a valid JSON Schema document. You can use the `json_schema` method to generate the JSON Schema and use a JSON Schema validator library like [JSONSchemer](https://github.com/davishmcclurg/json_schemer) to validate JSON against. See https://json-schema.org/implementations#validators-ruby for a list of JSON Schema validator libraries for Ruby.
+
+The goal is to introduce JSON validation in the near future.
+
+## JSON Schema Specifications
+
+EasyTalk is currently very loose about JSON Schema specifications. It does not enforce the use of the latest JSON Schema specifications. Support for the dictionary of JSON Schema keywords varies depending on the keyword. The goal is to have robust support for the latest JSON Schema specifications in the near future.
+
+To learn about the current EasyTalk capabilities, take a look at the [spec/easy_talk/examples](https://github.com/sergiobayona/easy_talk/tree/main/spec/easy_talk/examples) folder. The examples are used to test the JSON Schema generation.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
