@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 require_relative 'builders/integer_builder'
 require_relative 'builders/number_builder'

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'base_builder'
 require 'sorbet-runtime' # Add the import statement for the T module
 
