@@ -11,7 +11,7 @@ module EasyTalk
         optional: { type: T::Boolean } # special option to skip from including in required array. Does not get printed.
       }.freeze
 
-      attr_reader :name, :schema
+      attr_reader :name, :schema, :options
 
       sig do
         params(

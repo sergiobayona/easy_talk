@@ -16,7 +16,7 @@ module EasyTalk
 
       sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})
-        super(name, { type: 'number' }, options)
+        super(name, { type: 'number' }, options, VALID_OPTIONS)
       end
     end
   end
