@@ -27,7 +27,7 @@ module EasyTalk
         schema_definition
         definition = SchemaDefinition.new(self, @schema_definition)
         definition.instance_eval(&block)
-        @schema = Builder.build_schema(schema_definition)
+        @schema = Builder.new(definition).schema
       end
 
       # Returns the schema definition.

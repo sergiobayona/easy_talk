@@ -1,44 +1,38 @@
 module EasyTalk
-  KEYWORDS = {
-    _schema: :_schema,
-    _id: :_id,
-    description: :description,
-    type: :type,
-    title: :title,
-    all_of: :allOf,
-    any_of: :anyOf,
-    one_of: :oneOf,
-    property: :property,
-    required: :required,
-    items: :items,
-    additional_items: :additionalItems,
-    pattern_properties: :patternProperties,
-    additional_properties: :additionalProperties,
-    dependencies: :dependencies,
-    dependent_required: :dependentRequired,
-    format: :format,
-    content_media_type: :contentMediaType,
-    content_encoding: :contentEncoding,
-    schema_if: :if,
-    schema_then: :then,
-    schema_else: :else,
-    schema_not: :not,
-    enum: :enum,
-    const: :const,
-    default: :default,
-    examples: :examples,
-    max_length: :maxLength,
-    min_length: :minLength,
-    pattern: :pattern,
-    maximum: :maximum,
-    exclusive_maximum: :exclusiveMaximum,
-    minimum: :minimum,
-    exclusive_minimum: :exclusiveMinimum,
-    multiple_of: :multipleOf,
-    max_items: :maxItems,
-    min_items: :minItems,
-    unique_items: :uniqueItems,
-    max_properties: :maxProperties,
-    min_properties: :minProperties
-  }.freeze
+  KEYWORDS = %i[
+    description
+    type
+    title
+    all_of
+    any_of
+    one_of
+    property
+    required
+    items
+    additional_items
+    pattern_properties
+    additional_properties
+    dependencies
+    dependent_required
+    format
+    content_media_type
+    content_encoding
+    enum
+    const
+    default
+    examples
+    max_length
+    min_length
+    pattern
+    maximum
+    exclusive_maximum
+    minimum
+    exclusive_minimum
+    multiple_of
+    max_items
+    min_items
+    unique_items
+    max_properties
+    min_properties
+  ].freeze
 end

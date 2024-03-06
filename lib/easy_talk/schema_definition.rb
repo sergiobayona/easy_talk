@@ -5,15 +5,17 @@ module EasyTalk
   class SchemaDefinition
     extend T::Sig
 
-    attr_reader :klass
+    attr_reader :klass, :schema_definition
+
+    alias to_h schema_definition
 
     def initialize(klass, schema_definition)
       @schema_definition = schema_definition
       @klass = klass
     end
 
-    EasyTalk::KEYWORDS.each do |method_name, keyword|
-      define_method(method_name) do |*values|
+    EasyTalk::KEYWORDS.each do |keyword|
+      define_method(keyword) do |*values|
         @schema_definition[keyword] = values.size > 1 ? values : values.first
       end
     end

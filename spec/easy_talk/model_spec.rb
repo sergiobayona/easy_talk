@@ -6,6 +6,10 @@ RSpec.describe EasyTalk::Model do
   let(:user) do
     Class.new do
       include EasyTalk::Model
+
+      def self.name
+        'User'
+      end
     end
   end
 

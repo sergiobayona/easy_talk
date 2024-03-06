@@ -6,6 +6,10 @@ RSpec.describe 'json for user model' do
   let(:user) do
     Class.new do
       include EasyTalk::Model
+
+      def name
+        'User'
+      end
     end
   end
 
@@ -17,6 +21,10 @@ RSpec.describe 'json for user model' do
 
   describe '.json_schema' do
     class Phone
+      def self.name
+        'Phone'
+      end
+
       include EasyTalk::Model
       define_schema do
         title 'Phone'
@@ -37,7 +45,7 @@ RSpec.describe 'json for user model' do
         property :phones, T::Array[Phone], title: 'Phones', min_items: 1
         property :tags, T::Array[String], title: 'Tags'
       end
-
+      puts user.json_schema
       expect(user.json_schema).to include_json({
                                                  "title": 'User',
                                                  "description": 'A user of the system',

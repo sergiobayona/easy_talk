@@ -51,6 +51,7 @@ RSpec.describe 'Payment object example' do
 
   context 'json schema' do
     it 'returns a json schema for a payment object' do
+      puts Payment.json_schema
       expect(Payment.json_schema).to include_json({
                                                     "title": 'Payment',
                                                     "description": 'Payment info',
@@ -95,7 +96,7 @@ RSpec.describe 'Payment object example' do
                                                                 "pattern": '^[0-9]{3,4}$'
                                                               }
                                                             },
-                                                            "additional_properties": false,
+                                                            "additionalProperties": false,
                                                             "required": %w[
                                                               CardNumber
                                                               CardType
@@ -115,7 +116,7 @@ RSpec.describe 'Payment object example' do
                                                                 "type": 'string'
                                                               }
                                                             },
-                                                            "additional_properties": false,
+                                                            "additionalProperties": false,
                                                             "required": %w[
                                                               PaypalEmail
                                                               PaypalPasswordEncrypted
@@ -141,7 +142,7 @@ RSpec.describe 'Payment object example' do
                                                                 ]
                                                               }
                                                             },
-                                                            "additional_properties": false,
+                                                            "additionalProperties": false,
                                                             "required": %w[
                                                               BankName
                                                               AccountNumber

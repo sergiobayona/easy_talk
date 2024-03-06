@@ -3,35 +3,39 @@
 require 'spec_helper'
 
 RSpec.describe EasyTalk::Builder do
-  context 'when building a schema' do
-    it 'returns a bare json object' do
-      expect(described_class.build_schema({})).to eq({ type: 'object', properties: {}, required: [] })
-    end
+  it 'returns itself without errors' do
+    schema_definition = EasyTalk::SchemaDefinition.new(Object, {})
+    builder = described_class.new(schema_definition)
+    expect(builder).to be_a(EasyTalk::Builder)
+    expect(builder.schema).to eq({ type: 'object' })
+    expect(builder.json_schema).to eq('{"type":"object"}')
+  end
 
+  context 'when building a schema' do
     it 'includes a title' do
-      expect(described_class.build_schema(title: 'Title')).to eq({
-                                                                   title: 'Title',
-                                                                   type: 'object',
-                                                                   properties: {},
-                                                                   required: []
-                                                                 })
+      schema_definition = EasyTalk::SchemaDefinition.new(Object, { title: 'Title' })
+      builder = described_class.new(schema_definition).build_schema
+      expect(builder).to eq({
+                              title: 'Title',
+                              type: 'object'
+                            })
     end
 
     it 'includes a description' do
-      obj = described_class.build_schema(description: 'Description')
-      expect(obj).to eq({
-                          description: 'Description',
-                          type: 'object',
-                          properties: {},
-                          required: []
-                        })
+      schema_definition = EasyTalk::SchemaDefinition.new(Object, { description: 'Description' })
+      builder = described_class.new(schema_definition).build_schema
+      expect(builder).to eq({
+                              description: 'Description',
+                              type: 'object'
+                            })
     end
 
     it 'includes the property' do
-      obj = described_class.build_schema(properties: { name: { type: String } })
-      expect(obj).to be_a(Hash)
-      expect(obj[:properties]).to be_a(Hash)
-      expect(obj[:properties][:name]).to be_a(EasyTalk::Property)
+      schema_definition = EasyTalk::SchemaDefinition.new(Object, { properties: { name: { type: String } } })
+      builder = described_class.new(schema_definition).build_schema
+      expect(builder).to be_a(Hash)
+      expect(builder[:properties]).to be_a(Hash)
+      expect(builder[:properties][:name]).to be_a(EasyTalk::Property)
     end
   end
 end
