@@ -11,6 +11,7 @@ module EasyTalk
         required: { type: T::Array[Symbol], key: :required }
       }.freeze
 
+      sig { params(schema_definition: EasyTalk::SchemaDefinition).void }
       def initialize(schema_definition)
         @schema_definition = schema_definition
         name = schema_definition.klass.name ? schema_definition.klass.name.to_sym : :klass

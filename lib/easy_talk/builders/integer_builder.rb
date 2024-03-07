@@ -17,6 +17,7 @@ module EasyTalk
         default: { type: Integer, key: :default }
       }.freeze
 
+      # Initializes a new instance of the IntegerBuilder class.
       sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})
         super(name, { type: 'integer' }, options, VALID_OPTIONS)

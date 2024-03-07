@@ -15,6 +15,7 @@ require_relative 'builders/time_builder'
 
 module EasyTalk
   class Property
+    extend T::Sig
     attr_reader :name, :type, :options
 
     TYPE_TO_BUILDER = {
@@ -29,6 +30,13 @@ module EasyTalk
       'Time' => Builders::TimeBuilder
     }.freeze
 
+    # Initializes a new instance of the Property class.
+    #
+    # @param name [Symbol] The name of the property.
+    # @param type [Object] The type of the property.
+    # @param options [Hash] The property constraints.
+    # @raise [ArgumentError] If the property type is missing.
+    sig { params(name: Symbol, type: T.any(String, Object), options: T::Hash[Symbol, T.untyped]).void }
     def initialize(name, type = nil, options = {})
       @name = name
       @type = type
@@ -36,7 +44,7 @@ module EasyTalk
       raise ArgumentError, 'property type is missing' if type.blank?
     end
 
-    def build # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
+    def build
       builder = TYPE_TO_BUILDER[type.name]
       return builder.new(name, options).build if builder
 

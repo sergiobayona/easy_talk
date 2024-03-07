@@ -18,6 +18,7 @@ module EasyTalk
         @schema ||= {}
       end
 
+      # Returns the JSON schema for the model.
       def self.json_schema
         @json_schema ||= schema.to_json
       end

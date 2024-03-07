@@ -6,6 +6,8 @@ module EasyTalk
     class BaseBuilder
       extend T::Sig
 
+      # BaseBuilder is a class that provides a common structure for building objects
+      # representing schema properties.
       COMMON_OPTIONS = {
         title: { type: T.nilable(String), key: :title },
         description: { type: T.nilable(String), key: :description },
@@ -22,6 +24,12 @@ module EasyTalk
           valid_options: T::Hash[Symbol, T.untyped]
         ).void
       end
+      # Initializes a new instance of the BaseBuilder class.
+      #
+      # @param name [Symbol] The name of the property.
+      # @param schema [Hash] A hash representing a json schema object.
+      # @param options [Hash] The options for the builder (default: {}).
+      # @param valid_options [Hash] The acceptable options for the given property type (default: {}).
       def initialize(name, schema, options = {}, valid_options = {})
         @valid_options = COMMON_OPTIONS.merge(valid_options)
         options.assert_valid_keys(@valid_options.keys)
@@ -30,6 +38,8 @@ module EasyTalk
         @options = options
       end
 
+      # Builds the schema object based on the provided options.
+      sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
         @valid_options.each_with_object(schema) do |(key, value), obj|
           next if @options[key].nil?
