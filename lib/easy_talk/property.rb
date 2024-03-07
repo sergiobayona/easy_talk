@@ -45,9 +45,15 @@ module EasyTalk
     end
 
     def build
-      builder = TYPE_TO_BUILDER[type.name]
-      return builder.new(name, options).build if builder
+      build_with_builder || build_with_type
+    end
 
+    def build_with_builder
+      builder = TYPE_TO_BUILDER[type.name]
+      builder.new(name, options).build if builder
+    end
+
+    def build_with_type
       case type.class.name
       when 'T::Types::TypedArray'
         build_array_property
