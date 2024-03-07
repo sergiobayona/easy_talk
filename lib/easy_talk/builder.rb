@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'property'
+require_relative 'builders/object_builder'
 
 module EasyTalk
   # The Builder class is responsible for building a schema for a class.
@@ -8,13 +9,10 @@ module EasyTalk
     extend T::Sig
     OBJECT_KEYWORDS = %i[title description type properties additional_properties required].freeze
 
-    sig { params(schema_definition: T::Hash[Symbol, T.untyped]).returns(Hash) }
-    def self.build_schema(schema_definition)
-      builder = new(schema_definition)
-      builder.schema
-    end
-
-    sig { params(schema_definition: T::Hash[Symbol, T.untyped]).void }
+    sig { params(schema_definition: SchemaDefinition).void }
+    # Initializes a new instance of the Builder class.
+    #
+    # @param schema_definition [SchemaDefinition] The schema definition.
     def initialize(schema_definition)
       @schema_definition = schema_definition
       @properties = {}
@@ -22,62 +20,35 @@ module EasyTalk
     end
 
     sig { returns(Hash) }
+    # Retrieves the schema document.
+    #
+    # @return [Hash] The schema document.
     def schema
-      @schema ||= schema_document
+      @schema = schema_document
     end
 
     sig { returns(String) }
+    # Returns the JSON representation of the schema document.
+    #
+    # @return [String] The JSON schema.
     def json_schema
       @json_schema ||= schema_document.to_json
     end
 
     sig { returns(Hash) }
+    # Returns the schema document, building it if necessary.
+    #
+    # @return [Hash] The schema document.
     def schema_document
-      OBJECT_KEYWORDS.each_with_object({}) do |keyword, hash|
-        value = send("build_#{keyword}")
-        next if value.nil?
-
-        hash[keyword] = value
-      end.compact
+      @schema_document ||= build_schema
     end
 
-    sig { returns(T.nilable(String)) }
-    def build_title
-      @schema_definition[:title]
-    end
-
-    sig { returns(T.nilable(String)) }
-    def build_description
-      @schema_definition[:description]
-    end
-
-    sig { returns(T.nilable(T::Boolean)) }
-    def build_additional_properties
-      @schema_definition[:additionalProperties]
-    end
-
-    sig { returns(String) }
-    def build_type
-      @schema_definition[:type] || 'object'
-    end
-
-    sig { returns(T::Hash[String, Property]) }
-    def build_properties
-      properties.each_with_object({}) do |(property_name, options), hash|
-        type = options.delete(:type)
-        @required_properties << property_name unless options[:optional]
-        hash[property_name] = Property.new(property_name, type, options)
-      end
-    end
-
-    sig { returns(T::Hash[Symbol, T::Hash[Symbol, String]]) }
-    def properties
-      @schema_definition[:properties] || {}
-    end
-
-    sig { returns(T::Array[String]) }
-    def build_required
-      @required_properties
+    sig { returns(Hash) }
+    # Builds the schema using the schema definition.
+    #
+    # Returns the built schema.
+    def build_schema
+      Builders::ObjectBuilder.new(@schema_definition).build
     end
   end
 end

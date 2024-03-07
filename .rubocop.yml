@@ -1,7 +1,14 @@
+AllCops:
+  TargetRubyVersion: 3.2
+
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
 
 Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'spec/**/*'
+
+Layout/LineLength:
   Exclude:
     - 'spec/**/*'

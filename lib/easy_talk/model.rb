@@ -10,6 +10,7 @@ require_relative 'builder'
 require_relative 'schema_definition'
 
 module EasyTalk
+  # The Model module can be included in a class to add JSON schema definition and generation support.
   module Model
     extend ActiveSupport::Concern
 
@@ -18,6 +19,7 @@ module EasyTalk
         @schema ||= {}
       end
 
+      # Returns the JSON schema for the model.
       def self.json_schema
         @json_schema ||= schema.to_json
       end
@@ -27,7 +29,7 @@ module EasyTalk
         schema_definition
         definition = SchemaDefinition.new(self, @schema_definition)
         definition.instance_eval(&block)
-        @schema = Builder.build_schema(schema_definition)
+        @schema = Builder.new(definition).schema
       end
 
       # Returns the schema definition.

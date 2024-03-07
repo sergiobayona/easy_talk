@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # Builder class for number properties.
     class NumberBuilder < BaseBuilder
       VALID_OPTIONS = {
         multiple_of: { type: T.any(Integer, Float), key: :multipleOf },
@@ -14,9 +17,10 @@ module EasyTalk
         default: { type: T.any(Integer, Float), key: :default }
       }.freeze
 
+      # Initializes a new instance of the NumberBuilder class.
       sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
       def initialize(name, options = {})
-        super(name, { type: 'number' }, options)
+        super(name, { type: 'number' }, options, VALID_OPTIONS)
       end
     end
   end

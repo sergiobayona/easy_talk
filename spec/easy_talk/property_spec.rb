@@ -112,6 +112,10 @@ RSpec.describe EasyTalk::Property do
       Class.new do
         include EasyTalk::Model
 
+        def self.name
+          'User'
+        end
+
         define_schema do
           property :name, String
           property :email, String, format: 'email'

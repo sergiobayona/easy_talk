@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 require_relative 'builders/integer_builder'
 require_relative 'builders/number_builder'
@@ -12,7 +14,9 @@ require_relative 'builders/time_builder'
 # frozen_string_literal: true
 
 module EasyTalk
+  # Property class for building a JSON schema property.
   class Property
+    extend T::Sig
     attr_reader :name, :type, :options
 
     TYPE_TO_BUILDER = {
@@ -27,6 +31,13 @@ module EasyTalk
       'Time' => Builders::TimeBuilder
     }.freeze
 
+    # Initializes a new instance of the Property class.
+    #
+    # @param name [Symbol] The name of the property.
+    # @param type [Object] The type of the property.
+    # @param options [Hash] The property constraints.
+    # @raise [ArgumentError] If the property type is missing.
+    sig { params(name: Symbol, type: T.any(String, Object), options: T::Hash[Symbol, T.untyped]).void }
     def initialize(name, type = nil, options = {})
       @name = name
       @type = type
@@ -34,10 +45,16 @@ module EasyTalk
       raise ArgumentError, 'property type is missing' if type.blank?
     end
 
-    def build # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
-      builder = TYPE_TO_BUILDER[type.name]
-      return builder.new(name, options).build if builder
+    def build
+      build_with_builder || build_with_type
+    end
 
+    def build_with_builder
+      builder = TYPE_TO_BUILDER[type.name]
+      builder&.new(name, options)&.build
+    end
+
+    def build_with_type
       case type.class.name
       when 'T::Types::TypedArray'
         build_array_property

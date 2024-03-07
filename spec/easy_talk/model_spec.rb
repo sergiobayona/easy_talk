@@ -6,6 +6,10 @@ RSpec.describe EasyTalk::Model do
   let(:user) do
     Class.new do
       include EasyTalk::Model
+
+      def self.name
+        'User'
+      end
     end
   end
 
@@ -30,7 +34,7 @@ RSpec.describe EasyTalk::Model do
         property :tags, T::Array[String], min_items: 1, title: 'Tags'
       end
 
-      properties = user.schema_definition[:properties]
+      user.schema_definition[:properties]
 
       # expect(properties).to be_a(Hash)
       # expect(user.schema_definition[:title]).to eq('User')
