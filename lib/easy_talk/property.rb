@@ -50,7 +50,7 @@ module EasyTalk
 
     def build_with_builder
       builder = TYPE_TO_BUILDER[type.name]
-      builder.new(name, options).build if builder
+      builder&.new(name, options)&.build
     end
 
     def build_with_type
