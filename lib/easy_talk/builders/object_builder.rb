@@ -2,6 +2,7 @@
 
 module EasyTalk
   module Builders
+    # Builder class for json schema objects.
     class ObjectBuilder < BaseBuilder
       extend T::Sig
 

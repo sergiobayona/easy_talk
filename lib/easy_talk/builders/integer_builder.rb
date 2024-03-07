@@ -4,6 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # Builder class for integer properties.
     class IntegerBuilder < BaseBuilder
       extend T::Sig
       VALID_OPTIONS = {

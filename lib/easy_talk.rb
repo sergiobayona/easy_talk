@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# The EasyTalk module is the main namespace for the gem.
 module EasyTalk
   class Error < StandardError; end
   require 'sorbet-runtime'

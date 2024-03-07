@@ -14,6 +14,7 @@ require_relative 'builders/time_builder'
 # frozen_string_literal: true
 
 module EasyTalk
+  # Property class for building a JSON schema property.
   class Property
     extend T::Sig
     attr_reader :name, :type, :options

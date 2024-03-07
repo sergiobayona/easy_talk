@@ -4,6 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # Builder class for number properties.
     class NumberBuilder < BaseBuilder
       VALID_OPTIONS = {
         multiple_of: { type: T.any(Integer, Float), key: :multipleOf },

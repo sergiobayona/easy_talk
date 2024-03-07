@@ -5,6 +5,7 @@ require 'sorbet-runtime' # Add the import statement for the T module
 
 module EasyTalk
   module Builders
+    # Builder class for string properties.
     class StringBuilder < BaseBuilder
       extend T::Sig
       VALID_OPTIONS = {

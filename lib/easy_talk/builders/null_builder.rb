@@ -4,7 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
-    # This class represents a builder for Null properties.
+    # builder class for Null properties.
     class NullBuilder < BaseBuilder
       VALID_OPTIONS = {}.freeze
 

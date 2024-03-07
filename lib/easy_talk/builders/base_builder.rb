@@ -3,6 +3,7 @@
 
 module EasyTalk
   module Builders
+    # BaseBuilder is a class that provides a common structure for building schema properties
     class BaseBuilder
       extend T::Sig
 

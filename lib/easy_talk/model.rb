@@ -10,6 +10,7 @@ require_relative 'builder'
 require_relative 'schema_definition'
 
 module EasyTalk
+  # The Model module can be included in a class to add JSON schema definition and generation support.
   module Model
     extend ActiveSupport::Concern
 

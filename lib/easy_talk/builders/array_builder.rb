@@ -4,6 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # Builder class for array properties.
     class ArrayBuilder < BaseBuilder
       # The `VALID_OPTIONS` constant is a hash that defines the valid options for an array property.
       VALID_OPTIONS = {

@@ -4,6 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # Builder class for date properties.
     class DateBuilder < StringBuilder
       # Modifies the schema to include the format constraint for a date property.
       sig { returns(T::Hash[Symbol, T.untyped]) }
