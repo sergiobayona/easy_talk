@@ -11,8 +11,7 @@ module EasyTalk
       # representing schema properties.
       COMMON_OPTIONS = {
         title: { type: T.nilable(String), key: :title },
-        description: { type: T.nilable(String), key: :description },
-        optional: { type: T::Boolean } # special option to skip from including in required array. Does not get printed.
+        description: { type: T.nilable(String), key: :description }
       }.freeze
 
       attr_reader :name, :schema, :options
