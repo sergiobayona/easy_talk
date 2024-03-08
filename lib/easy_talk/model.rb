@@ -12,20 +12,43 @@ require_relative 'schema_definition'
 module EasyTalk
   # The Model module can be included in a class to add JSON schema definition and generation support.
   module Model
-    extend ActiveSupport::Concern
+    def self.included(base)
+      base.extend(ClassMethods)
 
-    included do
-      def self.schema
+      base.singleton_class.instance_eval do
+        define_method(:inherited) do |subclass|
+          super(subclass)
+          subclass.extend(SubclassExtension)
+        end
+      end
+    end
+
+    module SubclassExtension
+      def inherited_schema?
+        true
+      end
+
+      def inherits_from
+        superclass.name
+      end
+    end
+
+    module ClassMethods
+      def schema
         @schema ||= {}
       end
 
+      def inherited_schema?
+        false
+      end
+
       # Returns the JSON schema for the model.
-      def self.json_schema
+      def json_schema
         @json_schema ||= schema.to_json
       end
 
       # Define the schema using the provided block.
-      def self.define_schema(&block)
+      def define_schema(&block)
         schema_definition
         definition = SchemaDefinition.new(self, @schema_definition)
         definition.instance_eval(&block)
@@ -35,7 +58,7 @@ module EasyTalk
       # Returns the schema definition.
       # The schema_definition is a hash that contains the unvalidated schema definition for the model.
       # It is then passed to the Builder.build_schema method to validate and compile the schema.
-      def self.schema_definition
+      def schema_definition
         @schema_definition ||= {}
       end
     end
