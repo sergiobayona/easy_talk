@@ -4,15 +4,23 @@ require 'spec_helper'
 require 'easy_talk/builders/number_builder'
 
 RSpec.describe EasyTalk::Builders::ObjectBuilder do
+  let(:my_class) do
+    Class.new do
+      include EasyTalk::Model
+      def self.name
+        'User'
+      end
+    end
+  end
   it 'returns a bare minimal json object' do
-    schema_definition = EasyTalk::SchemaDefinition.new(Class.new, {})
+    schema_definition = EasyTalk::SchemaDefinition.new(my_class, {})
     builder = described_class.new(schema_definition).build
 
     expect(builder).to eq({ type: 'object' })
   end
 
   it 'returns a json object with title' do
-    schema_definition = EasyTalk::SchemaDefinition.new(Class.new, { title: 'User' })
+    schema_definition = EasyTalk::SchemaDefinition.new(my_class, { title: 'User' })
     builder = described_class.new(schema_definition).build
 
     expect(builder).to eq({ type: 'object', title: 'User' })
@@ -20,7 +28,7 @@ RSpec.describe EasyTalk::Builders::ObjectBuilder do
 
   context 'with properties' do
     it 'returns a json object with properties' do
-      schema_definition = EasyTalk::SchemaDefinition.new(Class.new, {})
+      schema_definition = EasyTalk::SchemaDefinition.new(my_class, {})
       schema_definition.property(:name, String)
       schema_definition.property(:age, Integer)
 

@@ -3,8 +3,17 @@
 require 'spec_helper'
 
 RSpec.describe EasyTalk::Builder do
+  let(:my_class) do
+    Class.new do
+      include EasyTalk::Model
+      def self.name
+        'User'
+      end
+    end
+  end
+
   it 'returns itself without errors' do
-    schema_definition = EasyTalk::SchemaDefinition.new(Object, {})
+    schema_definition = EasyTalk::SchemaDefinition.new(my_class, {})
     builder = described_class.new(schema_definition)
     expect(builder).to be_a(EasyTalk::Builder)
     expect(builder.schema).to eq({ type: 'object' })
@@ -13,7 +22,7 @@ RSpec.describe EasyTalk::Builder do
 
   context 'when building a schema' do
     it 'includes a title' do
-      schema_definition = EasyTalk::SchemaDefinition.new(Object, { title: 'Title' })
+      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { title: 'Title' })
       builder = described_class.new(schema_definition).build_schema
       expect(builder).to eq({
                               title: 'Title',
@@ -22,7 +31,7 @@ RSpec.describe EasyTalk::Builder do
     end
 
     it 'includes a description' do
-      schema_definition = EasyTalk::SchemaDefinition.new(Object, { description: 'Description' })
+      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { description: 'Description' })
       builder = described_class.new(schema_definition).build_schema
       expect(builder).to eq({
                               description: 'Description',
@@ -31,7 +40,7 @@ RSpec.describe EasyTalk::Builder do
     end
 
     it 'includes the property' do
-      schema_definition = EasyTalk::SchemaDefinition.new(Object, { properties: { name: { type: String } } })
+      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { properties: { name: { type: String } } })
       builder = described_class.new(schema_definition).build_schema
       expect(builder).to be_a(Hash)
       expect(builder[:properties]).to be_a(Hash)

@@ -49,6 +49,8 @@ module EasyTalk
 
       # Define the schema using the provided block.
       def define_schema(&block)
+        raise ArgumentError, 'The class must have a name' unless name.present?
+
         schema_definition
         definition = SchemaDefinition.new(self, @schema_definition)
         definition.instance_eval(&block)
