@@ -24,12 +24,12 @@ module EasyTalk
     end
 
     module SubclassExtension
-      def inherited_schema?
+      def inherits_schema?
         true
       end
 
       def inherits_from
-        superclass.name
+        superclass
       end
     end
 
@@ -38,8 +38,12 @@ module EasyTalk
         @schema ||= {}
       end
 
-      def inherited_schema?
+      def inherits_schema?
         false
+      end
+
+      def ref_template
+        "#/$defs/#{name}"
       end
 
       # Returns the JSON schema for the model.
