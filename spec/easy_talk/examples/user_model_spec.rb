@@ -7,7 +7,7 @@ RSpec.describe 'json for user model' do
     Class.new do
       include EasyTalk::Model
 
-      def name
+      def self.name
         'User'
       end
     end

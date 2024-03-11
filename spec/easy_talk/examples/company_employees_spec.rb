@@ -6,6 +6,10 @@ RSpec.describe 'json for user model' do
   let(:company) do
     Class.new do
       include EasyTalk::Model
+
+      def self.name
+        'Company'
+      end
     end
   end
 
@@ -31,7 +35,7 @@ RSpec.describe 'json for user model' do
         property :department, String
         property :hire_date, Date
         property :active, T::Boolean, default: true
-        property :address, T::Array[Address], optional: true
+        property :address, T.nilable(T::Array[Address])
       end
     end
 
@@ -43,8 +47,8 @@ RSpec.describe 'json for user model' do
       end
 
       expect(company.json_schema).to include_json({
-                                                    "title": 'Company',
                                                     "type": 'object',
+                                                    "title": 'Company',
                                                     "properties": {
                                                       "name": {
                                                         "type": 'string'
@@ -52,9 +56,9 @@ RSpec.describe 'json for user model' do
                                                       "employees": {
                                                         "type": 'array',
                                                         "items": {
+                                                          "type": 'object',
                                                           "title": 'Employee',
                                                           "description": 'Company employee',
-                                                          "type": 'object',
                                                           "properties": {
                                                             "name": {
                                                               "type": 'string',
@@ -80,31 +84,38 @@ RSpec.describe 'json for user model' do
                                                               "default": true
                                                             },
                                                             "address": {
-                                                              "type": 'array',
-                                                              "items": {
-                                                                "type": 'object',
-                                                                "properties": {
-                                                                  "street": {
-                                                                    "type": 'string'
-                                                                  },
-                                                                  "city": {
-                                                                    "type": 'string'
-                                                                  },
-                                                                  "state": {
-                                                                    "type": 'string'
-                                                                  },
-                                                                  "zip": {
-                                                                    "type": 'string',
-                                                                    "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
+                                                              "anyOf": [
+                                                                {
+                                                                  "type": 'array',
+                                                                  "items": {
+                                                                    "type": 'object',
+                                                                    "properties": {
+                                                                      "street": {
+                                                                        "type": 'string'
+                                                                      },
+                                                                      "city": {
+                                                                        "type": 'string'
+                                                                      },
+                                                                      "state": {
+                                                                        "type": 'string'
+                                                                      },
+                                                                      "zip": {
+                                                                        "type": 'string',
+                                                                        "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
+                                                                      }
+                                                                    },
+                                                                    "required": %w[
+                                                                      street
+                                                                      city
+                                                                      state
+                                                                      zip
+                                                                    ]
                                                                   }
                                                                 },
-                                                                "required": %w[
-                                                                  street
-                                                                  city
-                                                                  state
-                                                                  zip
-                                                                ]
-                                                              }
+                                                                {
+                                                                  "type": 'null'
+                                                                }
+                                                              ]
                                                             }
                                                           },
                                                           "required": %w[

@@ -16,15 +16,14 @@ RSpec.describe 'Ticketing system' do
     include EasyTalk::Model
 
     define_schema do
+      title 'Ticket'
       property :id, Integer, description: 'Unique identifier for the ticket'
       property :name, String, description: 'Title of the ticket'
       property :description, String, description: 'Detailed description of the task'
       property :priority, String, enum: %w[High Meidum Low], description: 'Priority level'
       property :assignees, T::Array[String], description: 'List of users assigned to the task'
-      property :subtasks, T::Array[T.nilable(Subtask)], optional: true,
-                                                        description: 'List of subtasks associated with the main task'
-      property :dependencies, T::Array[Integer], optional: true,
-                                                 description: 'List of ticket IDs that this ticket depends on'
+      property :subtasks, T.nilable(T::Array[Subtask]), description: 'List of subtasks associated with the main task'
+      property :dependencies, T.nilable(T::Array[Integer]), description: 'List of ticket IDs that this ticket depends on'
     end
   end
 
@@ -41,14 +40,15 @@ RSpec.describe 'Ticketing system' do
   context 'json schema' do
     it 'returns a json schema for a list of action items' do
       expect(ActionItems.json_schema).to include_json({
+                                                        "type": 'object',
                                                         "title": 'Action Items',
                                                         "description": 'A list of action items',
-                                                        "type": 'object',
                                                         "properties": {
                                                           "items": {
                                                             "type": 'array',
                                                             "items": {
                                                               "type": 'object',
+                                                              "title": 'Ticket',
                                                               "properties": {
                                                                 "id": {
                                                                   "type": 'integer',
@@ -79,10 +79,10 @@ RSpec.describe 'Ticketing system' do
                                                                   "description": 'List of users assigned to the task'
                                                                 },
                                                                 "subtasks": {
-                                                                  "type": 'array',
-                                                                  "items": {
-                                                                    "anyOf": [
-                                                                      {
+                                                                  "anyOf": [
+                                                                    {
+                                                                      "type": 'array',
+                                                                      "items": {
                                                                         "type": 'object',
                                                                         "properties": {
                                                                           "id": {
@@ -99,21 +99,28 @@ RSpec.describe 'Ticketing system' do
                                                                           name
                                                                         ]
                                                                       },
-                                                                      {
-                                                                        "type": 'null'
-                                                                      }
-                                                                    ]
-                                                                  },
-                                                                  "description": 'List of subtasks associated with the main task',
-                                                                  "": true
+                                                                      "description": 'List of subtasks associated with the main task'
+                                                                    },
+                                                                    {
+                                                                      "type": 'null',
+                                                                      "description": 'List of subtasks associated with the main task'
+                                                                    }
+                                                                  ]
                                                                 },
                                                                 "dependencies": {
-                                                                  "type": 'array',
-                                                                  "items": {
-                                                                    "type": 'integer'
-                                                                  },
-                                                                  "description": 'List of ticket IDs that this ticket depends on',
-                                                                  "": true
+                                                                  "anyOf": [
+                                                                    {
+                                                                      "type": 'array',
+                                                                      "items": {
+                                                                        "type": 'integer'
+                                                                      },
+                                                                      "description": 'List of ticket IDs that this ticket depends on'
+                                                                    },
+                                                                    {
+                                                                      "type": 'null',
+                                                                      "description": 'List of ticket IDs that this ticket depends on'
+                                                                    }
+                                                                  ]
                                                                 }
                                                               },
                                                               "required": %w[
