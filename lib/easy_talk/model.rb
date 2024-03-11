@@ -23,16 +23,51 @@ module EasyTalk
       end
     end
 
+    # This module provides extension methods for subclasses with schema definitions.
     module SubclassExtension
+      # Returns true if the class inherits a schema.
       def inherits_schema?
         true
       end
 
+      # Returns the superclass that the class inherits from.
       def inherits_from
         superclass
       end
     end
 
+    # Module containing class-level methods for defining and accessing the schema of a model.
+    #
+    # This module provides methods for defining and accessing the JSON schema of a model.
+    # It includes methods for defining the schema, retrieving the schema definition,
+    # and generating the JSON schema for the model.
+    #
+    # Example usage:
+    #
+    #   class MyModel
+    #     extend ClassMethods
+    #
+    #     define_schema do
+    #       # schema definition goes here
+    #     end
+    #   end
+    #
+    #   MyModel.json_schema #=> returns the JSON schema for MyModel
+    #
+    #   MyModel.schema_definition #=> returns the unvalidated schema definition for MyModel
+    #
+    #   MyModel.ref_template #=> returns the reference template for MyModel
+    #
+    #   MyModel.inherits_schema? #=> returns false
+    #
+    #   MyModel.schema #=> returns the validated schema for MyModel
+    #
+    #   MyModel.schema_definition #=> returns the unvalidated schema definition for MyModel
+    #
+    #   MyModel.json_schema #=> returns the JSON schema for MyModel
+    #
+    # @see SchemaDefinition
+    # @see Builder
     module ClassMethods
       def schema
         @schema ||= {}
