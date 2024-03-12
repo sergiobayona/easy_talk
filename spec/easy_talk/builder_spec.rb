@@ -40,11 +40,23 @@ RSpec.describe EasyTalk::Builder do
     end
 
     it 'includes the property' do
-      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { properties: { name: { type: String } } })
+      schema_definition = EasyTalk::SchemaDefinition.new(my_class, {
+                                                           properties: {
+                                                             name: {
+                                                               type: String,
+                                                               constraints: {
+                                                                 format: 'email'
+                                                               }
+                                                             }
+                                                           }
+                                                         })
       builder = described_class.new(schema_definition).build_schema
       expect(builder).to be_a(Hash)
       expect(builder[:properties]).to be_a(Hash)
       expect(builder[:properties][:name]).to be_a(EasyTalk::Property)
+      expect(builder[:properties][:name].name).to eq(:name)
+      expect(builder[:properties][:name].type).to eq(String)
+      expect(builder[:properties][:name].constraints).to eq({ format: 'email' })
     end
   end
 end

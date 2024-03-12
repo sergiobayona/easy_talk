@@ -18,7 +18,29 @@ RSpec.describe EasyTalk::SchemaDefinition do
   describe 'property' do
     it 'adds a property to the schema_definition' do
       subject.property(:name, String, minimum: 1, maximum: 100)
-      expect(schema_definition[:properties]).to eq({ name: { type: String, minimum: 1, maximum: 100 } })
+      expect(schema_definition[:properties]).to eq({ name: { type: String, constraints: { minimum: 1, maximum: 100 } } })
+    end
+  end
+
+  describe 'composers' do
+    it 'adds a the OneOf keyword to the schema_definition composer node' do
+      subject.one_of('oneOf')
+      expect(schema_definition[:one_of]).to eq('oneOf')
+    end
+
+    it 'adds a the AllOf keyword to the schema_definition composer node' do
+      subject.all_of('allOf')
+      expect(schema_definition[:all_of]).to eq('allOf')
+    end
+
+    it 'adds a the AnyOf keyword to the schema_definition composer node' do
+      subject.any_of('anyOf')
+      expect(schema_definition[:any_of]).to eq('anyOf')
+    end
+
+    it 'adds a the Not keyword to the schema_definition composer node' do
+      subject.not('not')
+      expect(schema_definition[:not]).to eq('not')
     end
   end
 
@@ -40,6 +62,7 @@ RSpec.describe EasyTalk::SchemaDefinition do
       subject.all_of('AllOf')
       subject.any_of('AnyOf')
       subject.one_of('OneOf')
+      subject.not('not')
       subject.content_media_type('ContentMediaType')
       subject.content_encoding('ContentEncoding')
 
@@ -56,11 +79,12 @@ RSpec.describe EasyTalk::SchemaDefinition do
       expect(schema_definition[:additional_properties]).to eq(false)
       expect(schema_definition[:unique_items]).to eq(true)
       expect(schema_definition[:const]).to eq('Const')
+      expect(schema_definition[:content_media_type]).to eq('ContentMediaType')
+      expect(schema_definition[:content_encoding]).to eq('ContentEncoding')
       expect(schema_definition[:all_of]).to eq('AllOf')
       expect(schema_definition[:any_of]).to eq('AnyOf')
       expect(schema_definition[:one_of]).to eq('OneOf')
-      expect(schema_definition[:content_media_type]).to eq('ContentMediaType')
-      expect(schema_definition[:content_encoding]).to eq('ContentEncoding')
+      expect(schema_definition[:not]).to eq('not')
     end
   end
 end

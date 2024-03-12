@@ -17,7 +17,7 @@ module EasyTalk
   # Property class for building a JSON schema property.
   class Property
     extend T::Sig
-    attr_reader :name, :type, :options
+    attr_reader :name, :type, :constraints
 
     TYPE_TO_BUILDER = {
       'String' => Builders::StringBuilder,
@@ -35,13 +35,13 @@ module EasyTalk
     #
     # @param name [Symbol] The name of the property.
     # @param type [Object] The type of the property.
-    # @param options [Hash] The property constraints.
+    # @param constraints [Hash] The property constraints.
     # @raise [ArgumentError] If the property type is missing.
-    sig { params(name: Symbol, type: T.any(String, Object), options: T::Hash[Symbol, T.untyped]).void }
-    def initialize(name, type = nil, options = {})
+    sig { params(name: Symbol, type: T.any(String, Object), constraints: T::Hash[Symbol, T.untyped]).void }
+    def initialize(name, type = nil, constraints = {})
       @name = name
       @type = type
-      @options = options
+      @constraints = constraints
       raise ArgumentError, 'property type is missing' if type.blank?
     end
 
@@ -51,7 +51,7 @@ module EasyTalk
 
     def build_with_builder
       builder = TYPE_TO_BUILDER[type.name]
-      builder&.new(name, options)&.build
+      builder&.new(name, constraints)&.build
     end
 
     def build_with_type
@@ -61,7 +61,7 @@ module EasyTalk
       when 'T::Private::Types::SimplePairUnion', 'T::Types::Union'
         build_union_property
       when 'T::Types::Simple'
-        Property.new(name, type.raw_type, options)
+        Property.new(name, type.raw_type, constraints)
       else
         build_object_property
       end
@@ -74,12 +74,12 @@ module EasyTalk
     private
 
     def build_array_property
-      Builders::ArrayBuilder.new(name, type.type, options).build
+      Builders::ArrayBuilder.new(name, type.type, constraints).build
     end
 
     def build_union_property
       type.types.each_with_object({ anyOf: [] }) do |type, hash|
-        hash[:anyOf] << Property.new(name, type, options)
+        hash[:anyOf] << Property.new(name, type, constraints)
       end
     end
 

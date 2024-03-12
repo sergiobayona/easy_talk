@@ -13,7 +13,10 @@ module EasyTalk
         additional_properties: { type: T::Boolean, key: :additionalProperties },
         required: { type: T::Array[Symbol], key: :required },
         defs: { type: T::Hash[Symbol, T.untyped], key: :$defs },
-        allOf: { type: T::Array[T.untyped], key: :allOf }
+        all_of: { type: T::Array[T.untyped], key: :allOf },
+        any_of: { type: T::Array[T.untyped], key: :anyOf },
+        one_of: { type: T::Array[T.untyped], key: :oneOf },
+        not: { type: T.untyped, key: :not }
       }.freeze
 
       sig { params(schema_definition: EasyTalk::SchemaDefinition).void }
@@ -27,36 +30,19 @@ module EasyTalk
 
       private
 
-      def properties_from_schema_definition(schema_definition)
-        schema = schema_definition.each_with_object({}) do |(property_name, options), hash|
-          type = options.delete(:type)
-          @required_properties << property_name unless type.respond_to?(:nilable?) && type.nilable?
-          hash[property_name] = Property.new(property_name, type, options)
+      def properties_from_schema_definition(properties)
+        schema = properties.each_with_object({}) do |(property_name, options), hash|
+          @required_properties << property_name unless options[:type].respond_to?(:nilable?) && options[:type].nilable?
+          hash[property_name] = Property.new(property_name, options[:type], options[:constraints])
         end
 
         EasyTalk.add_schema(klass.name.to_sym, schema)
         schema
       end
 
-      def defs_from_schemas
-        return unless klass.inherits_schema?
-
-        EasyTalk.schemas.slice(klass.inherits_from.name.to_sym)
-      end
-
-      def all_of
-        return unless klass.inherits_schema?
-
-        [
-          { '$ref': klass.inherits_from.ref_template }
-        ]
-      end
-
       def options
         @options = @schema_definition.to_h
         @options[:properties] = properties_from_schema_definition(properties)
-        @options[:defs] = defs_from_schemas
-        @options[:allOf] = all_of
         @options[:required] = @required_properties
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
         @options
