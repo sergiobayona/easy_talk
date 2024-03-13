@@ -15,9 +15,12 @@ RSpec.describe 'Product catalog example' do
     end
   end
 
-  class ClothingProduct < BaseProduct
+  class ClothingProduct
+    include EasyTalk::Model
+
     define_schema do
       title 'Clothing Product'
+      all_of BaseProduct
       property :size, String, enum: %w[XS S M L XL XXL]
       property :color, String
       property :material, String
@@ -55,27 +58,37 @@ RSpec.describe 'Product catalog example' do
                                                             ],
                                                             "$defs": {
                                                               "BaseProduct": {
-                                                                "productId": {
-                                                                  "type": 'string',
-                                                                  "format": 'uuid'
+                                                                "type": 'object',
+                                                                "properties": {
+                                                                  "productId": {
+                                                                    "type": 'string',
+                                                                    "format": 'uuid'
+                                                                  },
+                                                                  "name": {
+                                                                    "type": 'string'
+                                                                  },
+                                                                  "description": {
+                                                                    "type": 'string'
+                                                                  },
+                                                                  "price": {
+                                                                    "type": 'number'
+                                                                  },
+                                                                  "currency": {
+                                                                    "type": 'string',
+                                                                    "enum": %w[
+                                                                      USD
+                                                                      EUR
+                                                                      GBP
+                                                                    ]
+                                                                  }
                                                                 },
-                                                                "name": {
-                                                                  "type": 'string'
-                                                                },
-                                                                "description": {
-                                                                  "type": 'string'
-                                                                },
-                                                                "price": {
-                                                                  "type": 'number'
-                                                                },
-                                                                "currency": {
-                                                                  "type": 'string',
-                                                                  "enum": %w[
-                                                                    USD
-                                                                    EUR
-                                                                    GBP
-                                                                  ]
-                                                                }
+                                                                "required": %w[
+                                                                  productId
+                                                                  name
+                                                                  description
+                                                                  price
+                                                                  currency
+                                                                ]
                                                               }
                                                             },
                                                             "allOf": [

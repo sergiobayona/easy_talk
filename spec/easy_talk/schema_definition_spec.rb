@@ -22,25 +22,46 @@ RSpec.describe EasyTalk::SchemaDefinition do
     end
   end
 
-  describe 'composers' do
-    it 'adds a the OneOf keyword to the schema_definition composer node' do
-      subject.one_of('oneOf')
-      expect(schema_definition[:one_of]).to eq('oneOf')
+  describe 'with compositional keywords i.e. allOf, anyOf, oneOf...' do
+    it 'raises an error when the the argument is not a class that includes the EasyTalk::Model' do
+      expect { subject.all_of('allOf') }.to raise_error(ArgumentError, 'Invalid argument: allOf. Must be a class that includes EasyTalk::Model')
     end
 
-    it 'adds a the AllOf keyword to the schema_definition composer node' do
-      subject.all_of('allOf')
-      expect(schema_definition[:all_of]).to eq('allOf')
-    end
+    describe 'with a valid class' do
+      let(:model) do
+        Class.new do
+          include EasyTalk::Model
 
-    it 'adds a the AnyOf keyword to the schema_definition composer node' do
-      subject.any_of('anyOf')
-      expect(schema_definition[:any_of]).to eq('anyOf')
-    end
+          def self.name
+            'Model'
+          end
 
-    it 'adds a the Not keyword to the schema_definition composer node' do
-      subject.not('not')
-      expect(schema_definition[:not]).to eq('not')
+          define_schema do
+            property(:myprop, String, minimum: 1, maximum: 100)
+          end
+        end
+      end
+
+      it 'adds a reference to the model on the all_of node' do
+        subject.all_of(model)
+        expect(schema_definition[:all_of]).to eq([{ "$ref": model.ref_template }])
+      end
+
+      it 'adds a reference to the model on the any_of node' do
+        subject.any_of(model)
+        expect(schema_definition[:any_of]).to eq([{ "$ref": model.ref_template }])
+      end
+
+      it 'adds a reference to the model on the the one_of node' do
+        subject.one_of(model)
+        expect(schema_definition[:one_of]).to eq([{ "$ref": model.ref_template }])
+      end
+
+      it 'adds the referenced model to the defs node' do
+        property = model.schema_definition[:properties][:myprop]
+        subject.all_of(model)
+        expect(schema_definition[:defs]).to eq({ Model: { properties: { myprop: property }, required: [:myprop], type: 'object' } })
+      end
     end
   end
 
@@ -59,10 +80,6 @@ RSpec.describe EasyTalk::SchemaDefinition do
       subject.additional_properties(false)
       subject.unique_items(true)
       subject.const('Const')
-      subject.all_of('AllOf')
-      subject.any_of('AnyOf')
-      subject.one_of('OneOf')
-      subject.not('not')
       subject.content_media_type('ContentMediaType')
       subject.content_encoding('ContentEncoding')
 
@@ -81,10 +98,6 @@ RSpec.describe EasyTalk::SchemaDefinition do
       expect(schema_definition[:const]).to eq('Const')
       expect(schema_definition[:content_media_type]).to eq('ContentMediaType')
       expect(schema_definition[:content_encoding]).to eq('ContentEncoding')
-      expect(schema_definition[:all_of]).to eq('AllOf')
-      expect(schema_definition[:any_of]).to eq('AnyOf')
-      expect(schema_definition[:one_of]).to eq('OneOf')
-      expect(schema_definition[:not]).to eq('not')
     end
   end
 end

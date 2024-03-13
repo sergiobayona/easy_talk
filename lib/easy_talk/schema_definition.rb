@@ -32,5 +32,35 @@ module EasyTalk
       @schema_definition[:properties] ||= {}
       @schema_definition[:properties][name] = { type:, constraints: }
     end
+
+    def all_of(*models)
+      @schema_definition[:all_of] = process_models(models)
+    end
+
+    def one_of(*models)
+      @schema_definition[:one_of] = process_models(models)
+    end
+
+    def any_of(*models)
+      @schema_definition[:any_of] = process_models(models)
+    end
+
+    private
+
+    def process_models(models)
+      models.map do |model|
+        unless model.is_a?(Class) && model.included_modules.include?(EasyTalk::Model)
+          raise ArgumentError, "Invalid argument: #{model}. Must be a class that includes EasyTalk::Model"
+        end
+
+        insert_definition(model.name.to_sym, model.schema)
+        { "$ref": model.ref_template }
+      end
+    end
+
+    def insert_definition(name, schema)
+      @schema_definition[:defs] ||= {}
+      @schema_definition[:defs][name] = schema
+    end
   end
 end
