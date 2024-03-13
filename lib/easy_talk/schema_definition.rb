@@ -45,6 +45,10 @@ module EasyTalk
       @schema_definition[:any_of] = process_models(models)
     end
 
+    def not_schema(*models)
+      @schema_definition[:not] = process_models(models).first
+    end
+
     private
 
     def process_models(models)
