@@ -61,7 +61,8 @@ module EasyTalk
       when 'T::Private::Types::SimplePairUnion', 'T::Types::Union'
         build_union_property
       when 'T::Types::Simple'
-        Property.new(name, type.raw_type, constraints)
+        @type = type.raw_type
+        self
       else
         build_object_property
       end
