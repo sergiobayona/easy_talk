@@ -30,7 +30,7 @@ RSpec.describe EasyTalk::Builders::ObjectBuilder do
     it 'returns a json object with properties' do
       schema_definition = EasyTalk::SchemaDefinition.new(my_class, {})
       schema_definition.property(:name, String)
-      schema_definition.property(:age, Integer)
+      schema_definition.property(:age, Integer, minimum: 1, maximum: 100)
 
       builder = described_class.new(schema_definition).build
 
@@ -43,8 +43,8 @@ RSpec.describe EasyTalk::Builders::ObjectBuilder do
       expect(builder[:properties][:age].type).to eq(Integer)
       expect(builder[:properties][:name].name).to eq(:name)
       expect(builder[:properties][:age].name).to eq(:age)
-      expect(builder[:properties][:name].options).to eq({})
-      expect(builder[:properties][:age].options).to eq({})
+      expect(builder[:properties][:name].constraints).to eq({})
+      expect(builder[:properties][:age].constraints).to eq({ maximum: 100, minimum: 1 })
     end
   end
 end

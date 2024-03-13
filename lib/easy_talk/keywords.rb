@@ -8,6 +8,7 @@ module EasyTalk
     all_of
     any_of
     one_of
+    not
     property
     required
     items
