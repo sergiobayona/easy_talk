@@ -13,7 +13,7 @@ RSpec.describe EasyTalk::Builder do
   end
 
   it 'returns itself without errors' do
-    schema_definition = EasyTalk::SchemaDefinition.new(my_class, {})
+    schema_definition = EasyTalk::SchemaDefinition.new(:name)
     builder = described_class.new(schema_definition)
     expect(builder).to be_a(EasyTalk::Builder)
     expect(builder.schema).to eq({ type: 'object' })
@@ -22,7 +22,7 @@ RSpec.describe EasyTalk::Builder do
 
   context 'when building a schema' do
     it 'includes a title' do
-      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { title: 'Title' })
+      schema_definition = my_class.defined_schema
       builder = described_class.new(schema_definition).build_schema
       expect(builder).to eq({
                               title: 'Title',

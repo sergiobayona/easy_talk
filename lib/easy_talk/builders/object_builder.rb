@@ -22,8 +22,7 @@ module EasyTalk
       sig { params(schema_definition: EasyTalk::SchemaDefinition).void }
       def initialize(schema_definition)
         @schema_definition = schema_definition
-        @klass = schema_definition.klass
-        name = schema_definition.klass.name ? schema_definition.klass.name.to_sym : :klass
+        name = schema_definition.name ? schema_definition.name.to_sym : :klass
         @required_properties = []
         super(name, { type: 'object' }, options, VALID_OPTIONS)
       end
@@ -31,17 +30,14 @@ module EasyTalk
       private
 
       def properties_from_schema_definition(properties)
-        schema = properties.each_with_object({}) do |(property_name, options), hash|
+        properties.each_with_object({}) do |(property_name, options), hash|
           @required_properties << property_name unless options[:type].respond_to?(:nilable?) && options[:type].nilable?
           hash[property_name] = Property.new(property_name, options[:type], options[:constraints])
         end
-
-        EasyTalk.add_schema(klass.name.to_sym, schema)
-        schema
       end
 
       def options
-        @options = @schema_definition.to_h
+        @options = @schema_definition.definition.dup
         @options[:properties] = properties_from_schema_definition(properties)
         @options[:required] = @required_properties
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
@@ -49,7 +45,7 @@ module EasyTalk
       end
 
       def properties
-        @schema_definition.to_h[:properties] || {}
+        @schema_definition.definition[:properties] || {}
       end
     end
   end
