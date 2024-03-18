@@ -37,7 +37,7 @@ module EasyTalk
       end
 
       def options
-        @options = @schema_definition.definition.dup
+        @options = @schema_definition.schema.dup
         @options[:properties] = properties_from_schema_definition(properties)
         @options[:required] = @required_properties
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
@@ -45,7 +45,7 @@ module EasyTalk
       end
 
       def properties
-        @schema_definition.definition[:properties] || {}
+        @schema_definition.schema[:properties] || {}
       end
     end
   end
