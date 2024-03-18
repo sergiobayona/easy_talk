@@ -54,7 +54,7 @@ module EasyTalk
       builder&.new(name, constraints)&.build
     end
 
-    def build_with_type
+    def build_with_type # rubocop:disable Metrics/MethodLength
       case type.class.name
       when 'T::Types::TypedArray'
         build_array_property

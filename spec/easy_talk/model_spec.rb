@@ -14,7 +14,7 @@ RSpec.describe EasyTalk::Model do
   end
 
   it "returns nil because it hasn't been defined" do
-    expect(user.schema_definition).to eq(nil)
+    expect(user.schema_definition).to eq({})
   end
 
   it 'does not inherit schema' do

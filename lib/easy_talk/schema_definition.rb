@@ -55,7 +55,7 @@ module EasyTalk
           raise ArgumentError, "Invalid argument: #{model}. Must be a class that includes EasyTalk::Model"
         end
 
-        insert_definition(model.name.to_sym, model.schema_definition.schema)
+        insert_definition(model.name.to_sym, model.schema)
         { "$ref": model.ref_template }
       end
     end

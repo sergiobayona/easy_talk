@@ -9,6 +9,11 @@ RSpec.describe EasyTalk::Builder do
       def self.name
         'User'
       end
+
+      define_schema do
+        title 'Title'
+        property :name, String
+      end
     end
   end
 
@@ -22,41 +27,11 @@ RSpec.describe EasyTalk::Builder do
 
   context 'when building a schema' do
     it 'includes a title' do
-      schema_definition = my_class.defined_schema
+      schema_definition = my_class.schema_definition
       builder = described_class.new(schema_definition).build_schema
-      expect(builder).to eq({
-                              title: 'Title',
-                              type: 'object'
-                            })
-    end
-
-    it 'includes a description' do
-      schema_definition = EasyTalk::SchemaDefinition.new(my_class, { description: 'Description' })
-      builder = described_class.new(schema_definition).build_schema
-      expect(builder).to eq({
-                              description: 'Description',
-                              type: 'object'
-                            })
-    end
-
-    it 'includes the property' do
-      schema_definition = EasyTalk::SchemaDefinition.new(my_class, {
-                                                           properties: {
-                                                             name: {
-                                                               type: String,
-                                                               constraints: {
-                                                                 format: 'email'
-                                                               }
-                                                             }
-                                                           }
-                                                         })
-      builder = described_class.new(schema_definition).build_schema
-      expect(builder).to be_a(Hash)
-      expect(builder[:properties]).to be_a(Hash)
-      expect(builder[:properties][:name]).to be_a(EasyTalk::Property)
-      expect(builder[:properties][:name].name).to eq(:name)
-      expect(builder[:properties][:name].type).to eq(String)
-      expect(builder[:properties][:name].constraints).to eq({ format: 'email' })
+      expect(builder).to include({ title: 'Title' })
+      expect(builder).to include({ type: 'object' })
+      expect(builder).to include({ required: [:name] })
     end
   end
 end

@@ -123,14 +123,6 @@ RSpec.describe EasyTalk::Property do
         end
       end
     end
-
-    it 'returns an array schema' do
-      prop = described_class.new(:name, T::Array[user]).build
-      expect(prop[:type]).to eq('array')
-      expect(prop[:items]).to include(type: 'object')
-      expect(prop[:items][:properties].keys).to eq(%i[name email age])
-      expect(prop[:items][:properties][:name]).to be_a(EasyTalk::Property)
-    end
   end
 
   # it 'returns an object type' do

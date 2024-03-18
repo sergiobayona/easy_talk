@@ -86,9 +86,18 @@ RSpec.describe EasyTalk::SchemaDefinition do
       end
 
       it 'adds the referenced model to the defs node' do
-        property = car.schema_definition.schema[:properties][:myprop]
+        property = car.schema[:properties][:myprop]
         model.schema_definition.all_of(car)
-        expect(model.schema_definition.schema[:defs]).to eq({ Car: { properties: { myprop: property } } })
+
+        expect(model.schema_definition.schema[:defs]).to eq({
+                                                              Car: {
+                                                                properties: {
+                                                                  myprop: property
+                                                                },
+                                                                required: [:myprop],
+                                                                type: 'object'
+                                                              }
+                                                            })
       end
     end
   end
