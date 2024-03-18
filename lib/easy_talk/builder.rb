@@ -7,7 +7,6 @@ module EasyTalk
   # The Builder class is responsible for building a schema for a class.
   class Builder
     extend T::Sig
-    OBJECT_KEYWORDS = %i[title description type properties additional_properties required].freeze
 
     sig { params(schema_definition: SchemaDefinition).void }
     # Initializes a new instance of the Builder class.
@@ -15,8 +14,6 @@ module EasyTalk
     # @param schema_definition [SchemaDefinition] The schema definition.
     def initialize(schema_definition)
       @schema_definition = schema_definition
-      @properties = {}
-      @required_properties = []
     end
 
     sig { returns(Hash) }
