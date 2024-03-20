@@ -9,8 +9,10 @@ module EasyTalk
       VALID_OPTIONS = {}.freeze
 
       # Initializes a new instance of the NullBuilder class.
-      sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
-      def initialize(name, options = {})
+      sig { params(context: T.untyped, name: Symbol).void }
+      def initialize(context, name)
+        options = {}
+        @context = context
         super(name, { type: 'null' }, options, VALID_OPTIONS)
       end
     end

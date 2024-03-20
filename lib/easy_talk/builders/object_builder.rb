@@ -30,9 +30,9 @@ module EasyTalk
       private
 
       def properties_from_schema_definition(properties)
-        properties.each_with_object({}) do |(property_name, options), hash|
+        properties.each_with_object({}) do |(property_name, options), context|
           @required_properties << property_name unless options[:type].respond_to?(:nilable?) && options[:type].nilable?
-          hash[property_name] = Property.new(property_name, options[:type], options[:constraints])
+          context[property_name] = Property.new(context, property_name, options[:type], options[:constraints])
         end
       end
 

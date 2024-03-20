@@ -10,6 +10,11 @@ require_relative 'builders/string_builder'
 require_relative 'builders/date_builder'
 require_relative 'builders/datetime_builder'
 require_relative 'builders/time_builder'
+require_relative 'builders/any_of_builder'
+require_relative 'builders/all_of_builder'
+require_relative 'builders/one_of_builder'
+require_relative 'builders/typed_array_builder'
+require_relative 'builders/union_builder'
 
 # frozen_string_literal: true
 
@@ -17,7 +22,7 @@ module EasyTalk
   # Property class for building a JSON schema property.
   class Property
     extend T::Sig
-    attr_reader :name, :type, :constraints
+    attr_reader :context, :name, :type, :constraints
 
     TYPE_TO_BUILDER = {
       'String' => Builders::StringBuilder,
@@ -28,17 +33,27 @@ module EasyTalk
       'NilClass' => Builders::NullBuilder,
       'Date' => Builders::DateBuilder,
       'DateTime' => Builders::DatetimeBuilder,
-      'Time' => Builders::TimeBuilder
+      'Time' => Builders::TimeBuilder,
+      'AnyOf' => Builders::AnyOfBuilder,
+      'AllOf' => Builders::AllOfBuilder,
+      'OneOf' => Builders::OneOfBuilder,
+      'Array' => Builders::ArrayBuilder,
+      'T::Types::TypedArray' => Builders::TypedArrayBuilder,
+      'T::Types::Union' => Builders::UnionBuilder
     }.freeze
 
     # Initializes a new instance of the Property class.
-    #
+    # @params context [Hash] The context of tree structure.
     # @param name [Symbol] The name of the property.
     # @param type [Object] The type of the property.
     # @param constraints [Hash] The property constraints.
     # @raise [ArgumentError] If the property type is missing.
-    sig { params(name: Symbol, type: T.any(String, Object), constraints: T::Hash[Symbol, T.untyped]).void }
-    def initialize(name, type = nil, constraints = {})
+    sig do
+      params(context: T.untyped, name: Symbol, type: T.any(String, Object),
+             constraints: T::Hash[Symbol, T.untyped]).void
+    end
+    def initialize(context, name, type = nil, constraints = {})
+      @context = context
       @name = name
       @type = type
       @constraints = constraints
@@ -46,51 +61,22 @@ module EasyTalk
     end
 
     def build
-      build_with_builder || build_with_type
-    end
+      return type.schema if type.respond_to?(:schema)
 
-    def build_with_builder
-      builder = TYPE_TO_BUILDER[type.name]
-      builder&.new(name, constraints)&.build
-    end
-
-    def build_with_type # rubocop:disable Metrics/MethodLength
-      case type.class.name
-      when 'T::Types::TypedArray'
-        build_array_property
-      when 'T::Private::Types::SimplePairUnion', 'T::Types::Union'
-        build_union_property
-      when 'T::Types::Simple'
+      if type.is_a?(T::Types::Simple)
         @type = type.raw_type
-        self
-      else
-        build_object_property
+        return self
       end
+
+      builder.new(context, name).build
     end
 
     def as_json(*_args)
       build.as_json
     end
 
-    private
-
-    def build_array_property
-      Builders::ArrayBuilder.new(name, type.type, constraints).build
-    end
-
-    def build_union_property
-      type.types.each_with_object({ anyOf: [] }) do |type, hash|
-        hash[:anyOf] << Property.new(name, type, constraints)
-      end
-    end
-
-    def build_object_property
-      case type.class
-      when Class
-        type.respond_to?(:schema) ? type.schema : { type: 'object' }
-      else
-        raise ArgumentError, "unsupported type: #{type.class.name}"
-      end
+    def builder
+      TYPE_TO_BUILDER[type.class.name] || TYPE_TO_BUILDER[type.name]
     end
   end
 end

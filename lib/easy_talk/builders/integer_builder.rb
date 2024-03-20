@@ -19,9 +19,10 @@ module EasyTalk
       }.freeze
 
       # Initializes a new instance of the IntegerBuilder class.
-      sig { params(name: Symbol, options: T::Hash[Symbol, T.nilable(T.any(String, Integer))]).void }
-      def initialize(name, options = {})
-        super(name, { type: 'integer' }, options, VALID_OPTIONS)
+      sig { params(context: T.untyped, name: Symbol).void }
+      def initialize(context, name)
+        constraints = context[name].constraints
+        super(name, { type: 'integer' }, constraints, VALID_OPTIONS)
       end
     end
   end
