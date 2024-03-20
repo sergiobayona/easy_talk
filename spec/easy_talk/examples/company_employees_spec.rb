@@ -35,7 +35,7 @@ RSpec.describe 'json for user model' do
         property :department, String
         property :hire_date, Date
         property :active, T::Boolean, default: true
-        property :address, T.nilable(T::Array[Address])
+        property :addresses, T.nilable(T::Array[Address])
       end
     end
 
@@ -83,7 +83,7 @@ RSpec.describe 'json for user model' do
                                                               "type": 'boolean',
                                                               "default": true
                                                             },
-                                                            "address": {
+                                                            "addresses": {
                                                               "anyOf": [
                                                                 {
                                                                   "type": 'array',

@@ -74,7 +74,8 @@ RSpec.describe 'Ticketing system' do
                                                                 "assignees": {
                                                                   "type": 'array',
                                                                   "items": {
-                                                                    "type": 'string'
+                                                                    "type": 'string',
+                                                                    "description": 'List of users assigned to the task'
                                                                   },
                                                                   "description": 'List of users assigned to the task'
                                                                 },
@@ -102,8 +103,7 @@ RSpec.describe 'Ticketing system' do
                                                                       "description": 'List of subtasks associated with the main task'
                                                                     },
                                                                     {
-                                                                      "type": 'null',
-                                                                      "description": 'List of subtasks associated with the main task'
+                                                                      "type": 'null'
                                                                     }
                                                                   ]
                                                                 },
@@ -112,13 +112,13 @@ RSpec.describe 'Ticketing system' do
                                                                     {
                                                                       "type": 'array',
                                                                       "items": {
-                                                                        "type": 'integer'
+                                                                        "type": 'integer',
+                                                                        "description": 'List of ticket IDs that this ticket depends on'
                                                                       },
                                                                       "description": 'List of ticket IDs that this ticket depends on'
                                                                     },
                                                                     {
-                                                                      "type": 'null',
-                                                                      "description": 'List of ticket IDs that this ticket depends on'
+                                                                      "type": 'null'
                                                                     }
                                                                   ]
                                                                 }

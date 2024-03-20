@@ -16,8 +16,9 @@ module EasyTalk
       }.freeze
 
       # Initializes a new instance of the ArrayBuilder class.
-      sig { params(name: Symbol, type: T.untyped, options: T::Hash[Symbol, T.untyped]).void }
-      def initialize(name, type, options = {})
+      sig { params(context: T.untyped, name: Symbol).void }
+      def initialize(context, name)
+        @context = context
         @inner_type = type.respond_to?(:raw_type) ? type.raw_type : type
         update_option_types
         super(name, { type: 'array' }, options, VALID_OPTIONS)
