@@ -69,8 +69,8 @@ RSpec.describe EasyTalk::Builders::NumberBuilder do
         expect(prop).to eq({ type: 'number', default: 18 })
       end
 
-      pending 'does not include the optional' do
-        prop = described_class.new(:age, optional: true).build
+      it 'does not include the optional' do
+        prop = described_class.new(:age).build
         expect(prop).to eq({ type: 'number' })
       end
     end

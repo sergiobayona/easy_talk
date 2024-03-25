@@ -90,15 +90,11 @@ module EasyTalk
       def define_schema(&block)
         raise ArgumentError, 'The class must have a name' unless name.present?
 
-        schema_definition
-        definition = SchemaDefinition.new(self, @schema_definition)
-        definition.instance_eval(&block)
-        @schema = Builder.new(definition).schema
+        @schema_definition = SchemaDefinition.new(name)
+        @schema_definition.instance_eval(&block)
+        @schema = Builder.new(@schema_definition).schema
       end
 
-      # Returns the schema definition.
-      # The schema_definition is a hash that contains the unvalidated schema definition for the model.
-      # It is then passed to the Builder.build_schema method to validate and compile the schema.
       def schema_definition
         @schema_definition ||= {}
       end
