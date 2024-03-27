@@ -5,10 +5,6 @@ module EasyTalk
     description
     type
     title
-    all_of
-    any_of
-    one_of
-    not
     property
     required
     items

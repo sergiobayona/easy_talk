@@ -5,7 +5,6 @@ require_relative 'builders/integer_builder'
 require_relative 'builders/number_builder'
 require_relative 'builders/boolean_builder'
 require_relative 'builders/null_builder'
-require_relative 'builders/array_builder'
 require_relative 'builders/string_builder'
 require_relative 'builders/date_builder'
 require_relative 'builders/datetime_builder'
@@ -37,7 +36,6 @@ module EasyTalk
       'AnyOf' => Builders::AnyOfBuilder,
       'AllOf' => Builders::AllOfBuilder,
       'OneOf' => Builders::OneOfBuilder,
-      'Array' => Builders::ArrayBuilder,
       'T::Types::TypedArray' => Builders::TypedArrayBuilder,
       'T::Types::Union' => Builders::UnionBuilder
     }.freeze

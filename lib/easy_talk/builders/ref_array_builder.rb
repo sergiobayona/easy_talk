@@ -6,13 +6,10 @@ module EasyTalk
   module Builders
     # Builder class for array properties.
     class RefArrayBuilder < BaseBuilder
-      # The `VALID_OPTIONS` constant is a hash that defines the valid options for an array property.
-      VALID_OPTIONS = {}.freeze
-
       # Initializes a new instance of the ArrayBuilder class.
       sig { params(name: Symbol).void }
       def initialize(name)
-        super(name, { type: 'array' }, options, VALID_OPTIONS)
+        super(name, { type: 'array' }, options, {})
       end
 
       private
