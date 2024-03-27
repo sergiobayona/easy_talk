@@ -4,7 +4,6 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
-    # Builder class for integer properties.
     class CompositionBuilder
       extend T::Sig
 
@@ -36,7 +35,7 @@ module EasyTalk
       end
 
       def schemas
-        @type.types.map { |type| type.raw_type.schema }
+        types.map { |type| type.respond_to?(:schema) ? type.schema : type.to_s }
       end
 
       def types

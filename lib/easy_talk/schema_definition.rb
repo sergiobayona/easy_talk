@@ -11,6 +11,9 @@ module EasyTalk
   # A SchemaDefinition instanace is the passed to the Builder.build_schema method to validate and compile the schema.
   class SchemaDefinition
     extend T::Sig
+    extend T::AnyOf
+    extend T::OneOf
+    extend T::AllOf
 
     attr_reader :name, :schema
 
@@ -29,40 +32,6 @@ module EasyTalk
     def property(name, type, **constraints)
       @schema[:properties] ||= {}
       @schema[:properties][name] = { type:, constraints: }
-    end
-
-    def all_of(*models)
-      @schema[:all_of] = process_models(models)
-    end
-
-    def one_of(*models)
-      @schema[:one_of] = process_models(models)
-    end
-
-    def any_of(*models)
-      @schema[:any_of] = process_models(models)
-    end
-
-    def not_schema(*models)
-      @schema[:not] = process_models(models).first
-    end
-
-    private
-
-    def process_models(models)
-      models.map do |model|
-        unless model.is_a?(Class) && model.included_modules.include?(EasyTalk::Model)
-          raise ArgumentError, "Invalid argument: #{model}. Must be a class that includes EasyTalk::Model"
-        end
-
-        insert_definition(model.name.to_sym, model.schema)
-        { "$ref": model.ref_template }
-      end
-    end
-
-    def insert_definition(name, model_schema)
-      @schema[:defs] ||= {}
-      @schema[:defs][name] = model_schema
     end
   end
 end

@@ -95,7 +95,6 @@ module EasyTalk
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
         @schema = Builder.new(@schema_definition).schema
-        CurrentContext.reset
         @schema
       end
 
