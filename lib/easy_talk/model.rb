@@ -6,6 +6,7 @@ require 'active_support/core_ext'
 require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
+require_relative 'current_context'
 require_relative 'builder'
 require_relative 'schema_definition'
 
@@ -90,9 +91,12 @@ module EasyTalk
       def define_schema(&block)
         raise ArgumentError, 'The class must have a name' unless name.present?
 
+        CurrentContext.model = self
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
         @schema = Builder.new(@schema_definition).schema
+        CurrentContext.reset
+        @schema
       end
 
       def schema_definition
