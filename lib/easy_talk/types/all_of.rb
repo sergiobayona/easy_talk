@@ -2,11 +2,10 @@ require_relative 'compositional_keyword'
 module EasyTalk
   module Types
     class AllOf
-      include CompositionalKeyword
+      attr_reader :types
 
       def initialize(*args)
         @types = args
-        insert_schemas
       end
 
       def self.name
