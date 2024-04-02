@@ -84,7 +84,10 @@ module EasyTalk
 
       # Returns the JSON schema for the model.
       def json_schema
-        @json_schema ||= schema.to_json
+        @json_schema ||= begin
+          schema = Builder.new(schema_definition).schema
+          schema.to_json
+        end
       end
 
       # Define the schema using the provided block.
@@ -94,8 +97,6 @@ module EasyTalk
         CurrentContext.model = self
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
-        @schema = Builder.new(@schema_definition).schema
-        @schema
       end
 
       def schema_definition
