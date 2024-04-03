@@ -1,5 +1,5 @@
 module EasyTalk
   class CurrentContext < ActiveSupport::CurrentAttributes
-    attribute :model
+    attribute :model, :schema_definitions
   end
 end

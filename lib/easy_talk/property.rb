@@ -59,13 +59,11 @@ module EasyTalk
     end
 
     def build
-      return type.schema if type.respond_to?(:schema)
-
       if type.is_a?(T::Types::Simple)
         @type = type.raw_type
         return self
       end
-
+      puts "builder: #{builder.inspect}"
       builder.new(context, name).build
     end
 

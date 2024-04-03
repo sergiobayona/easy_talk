@@ -21,6 +21,7 @@ module EasyTalk
 
       sig { params(schema_definition: EasyTalk::SchemaDefinition).void }
       def initialize(schema_definition)
+        binding.pry
         @schema_definition = schema_definition
         name = schema_definition.name ? schema_definition.name.to_sym : :klass
         @required_properties = []

@@ -54,7 +54,8 @@ RSpec.describe EasyTalk::Property do
   end
 
   describe 'with a union type' do
-    prop = described_class.new(:name, T.any(Integer, String)).build
+    context = { name: EasyTalk::Property.new({}, :name, T::AnyOf[Integer, String]) }
+    prop = described_class.new(context, :name, T::AnyOf[Integer, String]).build
     it "returns a schema with 'anyOf' property" do
       expect(prop.keys).to include(:anyOf)
       expect(prop[:anyOf].size).to eq(2)

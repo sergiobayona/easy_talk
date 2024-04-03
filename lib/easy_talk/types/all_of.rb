@@ -1,4 +1,3 @@
-require_relative 'compositional_keyword'
 module EasyTalk
   module Types
     class AllOf

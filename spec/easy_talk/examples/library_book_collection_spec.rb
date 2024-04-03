@@ -20,7 +20,7 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
       property :author, String, description: "The name of the book's author."
       property :ISBN, String, pattern: '^(\\d{3}-?\\d{10})$', description: 'The International Standard Book Number.'
       property :publicationYear, Integer, description: 'The year the book was published.'
-      not_schema(Magazine)
+      # not_schema(Magazine)
     end
   end
 

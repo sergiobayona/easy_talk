@@ -24,6 +24,7 @@ module EasyTalk
       end
 
       def build
+        binding.pry
         @context[@name] = {
           'type' => 'object',
           composer_keyword => schemas
@@ -35,7 +36,7 @@ module EasyTalk
       end
 
       def schemas
-        types.map { |type| type.respond_to?(:schema) ? type.schema : type.to_s }
+        types.map { |type| type.schema }
       end
 
       def types

@@ -1,4 +1,3 @@
-require_relative 'compositional_keyword'
 module EasyTalk
   module Types
     class OneOf
@@ -6,6 +5,7 @@ module EasyTalk
 
       def initialize(*args)
         @types = args
+        insert_schema
       end
 
       def self.name
@@ -14,6 +14,11 @@ module EasyTalk
 
       def name
         'OneOf'
+      end
+
+      def insert_schema
+        binding.pry
+        EasyTalk::CurrentContext.schema_definitions << self
       end
     end
   end

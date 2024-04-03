@@ -46,7 +46,7 @@ RSpec.describe 'Vehicle Registration System example' do
     include EasyTalk::Model
 
     define_schema do
-      all_of(VehicleIdentification, OwnerInfo, RegistrationDetails)
+      T::AllOf[VehicleIdentification, OwnerInfo, RegistrationDetails]
     end
   end
 

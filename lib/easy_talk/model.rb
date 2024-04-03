@@ -71,7 +71,7 @@ module EasyTalk
     # @see Builder
     module ClassMethods
       def schema
-        @schema ||= {}
+        @schema ||= Builder.new(schema_definition).schema
       end
 
       def inherits_schema?
@@ -95,6 +95,7 @@ module EasyTalk
         raise ArgumentError, 'The class must have a name' unless name.present?
 
         CurrentContext.model = self
+        CurrentContext.schema_definitions = []
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
       end

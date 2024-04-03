@@ -20,7 +20,7 @@ RSpec.describe 'Product catalog example' do
 
     define_schema do
       title 'Clothing Product'
-      all_of BaseProduct
+      T::AllOf[BaseProduct]
       property :size, String, enum: %w[XS S M L XL XXL]
       property :color, String
       property :material, String
@@ -29,6 +29,7 @@ RSpec.describe 'Product catalog example' do
 
   context 'json schema' do
     it 'returns a json schema for a payment object' do
+      puts ClothingProduct.json_schema
       expect(ClothingProduct.json_schema).to include_json({
                                                             "type": 'object',
                                                             "title": 'Clothing Product',

@@ -46,6 +46,7 @@ RSpec.describe 'json for user model' do
         property :employees, T::Array[Employee]
       end
 
+      puts company.json_schema
       expect(company.json_schema).to include_json({
                                                     "type": 'object',
                                                     "title": 'Company',
