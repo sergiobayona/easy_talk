@@ -1,29 +1,26 @@
 # frozen_string_literal: true
 
-require_relative 'base_array_builder'
-
 module EasyTalk
   module Builders
     # Builder class for array properties.
-    class TypedArrayBuilder < BaseArrayBuilder
-      sig { params(context: T.untyped, name: Symbol).void }
-      def initialize(context, name)
-        @name = name
-        @context = context
-        super(context, name)
+    class TypedArrayBuilder < BaseBuilder
+      VALID_OPTIONS = {
+        min_items: { type: Integer, key: :minItems },
+        max_items: { type: Integer, key: :maxItems },
+        unique_items: { type: T::Boolean, key: :uniqueItems },
+        enum: { type: T::Array[T.untyped], key: :enum },
+        const: { type: T::Array[T.untyped], key: :const }
+      }.freeze
+
+      attr_reader :type
+
+      sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
+      def initialize(name, type, constraints)
+        @type = type
+        super(name, { type: 'array' }, constraints, VALID_OPTIONS)
       end
 
       private
-
-      def type
-        @context[@name].type
-      end
-
-      def constraints
-        @context[@name].constraints
-      end
-
-      attr_reader :context
 
       # Modifies the schema to include the `items` property.
       #

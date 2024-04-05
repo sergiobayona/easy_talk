@@ -13,19 +13,16 @@ module EasyTalk
         'OneOfBuilder' => 'oneOf'
       }.freeze
 
-      sig do
-        params(context: T.untyped, name: Symbol).void
-      end
-      def initialize(context, name)
+      sig { params(name: Symbol, type: T.untyped, _constraints: Hash).void }
+      def initialize(name, type, _constraints)
         @composer_type = self.class.name.split('::').last
         @name = name
-        @type = context[name].type
-        @context = context.dup
+        @type = type
+        @context = {}
       end
 
       def build
-        binding.pry
-        @context[@name] = {
+        @context[@name.to_sym] = {
           'type' => 'object',
           composer_keyword => schemas
         }
@@ -36,11 +33,11 @@ module EasyTalk
       end
 
       def schemas
-        types.map { |type| type.schema }
+        items.map { |type| type.schema }
       end
 
-      def types
-        @type.types
+      def items
+        @type.items
       end
     end
   end

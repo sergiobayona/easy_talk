@@ -6,11 +6,11 @@ module EasyTalk
   module Builders
     # Base builder class for array-type properties.
     class UnionBuilder < BaseBuilder
-      sig { params(context: T.untyped, name: Symbol).void }
-      def initialize(context, name)
+      sig { params(name: Symbol, type: T.untyped).void }
+      def initialize(name, type)
         @name = name
-        @type = context[name].type
-        @context = context.dup
+        @type = type
+        @context = {}
       end
 
       def build

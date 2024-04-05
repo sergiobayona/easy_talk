@@ -15,9 +15,8 @@ module EasyTalk
         const: { type: T::Array[T.untyped], key: :const }
       }.freeze
 
-      sig { params(context: T.untyped, name: Symbol).void }
-      def initialize(context, name)
-        @context = context
+      sig { params(name: Symbol).void }
+      def initialize(name)
         super(name, { type: 'array' }, constraints, VALID_OPTIONS)
       end
 

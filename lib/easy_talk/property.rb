@@ -21,7 +21,7 @@ module EasyTalk
   # Property class for building a JSON schema property.
   class Property
     extend T::Sig
-    attr_reader :context, :name, :type, :constraints
+    attr_reader :name, :type, :constraints
 
     TYPE_TO_BUILDER = {
       'String' => Builders::StringBuilder,
@@ -33,25 +33,23 @@ module EasyTalk
       'Date' => Builders::DateBuilder,
       'DateTime' => Builders::DatetimeBuilder,
       'Time' => Builders::TimeBuilder,
-      'AnyOf' => Builders::AnyOfBuilder,
-      'AllOf' => Builders::AllOfBuilder,
-      'OneOf' => Builders::OneOfBuilder,
+      'anyOf' => Builders::AnyOfBuilder,
+      'allOf' => Builders::AllOfBuilder,
+      'oneOf' => Builders::OneOfBuilder,
       'T::Types::TypedArray' => Builders::TypedArrayBuilder,
       'T::Types::Union' => Builders::UnionBuilder
     }.freeze
 
     # Initializes a new instance of the Property class.
-    # @params context [Hash] The context of tree structure.
     # @param name [Symbol] The name of the property.
     # @param type [Object] The type of the property.
     # @param constraints [Hash] The property constraints.
     # @raise [ArgumentError] If the property type is missing.
     sig do
-      params(context: T.untyped, name: Symbol, type: T.any(String, Object),
+      params(name: Symbol, type: T.any(String, Object),
              constraints: T::Hash[Symbol, T.untyped]).void
     end
-    def initialize(context, name, type = nil, constraints = {})
-      @context = context
+    def initialize(name, type = nil, constraints = {})
       @name = name
       @type = type
       @constraints = constraints
@@ -63,8 +61,8 @@ module EasyTalk
         @type = type.raw_type
         return self
       end
-      puts "builder: #{builder.inspect}"
-      builder.new(context, name).build
+
+      builder.new(name, type, constraints).build
     end
 
     def as_json(*_args)
@@ -72,7 +70,7 @@ module EasyTalk
     end
 
     def builder
-      TYPE_TO_BUILDER[type.class.name] || TYPE_TO_BUILDER[type.name]
+      TYPE_TO_BUILDER[type.class.name.to_s] || TYPE_TO_BUILDER[type.name.to_s]
     end
   end
 end

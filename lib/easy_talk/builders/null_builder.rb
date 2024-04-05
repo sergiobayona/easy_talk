@@ -7,9 +7,8 @@ module EasyTalk
     # builder class for Null properties.
     class NullBuilder < BaseBuilder
       # Initializes a new instance of the NullBuilder class.
-      sig { params(context: T.untyped, name: Symbol).void }
-      def initialize(context, name)
-        @context = context
+      sig { params(name: Symbol, _type: T.untyped, _constraints: Hash).void }
+      def initialize(name, _type, _constraints)
         super(name, { type: 'null' }, {}, {})
       end
     end

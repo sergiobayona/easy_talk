@@ -18,9 +18,8 @@ module EasyTalk
       }.freeze
 
       # Initializes a new instance of the NumberBuilder class.
-      sig { params(context: T.untyped, name: Symbol).void }
-      def initialize(context, name)
-        constraints = context[name].constraints
+      sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
+      def initialize(name, _type, constraints)
         super(name, { type: 'number' }, constraints, VALID_OPTIONS)
       end
     end
