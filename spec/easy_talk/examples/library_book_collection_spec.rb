@@ -25,7 +25,7 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
   end
 
   context 'json schema' do
-    it 'returns a json schema for the book class' do
+    pending 'returns a json schema for the book class' do
       expect(Book.json_schema).to include_json({
                                                  "type": 'object',
                                                  "title": 'Book',

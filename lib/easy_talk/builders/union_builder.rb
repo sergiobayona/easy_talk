@@ -6,22 +6,23 @@ module EasyTalk
   module Builders
     # Base builder class for array-type properties.
     class UnionBuilder < BaseBuilder
-      sig { params(name: Symbol, type: T.untyped).void }
-      def initialize(name, type)
+      sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
+      def initialize(name, type, constraints)
         @name = name
         @type = type
-        @context = {}
+        @constraints = constraints
       end
 
       def build
-        @context[@name] = {
+        context = {}
+        context[@name] = {
           'anyOf' => schemas
         }
       end
 
       def schemas
         types.map do |type|
-          Property.new(@context, @name, type).build
+          Property.new(@name, type, @constraints).build
         end
       end
 

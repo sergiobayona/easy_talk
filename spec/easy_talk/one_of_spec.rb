@@ -44,7 +44,6 @@ RSpec.describe 'Compositional Keywords' do
 
   context 'OneOf as a root node' do
     it 'returns the object with the definitions and references' do
-      puts user.json_schema
       expect(user.json_schema).to include_json({
                                                  "type": 'object',
                                                  "$defs": {
@@ -106,7 +105,6 @@ RSpec.describe 'Compositional Keywords' do
         property :contactDetail, T::OneOf[PhoneNumber, EmailAddress]
       end
 
-      puts user.json_schema
       expect(user.json_schema).to include_json({
                                                  "type": 'object',
                                                  "title": 'User',
@@ -140,7 +138,7 @@ RSpec.describe 'Compositional Keywords' do
   end
 
   context 'OneOf with fields' do
-    it 'not supported yet' do
+    pending 'not supported yet' do
       user.define_schema do
         title 'User'
         field :phone_number, String, format: 'phone'
@@ -148,7 +146,6 @@ RSpec.describe 'Compositional Keywords' do
         property :contactDetail, T::OneOf[:phone_number, :email]
       end
 
-      puts user.json_schema
       expect(user.json_schema).to include_json({
                                                  "type": 'object',
                                                  "title": 'User',

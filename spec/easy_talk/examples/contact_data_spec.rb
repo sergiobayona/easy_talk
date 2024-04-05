@@ -30,7 +30,6 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
 
   context 'json schema' do
     it 'returns a json schema for the book class' do
-      puts Contact.json_schema
       expect(Contact.json_schema).to include_json({
                                                     "type": 'object',
                                                     "title": 'Contact Info',

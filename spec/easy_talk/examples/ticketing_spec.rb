@@ -74,8 +74,7 @@ RSpec.describe 'Ticketing system' do
                                                                 "assignees": {
                                                                   "type": 'array',
                                                                   "items": {
-                                                                    "type": 'string',
-                                                                    "description": 'List of users assigned to the task'
+                                                                    "type": 'string'
                                                                   },
                                                                   "description": 'List of users assigned to the task'
                                                                 },
@@ -112,8 +111,7 @@ RSpec.describe 'Ticketing system' do
                                                                     {
                                                                       "type": 'array',
                                                                       "items": {
-                                                                        "type": 'integer',
-                                                                        "description": 'List of ticket IDs that this ticket depends on'
+                                                                        "type": 'integer'
                                                                       },
                                                                       "description": 'List of ticket IDs that this ticket depends on'
                                                                     },

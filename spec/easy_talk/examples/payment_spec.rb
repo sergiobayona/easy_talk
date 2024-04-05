@@ -51,7 +51,6 @@ RSpec.describe 'Payment object example' do
 
   context 'json schema' do
     it 'returns a json schema for a payment object' do
-      puts Payment.json_schema
       expect(Payment.json_schema).to include_json({
                                                     "title": 'Payment',
                                                     "description": 'Payment info',

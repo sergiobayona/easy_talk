@@ -13,12 +13,6 @@ RSpec.describe 'json for user model' do
     end
   end
 
-  describe '.schema_definition' do
-    it 'returns the schema definition' do
-      expect(user.json_schema).to include_json({})
-    end
-  end
-
   describe '.json_schema' do
     class Phone
       def self.name

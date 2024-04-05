@@ -95,7 +95,6 @@ module EasyTalk
         raise ArgumentError, 'The class must have a name' unless name.present?
 
         CurrentContext.model = self
-        CurrentContext.schema_definitions = []
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
       end

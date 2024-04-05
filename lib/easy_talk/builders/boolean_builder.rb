@@ -15,7 +15,7 @@ module EasyTalk
         default: { type: T::Boolean, key: :default }
       }.freeze
 
-      sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
+      sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
       def initialize(name, _type, constraints)
         super(name, { type: 'boolean' }, constraints, VALID_OPTIONS)
       end

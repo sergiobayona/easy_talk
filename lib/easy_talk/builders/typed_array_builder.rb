@@ -28,7 +28,7 @@ module EasyTalk
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def schema
         super.tap do |schema|
-          schema[:items] = Property.new(context, @name, inner_type, constraints).build
+          schema[:items] = Property.new(@name, inner_type, {}).build
         end
       end
 

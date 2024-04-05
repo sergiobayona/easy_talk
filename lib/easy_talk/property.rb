@@ -62,7 +62,11 @@ module EasyTalk
         return self
       end
 
-      builder.new(name, type, constraints).build
+      if builder
+        builder.new(name, type, constraints).build
+      else
+        type.respond_to?(:schema) ? type.schema : 'object'
+      end
     end
 
     def as_json(*_args)
