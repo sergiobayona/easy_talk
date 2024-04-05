@@ -36,7 +36,8 @@ RSpec.describe 'Compositional Keywords' do
       end
 
       define_schema do
-        T::OneOf[SomeModel, AnotherModel]
+        property :name, String
+        compose T::OneOf[SomeModel, AnotherModel]
       end
     end
   end
@@ -70,7 +71,7 @@ RSpec.describe 'Compositional Keywords' do
                                                      ]
                                                    }
                                                  },
-                                                 "OneOf": [
+                                                 "oneOf": [
                                                    {
                                                      "$ref": '#/$defs/SomeModel'
                                                    },

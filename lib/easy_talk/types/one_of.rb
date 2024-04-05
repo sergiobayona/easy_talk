@@ -1,24 +1,13 @@
+require_relative 'base_composer'
 module EasyTalk
   module Types
-    class OneOf
-      attr_reader :types
-
-      def initialize(*args)
-        @types = args
-        insert_schema
-      end
-
+    class OneOf < BaseComposer
       def self.name
-        'OneOf'
+        :oneOf
       end
 
       def name
-        'OneOf'
-      end
-
-      def insert_schema
-        binding.pry
-        EasyTalk::CurrentContext.schema_definitions << self
+        :oneOf
       end
     end
   end

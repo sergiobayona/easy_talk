@@ -1,18 +1,13 @@
+require_relative 'base_composer'
 module EasyTalk
   module Types
-    class AnyOf
-      attr_reader :types
-
-      def initialize(*args)
-        @types = args
-      end
-
+    class AnyOf < BaseComposer
       def self.name
-        'AnyOf'
+        :anyOf
       end
 
       def name
-        'AnyOf'
+        :anyOf
       end
     end
   end

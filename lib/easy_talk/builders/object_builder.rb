@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'subschema_builder'
 module EasyTalk
   module Builders
     # Builder class for json schema objects.
@@ -14,7 +13,7 @@ module EasyTalk
         additional_properties: { type: T::Boolean, key: :additionalProperties },
         subschemas: { type: T::Array[T.untyped], key: :subschemas },
         required: { type: T::Array[Symbol], key: :required },
-        defs: { type: T::Hash[Symbol, T.untyped], key: :$defs },
+        defs: { type: T.untyped, key: :$defs },
         allOf: { type: T.untyped, key: :allOf },
         anyOf: { type: T.untyped, key: :anyOf },
         oneOf: { type: T.untyped, key: :oneOf },
@@ -44,7 +43,11 @@ module EasyTalk
           definitions = subschema.items.each_with_object({}) do |item, hash|
             hash[item.name] = item.schema
           end
-          schema[subschema.name] = { "$defs": definitions }
+          schema[:defs] = definitions
+          references = subschema.items.map do |item|
+            { '$ref': item.ref_template }
+          end
+          schema[subschema.name] = references
         end
       end
 

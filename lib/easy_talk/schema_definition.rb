@@ -28,6 +28,11 @@ module EasyTalk
       end
     end
 
+    def compose(*subschemas)
+      @schema[:subschemas] ||= []
+      @schema[:subschemas] += subschemas
+    end
+
     sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
     def property(name, type, **constraints)
       @schema[:properties] ||= {}
