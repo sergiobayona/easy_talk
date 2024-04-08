@@ -19,7 +19,7 @@ module EasyTalk
 
       # Initializes a new instance of the NumberBuilder class.
       sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
-      def initialize(name, _type, constraints)
+      def initialize(name, _type = nil, constraints = {})
         super(name, { type: 'number' }, constraints, VALID_OPTIONS)
       end
     end

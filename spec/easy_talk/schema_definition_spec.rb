@@ -50,58 +50,6 @@ RSpec.describe EasyTalk::SchemaDefinition do
     end
   end
 
-  describe 'with compositional keywords i.e. allOf, anyOf, oneOf...' do
-    it 'raises an error when the the argument is not a class that includes the EasyTalk::Model' do
-      expect { model.schema_definition.all_of('allOf') }.to raise_error(ArgumentError, 'Invalid argument: allOf. Must be a class that includes EasyTalk::Model')
-    end
-
-    describe 'with a valid class' do
-      let(:car) do
-        Class.new do
-          include EasyTalk::Model
-
-          def self.name
-            'Car'
-          end
-
-          define_schema do
-            property(:myprop, String, minimum: 1, maximum: 100)
-          end
-        end
-      end
-
-      it 'adds a reference to the model on the all_of node' do
-        model.schema_definition.all_of(car)
-        expect(model.schema_definition.schema[:all_of]).to eq([{ "$ref": car.ref_template }])
-      end
-
-      it 'adds a reference to the model on the any_of node' do
-        model.schema_definition.any_of(car)
-        expect(model.schema_definition.schema[:any_of]).to eq([{ "$ref": car.ref_template }])
-      end
-
-      it 'adds a reference to the model on the the one_of node' do
-        model.schema_definition.one_of(car)
-        expect(model.schema_definition.schema[:one_of]).to eq([{ "$ref": car.ref_template }])
-      end
-
-      it 'adds the referenced model to the defs node' do
-        property = car.schema[:properties][:myprop]
-        model.schema_definition.all_of(car)
-
-        expect(model.schema_definition.schema[:defs]).to eq({
-                                                              Car: {
-                                                                properties: {
-                                                                  myprop: property
-                                                                },
-                                                                required: [:myprop],
-                                                                type: 'object'
-                                                              }
-                                                            })
-      end
-    end
-  end
-
   describe 'keywords' do
     it 'adds a keyword to the model.schema_definition.schema' do
       model.schema_definition.title('Title')

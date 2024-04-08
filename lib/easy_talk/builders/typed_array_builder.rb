@@ -15,8 +15,10 @@ module EasyTalk
       attr_reader :type
 
       sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
-      def initialize(name, type, constraints)
+      def initialize(name, type, constraints = {})
+        @name = name
         @type = type
+        update_option_types
         super(name, { type: 'array' }, constraints, VALID_OPTIONS)
       end
 
@@ -33,13 +35,9 @@ module EasyTalk
       end
 
       def inner_type
-        if type.is_a?(T::Types::TypedArray)
-          type.type.raw_type
-        elsif type.is_a?(T::Types::Union)
-          type.types.each do |t|
-            return t.type.raw_type
-          end
-        end
+        return unless type.is_a?(T::Types::TypedArray)
+
+        type.type.raw_type
       end
 
       sig { void }

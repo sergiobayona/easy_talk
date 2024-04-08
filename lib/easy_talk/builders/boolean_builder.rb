@@ -16,7 +16,7 @@ module EasyTalk
       }.freeze
 
       sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
-      def initialize(name, _type, constraints)
+      def initialize(name, _type = nil, constraints = {})
         super(name, { type: 'boolean' }, constraints, VALID_OPTIONS)
       end
     end

@@ -5,17 +5,18 @@ require_relative 'base_builder'
 module EasyTalk
   module Builders
     # Base builder class for array-type properties.
-    class UnionBuilder < BaseBuilder
+    class UnionBuilder
+      extend T::Sig
       sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
       def initialize(name, type, constraints)
         @name = name
         @type = type
         @constraints = constraints
+        @context = {}
       end
 
       def build
-        context = {}
-        context[@name] = {
+        @context[@name] = {
           'anyOf' => schemas
         }
       end
