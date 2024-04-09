@@ -45,13 +45,12 @@ RSpec.describe 'Payment object example' do
       title 'Payment'
       description 'Payment info'
       property :PaymentMethod, String, enum: %w[CreditCard Paypal BankTransfer]
-      property :Details, T.any(CreditCard, Paypal, BankTransfer)
+      property :Details, T::AnyOf[CreditCard, Paypal, BankTransfer]
     end
   end
 
   context 'json schema' do
     it 'returns a json schema for a payment object' do
-      puts Payment.json_schema
       expect(Payment.json_schema).to include_json({
                                                     "title": 'Payment',
                                                     "description": 'Payment info',

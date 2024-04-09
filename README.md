@@ -84,7 +84,71 @@ Simply include the `EasyTalk::Model` module in your Ruby class, define the schem
 
 ## Schema Definition
 
-In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property as a string, the type, which can be a generic Ruby type or a [Sorbet type](https://sorbet.org/docs/stdlib-generics), and a hash of constraints as options.
+In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property as a symbol, the type, which can be a generic Ruby type or a [Sorbet type](https://sorbet.org/docs/stdlib-generics), and a hash of constraints as options.
+
+## Property Constraints
+
+Property constraints are type-dependent. Refer to the [CONSTRAINTS.md](Constraints) file for a list of constraints supported by the JSON Schema generator.
+
+
+## Schema Composition
+
+EasyTalk supports schema composition. You can define a schema for a nested object by defining a new class and including the `EasyTalk::Model` module. You can then reference the nested schema in the parent schema using the following special types:
+
+T::OneOf[Model1, Model2, ...] - The property must match at least one of the specified schemas.
+T::AnyOf[Model1, Model2, ...] - The property can match any of the specified schemas.
+T::AllOf[Model1, Model2, ...] - The property must match all of the specified schemas.
+
+Here is an example where we define a schema for a payment object that can be a credit card, a PayPal account, or a bank transfer. The first three classes represent the schemas for the different payment methods. The `Payment` class represents the schema for the payment object where the `Details` property can be any of the payment method schemas.
+
+```ruby
+  class CreditCard
+    include EasyTalk::Model
+
+    define_schema do
+      property :CardNumber, String
+      property :CardType, String, enum: %w[Visa MasterCard AmericanExpress]
+      property :CardExpMonth, Integer, minimum: 1, maximum: 12
+      property :CardExpYear, Integer, minimum: Date.today.year, maximum: Date.today.year + 10
+      property :CardCVV, String, pattern: '^[0-9]{3,4}$'
+      additional_properties false
+    end
+  end
+
+  class Paypal
+    include EasyTalk::Model
+
+    define_schema do
+      property :PaypalEmail, String, format: 'email'
+      property :PaypalPasswordEncrypted, String
+      additional_properties false
+    end
+  end
+
+  class BankTransfer
+    include EasyTalk::Model
+
+    define_schema do
+      property :BankName, String
+      property :AccountNumber, String
+      property :RoutingNumber, String
+      property :AccountType, String, enum: %w[Checking Savings]
+      additional_properties false
+    end
+  end
+
+  class Payment
+    include EasyTalk::Model
+
+    define_schema do
+      title 'Payment'
+      description 'Payment info'
+      property :PaymentMethod, String, enum: %w[CreditCard Paypal BankTransfer]
+      property :Details, T::AnyOf[CreditCard, Paypal, BankTransfer]
+    end
+  end
+
+```
 
 ## Type Checking and Schema Constraints
 

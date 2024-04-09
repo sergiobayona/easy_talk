@@ -84,6 +84,7 @@ DEPENDENCIES
   rake (~> 13.1)
   rspec (~> 3.13)
   rspec-json_expectations (~> 2.1)
+  rspec-mocks
   rubocop (~> 1.60)
 
 BUNDLED WITH

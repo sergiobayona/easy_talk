@@ -13,12 +13,6 @@ RSpec.describe 'json for user model' do
     end
   end
 
-  describe '.schema_definition' do
-    it 'returns the schema definition' do
-      expect(user.json_schema).to include_json({})
-    end
-  end
-
   describe '.json_schema' do
     class Phone
       def self.name
@@ -45,7 +39,7 @@ RSpec.describe 'json for user model' do
         property :phones, T::Array[Phone], title: 'Phones', min_items: 1
         property :tags, T::Array[String], title: 'Tags'
       end
-      puts user.json_schema
+
       expect(user.json_schema).to include_json({
                                                  "title": 'User',
                                                  "description": 'A user of the system',

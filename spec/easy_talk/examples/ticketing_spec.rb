@@ -102,8 +102,7 @@ RSpec.describe 'Ticketing system' do
                                                                       "description": 'List of subtasks associated with the main task'
                                                                     },
                                                                     {
-                                                                      "type": 'null',
-                                                                      "description": 'List of subtasks associated with the main task'
+                                                                      "type": 'null'
                                                                     }
                                                                   ]
                                                                 },
@@ -117,8 +116,7 @@ RSpec.describe 'Ticketing system' do
                                                                       "description": 'List of ticket IDs that this ticket depends on'
                                                                     },
                                                                     {
-                                                                      "type": 'null',
-                                                                      "description": 'List of ticket IDs that this ticket depends on'
+                                                                      "type": 'null'
                                                                     }
                                                                   ]
                                                                 }
