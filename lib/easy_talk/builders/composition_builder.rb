@@ -4,6 +4,7 @@ require_relative 'base_builder'
 
 module EasyTalk
   module Builders
+    # This class represents a builder for composing JSON schemas using the "allOf", "anyOf", or "oneOf" keywords.
     class CompositionBuilder
       extend T::Sig
 
@@ -13,8 +14,12 @@ module EasyTalk
         'OneOfBuilder' => 'oneOf'
       }.freeze
 
-      # This class represents a builder for composing JSON schemas using the "allOf", "anyOf", or "oneOf" keywords.
       sig { params(name: Symbol, type: T.untyped, _constraints: Hash).void }
+      # Initializes a new instance of the CompositionBuilder class.
+      #
+      # @param name [Symbol] The name of the composition.
+      # @param type [Class] The type of the composition.
+      # @param _constraints [Hash] The constraints for the composition (not used in this method).
       def initialize(name, type, _constraints)
         @composer_type = self.class.name.split('::').last
         @name = name
