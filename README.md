@@ -95,9 +95,9 @@ Property constraints are type-dependent. Refer to the [CONSTRAINTS.md](CONSTRAIN
 
 EasyTalk supports schema composition. You can define a schema for a nested object by defining a new class and including the `EasyTalk::Model` module. You can then reference the nested schema in the parent schema using the following special types:
 
-T::OneOf[Model1, Model2, ...] - The property must match at least one of the specified schemas.
-T::AnyOf[Model1, Model2, ...] - The property can match any of the specified schemas.
-T::AllOf[Model1, Model2, ...] - The property must match all of the specified schemas.
+- T::OneOf[Model1, Model2, ...] - The property must match at least one of the specified schemas.
+- T::AnyOf[Model1, Model2, ...] - The property can match any of the specified schemas.
+- T::AllOf[Model1, Model2, ...] - The property must match all of the specified schemas.
 
 Here is an example where we define a schema for a payment object that can be a credit card, a PayPal account, or a bank transfer. The first three classes represent the schemas for the different payment methods. The `Payment` class represents the schema for the payment object where the `Details` property can be any of the payment method schemas.
 
