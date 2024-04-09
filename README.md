@@ -88,7 +88,7 @@ In the example above, the `define_schema` method is used to add a description an
 
 ## Property Constraints
 
-Property constraints are type-dependent. Refer to the [CONSTRAINTS.md](Constraints) file for a list of constraints supported by the JSON Schema generator.
+Property constraints are type-dependent. Refer to the [CONSTRAINTS.md](CONSTRAINTS.md) file for a list of constraints supported by the JSON Schema generator.
 
 
 ## Schema Composition
