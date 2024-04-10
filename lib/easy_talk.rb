@@ -3,7 +3,6 @@
 # The EasyTalk module is the main namespace for the gem.
 module EasyTalk
   class Error < StandardError; end
-  require 'pry-byebug'
   require 'sorbet-runtime'
   require 'easy_talk/sorbet_extension'
   require 'easy_talk/types/any_of'
