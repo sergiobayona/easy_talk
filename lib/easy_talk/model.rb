@@ -85,7 +85,7 @@ module EasyTalk
       def json_schema
         @json_schema ||= begin
           schema = Builder.new(schema_definition).schema
-          schema.to_json
+          schema.as_json
         end
       end
 
