@@ -1,27 +1,35 @@
 PATH
   remote: .
   specs:
-    easy_talk (0.1.3)
-      activesupport (~> 6.0)
+    easy_talk (0.1.4)
+      activesupport (~> 7.0)
       json-schema (~> 4)
-      sorbet-runtime
+      sorbet-runtime (~> 0.5)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (6.1.7.6)
+    activesupport (7.1.3.2)
+      base64
+      bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
+      connection_pool (>= 2.2.5)
+      drb
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
+      mutex_m
       tzinfo (~> 2.0)
-      zeitwerk (~> 2.3)
     addressable (2.8.6)
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
+    base64 (0.2.0)
+    bigdecimal (3.1.7)
     byebug (11.1.3)
     coderay (1.1.3)
     concurrent-ruby (1.2.3)
+    connection_pool (2.4.1)
     diff-lcs (1.5.1)
+    drb (2.2.1)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     json (2.7.1)
@@ -30,6 +38,7 @@ GEM
     language_server-protocol (3.17.0.3)
     method_source (1.0.0)
     minitest (5.22.2)
+    mutex_m (0.2.0)
     parallel (1.24.0)
     parser (3.3.0.5)
       ast (~> 2.4.1)
@@ -78,7 +87,6 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
-    zeitwerk (2.6.13)
 
 PLATFORMS
   arm64-darwin-23

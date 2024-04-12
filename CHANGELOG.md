@@ -1,3 +1,6 @@
+## [0.1.4] - 2024-04-12
+- Bumped activesupport gem version.
+
 ## [0.1.3] - 2024-04-12
 - Bumped json-schema gem version.
 
