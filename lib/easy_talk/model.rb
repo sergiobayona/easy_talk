@@ -6,6 +6,7 @@ require 'active_support/core_ext'
 require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
+require 'json-schema'
 require_relative 'builder'
 require_relative 'schema_definition'
 
@@ -79,6 +80,10 @@ module EasyTalk
 
       def ref_template
         "#/$defs/#{name}"
+      end
+
+      def validate_json(json)
+        JSON::Validator.validate(json_schema, json)
       end
 
       # Returns the JSON schema for the model.

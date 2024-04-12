@@ -34,4 +34,26 @@ RSpec.describe EasyTalk::Model do
       expect(user.schema_definition).to be_a(EasyTalk::SchemaDefinition)
     end
   end
+
+  describe 'validating a JSON object' do
+    it 'validates the JSON object against the schema' do
+      user.define_schema do
+        title 'User'
+        property :name, String
+        property :age, Integer
+      end
+
+      expect(user.validate_json({ name: 'John', age: 21 })).to eq(true)
+    end
+
+    it 'fails validation of the JSON object against the schema' do
+      user.define_schema do
+        title 'User'
+        property :name, String
+        property :age, Integer
+      end
+
+      expect(user.validate_json({ name: 'John', age: '21' })).to eq(false)
+    end
+  end
 end
