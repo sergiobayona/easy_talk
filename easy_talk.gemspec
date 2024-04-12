@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'activesupport', '~> 6.0'
-  spec.add_dependency 'json-schema', '~> 2.8'
+  spec.add_dependency 'json-schema', '~> 4'
   spec.add_dependency 'sorbet-runtime'
   spec.add_development_dependency 'pry-byebug', '>= 3.10.1'
   spec.add_development_dependency 'rake', '~> 13.1'
