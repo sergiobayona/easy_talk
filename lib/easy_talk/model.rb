@@ -82,6 +82,10 @@ module EasyTalk
         "#/$defs/#{name}"
       end
 
+      def function_name
+        name.humanize.titleize
+      end
+
       def validate_json(json)
         JSON::Validator.validate(json_schema, json)
       end

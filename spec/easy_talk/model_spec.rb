@@ -17,6 +17,10 @@ RSpec.describe EasyTalk::Model do
     expect(user.schema_definition).to eq({})
   end
 
+  it "returns the function name 'User'" do
+    expect(user.function_name).to eq('User')
+  end
+
   it 'does not inherit schema' do
     expect(user.inherits_schema?).to eq(false)
   end
