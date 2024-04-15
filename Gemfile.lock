@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    easy_talk (0.1.4)
+    easy_talk (0.1.5)
       activesupport (~> 7.0)
       json-schema (~> 4)
       sorbet-runtime (~> 0.5)
