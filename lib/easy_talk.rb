@@ -17,12 +17,4 @@ module EasyTalk
 
   class UnsupportedTypeError < ArgumentError; end
   class UnsupportedConstraintError < ArgumentError; end
-
-  def self.schemas
-    @schemas ||= {}
-  end
-
-  def self.add_schema(ref, schema)
-    schemas[ref] = schema
-  end
 end

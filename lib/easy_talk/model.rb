@@ -24,6 +24,21 @@ module EasyTalk
       end
     end
 
+    def initialize(properties = {})
+      properties.each do |key, value|
+        instance_variable_set("@#{key}", value)
+        self.class.class_eval { attr_reader key }
+      end
+    end
+
+    def valid?
+      self.class.validate_json(properties)
+    end
+
+    def properties
+      as_json.symbolize_keys!
+    end
+
     # This module provides extension methods for subclasses with schema definitions.
     module SubclassExtension
       # Returns true if the class inherits a schema.
