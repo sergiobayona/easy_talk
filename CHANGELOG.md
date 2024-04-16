@@ -1,3 +1,9 @@
+## [0.1.6] - 2024-04-16
+- model instance takes a hash and converts it to attribute methods.
+
+## [0.1.5] - 2024-04-15
+- Added helper method for generating an openai function.
+
 ## [0.1.4] - 2024-04-12
 - Bumped activesupport gem version.
 
