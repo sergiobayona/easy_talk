@@ -1,3 +1,6 @@
+## [0.1.7] - 2024-04-16
+- general cleanup and refactoring.
+
 ## [0.1.6] - 2024-04-16
 - model instance takes a hash and converts it to attribute methods.
 
