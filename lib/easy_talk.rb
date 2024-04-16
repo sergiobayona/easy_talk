@@ -9,7 +9,6 @@ module EasyTalk
   require 'easy_talk/types/all_of'
   require 'easy_talk/types/one_of'
   require 'easy_talk/model'
-  require 'easy_talk/builder'
   require 'easy_talk/property'
   require 'easy_talk/schema_definition'
   require 'easy_talk/tools/function_builder'

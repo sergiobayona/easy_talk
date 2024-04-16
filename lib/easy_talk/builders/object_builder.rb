@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'base_builder'
+
 module EasyTalk
   module Builders
     # Builder class for json schema objects.

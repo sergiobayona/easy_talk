@@ -7,7 +7,7 @@ require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
 require 'json-schema'
-require_relative 'builder'
+require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 
 module EasyTalk
@@ -86,7 +86,7 @@ module EasyTalk
     # @see Builder
     module ClassMethods
       def schema
-        @schema ||= Builder.new(schema_definition).schema
+        @schema ||= build_schema(schema_definition)
       end
 
       def inherits_schema?
@@ -107,10 +107,7 @@ module EasyTalk
 
       # Returns the JSON schema for the model.
       def json_schema
-        @json_schema ||= begin
-          schema = Builder.new(schema_definition).schema
-          schema.as_json
-        end
+        @json_schema ||= schema.as_json
       end
 
       # Define the schema using the provided block.
@@ -123,6 +120,10 @@ module EasyTalk
 
       def schema_definition
         @schema_definition ||= {}
+      end
+
+      def build_schema(schema_definition)
+        Builders::ObjectBuilder.new(schema_definition).build
       end
     end
   end
