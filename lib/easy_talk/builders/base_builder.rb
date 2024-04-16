@@ -53,6 +53,10 @@ module EasyTalk
           obj[value[:key]] = T.let(@options[key], value[:type])
         end
       end
+
+      def self.collection_type?
+        false
+      end
     end
   end
 end
