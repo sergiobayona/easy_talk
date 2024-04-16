@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-require_relative 'base_builder'
+require_relative 'collection_helpers'
 
 module EasyTalk
   module Builders
     # Base builder class for array-type properties.
     class UnionBuilder
+      extend CollectionHelpers
       extend T::Sig
+
       sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
       def initialize(name, type, constraints)
         @name = name

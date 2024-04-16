@@ -1,9 +1,14 @@
 # frozen_string_literal: true
 
+require_relative 'collection_helpers'
+
 module EasyTalk
   module Builders
     # Builder class for array properties.
     class TypedArrayBuilder < BaseBuilder
+      extend CollectionHelpers
+      extend T::Sig
+
       VALID_OPTIONS = {
         min_items: { type: Integer, key: :minItems },
         max_items: { type: Integer, key: :maxItems },

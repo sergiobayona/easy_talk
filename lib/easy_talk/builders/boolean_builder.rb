@@ -11,12 +11,11 @@ module EasyTalk
       # VALID_OPTIONS defines the valid options for a boolean property.
       VALID_OPTIONS = {
         enum: { type: T::Array[T::Boolean], key: :enum },
-        const: { type: T::Boolean, key: :const },
         default: { type: T::Boolean, key: :default }
       }.freeze
 
-      sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
-      def initialize(name, _type = nil, constraints = {})
+      sig { params(name: Symbol, constraints: Hash).void }
+      def initialize(name, constraints = {})
         super(name, { type: 'boolean' }, constraints, VALID_OPTIONS)
       end
     end

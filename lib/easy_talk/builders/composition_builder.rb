@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'base_builder'
+require_relative 'collection_helpers'
 
 module EasyTalk
   module Builders
     # This class represents a builder for composing JSON schemas using the "allOf", "anyOf", or "oneOf" keywords.
     class CompositionBuilder
+      extend CollectionHelpers
       extend T::Sig
 
       COMPOSER_TO_KEYWORD = {

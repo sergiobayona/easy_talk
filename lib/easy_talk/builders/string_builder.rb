@@ -18,8 +18,8 @@ module EasyTalk
         default: { type: String, key: :default }
       }.freeze
 
-      sig { params(name: Symbol, _type: T.untyped, constraints: Hash).void }
-      def initialize(name, _type = nil, constraints = {})
+      sig { params(name: Symbol, constraints: Hash).void }
+      def initialize(name, constraints = {})
         super(name, { type: 'string' }, constraints, VALID_OPTIONS)
       end
     end

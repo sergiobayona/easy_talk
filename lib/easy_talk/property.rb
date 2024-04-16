@@ -57,13 +57,12 @@ module EasyTalk
     end
 
     def build
-      if type.is_a?(T::Types::Simple)
-        @type = type.raw_type
-        return self
-      end
-
       if builder
-        builder.new(name, type, constraints).build
+        if builder.collection_type?
+          builder.new(name, type, constraints).build
+        else
+          builder.new(name, constraints).build
+        end
       else
         type.respond_to?(:schema) ? type.schema : 'object'
       end
