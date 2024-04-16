@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EasyTalk
   module Builders
     # Base builder class for array-type properties.
