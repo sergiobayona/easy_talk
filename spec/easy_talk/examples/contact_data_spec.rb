@@ -3,71 +3,94 @@
 require 'spec_helper'
 
 RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
-  class PhoneContact
-    include EasyTalk::Model
+  let(:phone_contact) do
+    Class.new do
+      include EasyTalk::Model
 
-    define_schema do
-      property :phone_number, String, pattern: '^\\+?[1-9]\\d{1,14}$'
+      def self.name
+        'PhoneContact'
+      end
+
+      define_schema do
+        property :phone_number, String, pattern: '^\\+?[1-9]\\d{1,14}$'
+      end
     end
   end
 
-  class EmailContact
-    include EasyTalk::Model
+  let(:email_contact) do
+    Class.new do
+      include EasyTalk::Model
 
-    define_schema do
-      property :email, String, format: 'email'
+      def self.name
+        'EmailContact'
+      end
+
+      define_schema do
+        property :email, String, format: 'email'
+      end
     end
   end
 
-  class Contact
-    include EasyTalk::Model
+  let(:contact) do
+    Class.new do
+      include EasyTalk::Model
 
-    define_schema do
+      def self.name
+        'Contact'
+      end
+    end
+  end
+
+  let(:expected_json_schema) do
+    {
+      "type": 'object',
+      "title": 'Contact Info',
+      "properties": {
+        "contact": {
+          "type": 'object',
+          "oneOf": [
+            {
+              "type": 'object',
+              "properties": {
+                "phone_number": {
+                  "type": 'string',
+                  "pattern": '^\\+?[1-9]\\d{1,14}$'
+                }
+              },
+              "required": [
+                'phone_number'
+              ]
+            },
+            {
+              "type": 'object',
+              "properties": {
+                "email": {
+                  "type": 'string',
+                  "format": 'email'
+                }
+              },
+              "required": [
+                'email'
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        'contact'
+      ]
+    }
+  end
+
+  it 'returns a json schema for the book class' do
+    stub_const('PhoneContact', phone_contact)
+    stub_const('EmailContact', email_contact)
+    stub_const('Contact', contact)
+
+    Contact.define_schema do
       title 'Contact Info'
       property :contact, T::OneOf[PhoneContact, EmailContact]
     end
-  end
-
-  context 'json schema' do
-    it 'returns a json schema for the book class' do
-      expect(Contact.json_schema).to include_json({
-                                                    "type": 'object',
-                                                    "title": 'Contact Info',
-                                                    "properties": {
-                                                      "contact": {
-                                                        "type": 'object',
-                                                        "oneOf": [
-                                                          {
-                                                            "type": 'object',
-                                                            "properties": {
-                                                              "phone_number": {
-                                                                "type": 'string',
-                                                                "pattern": '^\\+?[1-9]\\d{1,14}$'
-                                                              }
-                                                            },
-                                                            "required": [
-                                                              'phone_number'
-                                                            ]
-                                                          },
-                                                          {
-                                                            "type": 'object',
-                                                            "properties": {
-                                                              "email": {
-                                                                "type": 'string',
-                                                                "format": 'email'
-                                                              }
-                                                            },
-                                                            "required": [
-                                                              'email'
-                                                            ]
-                                                          }
-                                                        ]
-                                                      }
-                                                    },
-                                                    "required": [
-                                                      'contact'
-                                                    ]
-                                                  })
-    end
+    expect(Contact.json_schema).to include_json(expected_json_schema)
   end
 end

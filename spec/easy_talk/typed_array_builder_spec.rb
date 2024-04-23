@@ -94,14 +94,6 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
         prop = described_class.new(:name, T::Array[Integer], const: [1]).build
         expect(prop).to eq({ type: 'array', const: [1], items: { type: 'integer' } })
       end
-
-      context 'with invalid constraint value' do
-        it 'raises an error' do # unclear why this does not throw an error
-          expect do
-            described_class.new(:name, T::Array[Integer], enum: %w[one two three]).build
-          end.to raise_error(TypeError)
-        end
-      end
     end
   end
 
@@ -111,6 +103,14 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
         described_class.new(:name, String, invalid: 'key').build
       end.to raise_error(ArgumentError,
                          'Unknown key: :invalid. Valid keys are: :title, :description, :min_items, :max_items, :unique_items, :enum, :const')
+    end
+  end
+
+  context 'with invalid constraint value' do
+    it 'raises an error' do
+      expect do
+        described_class.new(:name, T::Array[Integer], enum: %w[one two three]).build
+      end.to raise_error(TypeError, 'Invalid type for enum')
     end
   end
 end

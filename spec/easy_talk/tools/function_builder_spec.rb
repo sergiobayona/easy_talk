@@ -18,8 +18,8 @@ RSpec.describe EasyTalk::Tools::FunctionBuilder do
   end
 
   describe '.build' do
-    it 'returns a hash with the function type and function details' do
-      expect(described_class.new(model)).to include_json(
+    let(:expected_json) do
+      {
         type: 'function',
         function: {
           name: 'Mymodel',
@@ -33,7 +33,11 @@ RSpec.describe EasyTalk::Tools::FunctionBuilder do
             required: %w[name age]
           }
         }
-      )
+      }
+    end
+
+    it 'returns a hash with the function type and function details' do
+      expect(described_class.new(model)).to include_json(expected_json)
     end
   end
 end

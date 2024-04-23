@@ -13,9 +13,13 @@ RSpec.describe 'json for user model' do
     end
   end
 
-  describe '.json_schema' do
-    class Address
+  let(:address) do
+    Class.new do
       include EasyTalk::Model
+
+      def self.name
+        'Address'
+      end
 
       define_schema do
         property :street, String
@@ -24,115 +28,130 @@ RSpec.describe 'json for user model' do
         property :zip, String, pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
       end
     end
+  end
 
-    class Employee
+  let(:employee) do
+    Class.new do
       include EasyTalk::Model
-      define_schema do
-        title 'Employee'
-        description 'Company employee'
-        property :name, String, title: 'Full Name'
-        property :gender, String, enum: %w[male female other]
-        property :department, String
-        property :hire_date, Date
-        property :active, T::Boolean, default: true
-        property :addresses, T.nilable(T::Array[Address])
+
+      def self.name
+        'Employee'
       end
     end
+  end
 
-    it 'enhances the schema using the provided block' do
-      company.define_schema do
-        title 'Company'
-        property :name, String
-        property :employees, T::Array[Employee]
-      end
+  let(:expected_json_schema) do
+    {
+      "type": 'object',
+      "title": 'Company',
+      "properties": {
+        "name": {
+          "type": 'string'
+        },
+        "employees": {
+          "type": 'array',
+          "items": {
+            "type": 'object',
+            "title": 'Employee',
+            "description": 'Company employee',
+            "properties": {
+              "name": {
+                "type": 'string',
+                "title": 'Full Name'
+              },
+              "gender": {
+                "type": 'string',
+                "enum": %w[
+                  male
+                  female
+                  other
+                ]
+              },
+              "department": {
+                "type": 'string'
+              },
+              "hire_date": {
+                "type": 'string',
+                "format": 'date'
+              },
+              "active": {
+                "type": 'boolean',
+                "default": true
+              },
+              "addresses": {
+                "anyOf": [
+                  {
+                    "type": 'array',
+                    "items": {
+                      "type": 'object',
+                      "properties": {
+                        "street": {
+                          "type": 'string'
+                        },
+                        "city": {
+                          "type": 'string'
+                        },
+                        "state": {
+                          "type": 'string'
+                        },
+                        "zip": {
+                          "type": 'string',
+                          "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
+                        }
+                      },
+                      "required": %w[
+                        street
+                        city
+                        state
+                        zip
+                      ]
+                    }
+                  },
+                  {
+                    "type": 'null'
+                  }
+                ]
+              }
+            },
+            "required": %w[
+              name
+              gender
+              department
+              hire_date
+              active
+            ]
+          }
+        }
+      },
+      "required": %w[
+        name
+        employees
+      ]
+    }
+  end
 
-      expect(company.json_schema).to include_json({
-                                                    "type": 'object',
-                                                    "title": 'Company',
-                                                    "properties": {
-                                                      "name": {
-                                                        "type": 'string'
-                                                      },
-                                                      "employees": {
-                                                        "type": 'array',
-                                                        "items": {
-                                                          "type": 'object',
-                                                          "title": 'Employee',
-                                                          "description": 'Company employee',
-                                                          "properties": {
-                                                            "name": {
-                                                              "type": 'string',
-                                                              "title": 'Full Name'
-                                                            },
-                                                            "gender": {
-                                                              "type": 'string',
-                                                              "enum": %w[
-                                                                male
-                                                                female
-                                                                other
-                                                              ]
-                                                            },
-                                                            "department": {
-                                                              "type": 'string'
-                                                            },
-                                                            "hire_date": {
-                                                              "type": 'string',
-                                                              "format": 'date'
-                                                            },
-                                                            "active": {
-                                                              "type": 'boolean',
-                                                              "default": true
-                                                            },
-                                                            "addresses": {
-                                                              "anyOf": [
-                                                                {
-                                                                  "type": 'array',
-                                                                  "items": {
-                                                                    "type": 'object',
-                                                                    "properties": {
-                                                                      "street": {
-                                                                        "type": 'string'
-                                                                      },
-                                                                      "city": {
-                                                                        "type": 'string'
-                                                                      },
-                                                                      "state": {
-                                                                        "type": 'string'
-                                                                      },
-                                                                      "zip": {
-                                                                        "type": 'string',
-                                                                        "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
-                                                                      }
-                                                                    },
-                                                                    "required": %w[
-                                                                      street
-                                                                      city
-                                                                      state
-                                                                      zip
-                                                                    ]
-                                                                  }
-                                                                },
-                                                                {
-                                                                  "type": 'null'
-                                                                }
-                                                              ]
-                                                            }
-                                                          },
-                                                          "required": %w[
-                                                            name
-                                                            gender
-                                                            department
-                                                            hire_date
-                                                            active
-                                                          ]
-                                                        }
-                                                      }
-                                                    },
-                                                    "required": %w[
-                                                      name
-                                                      employees
-                                                    ]
-                                                  })
+  it 'enhances the schema using the provided block' do
+    stub_const('Address', address)
+    stub_const('Employee', employee)
+    stub_const('Company', company)
+
+    Employee.define_schema do
+      title 'Employee'
+      description 'Company employee'
+      property :name, String, title: 'Full Name'
+      property :gender, String, enum: %w[male female other]
+      property :department, String
+      property :hire_date, Date
+      property :active, T::Boolean, default: true
+      property :addresses, T.nilable(T::Array[Address])
     end
+
+    Company.define_schema do
+      title 'Company'
+      property :name, String
+      property :employees, T::Array[Employee]
+    end
+
+    expect(company.json_schema).to include_json(expected_json_schema)
   end
 end
