@@ -8,7 +8,7 @@ module EasyTalk
     class ObjectBuilder < BaseBuilder
       extend T::Sig
 
-      attr_reader :klass, :schema
+      attr_reader :schema
 
       VALID_OPTIONS = {
         properties: { type: T::Hash[Symbol, T.untyped], key: :properties },
