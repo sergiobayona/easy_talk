@@ -94,34 +94,23 @@ RSpec.describe EasyTalk::Property do
     end
   end
 
-  context 'array with simple class schema' do
-    class CustomClass; end
+  # unsure if this should be supported
+  context 'with a plain class as the array item' do
+    let(:custom_class) do
+      Class.new do
+        def self.name
+          'CustomClass'
+        end
+      end
+    end
 
     pending 'returns an array of custom class type' do
-      prop = described_class.new(:name, T::Array[CustomClass]).build
+      prop = described_class.new(:name, T::Array[custom_class]).build
       expect(prop).to eq(type: 'array', items: { type: 'object' })
     end
   end
 
-  context 'array with custom class that has a schema defined' do
-    let(:user) do
-      Class.new do
-        include EasyTalk::Model
-
-        def self.name
-          'User'
-        end
-
-        define_schema do
-          property :name, String
-          property :email, String, format: 'email'
-          property :age, Integer
-        end
-      end
-    end
-  end
-
-  context 'as_json' do
+  context 'when calling as_json' do
     it 'returns a json schema' do
       prop = described_class.new(:name, String).as_json
       expect(prop).to include_json(type: 'string')
