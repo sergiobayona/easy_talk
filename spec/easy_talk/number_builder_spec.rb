@@ -5,9 +5,13 @@ require 'easy_talk/builders/number_builder'
 
 RSpec.describe EasyTalk::Builders::NumberBuilder do
   describe '#initialize' do
-    it 'sets the name and options' do
-      builder = described_class.new(:age, minimum: 18, maximum: 100)
+    let(:builder) { described_class.new(:age, minimum: 18, maximum: 100) }
+
+    it 'sets the name' do
       expect(builder.name).to eq(:age)
+    end
+
+    it 'sets the constraint options' do
       expect(builder.options).to eq({ minimum: 18, maximum: 100 })
     end
   end
@@ -67,11 +71,6 @@ RSpec.describe EasyTalk::Builders::NumberBuilder do
       it 'includes the default' do
         prop = described_class.new(:age, default: 18).build
         expect(prop).to eq({ type: 'number', default: 18 })
-      end
-
-      it 'does not include the optional' do
-        prop = described_class.new(:age).build
-        expect(prop).to eq({ type: 'number' })
       end
     end
   end

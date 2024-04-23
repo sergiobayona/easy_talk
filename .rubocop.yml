@@ -1,5 +1,17 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
+
 AllCops:
   TargetRubyVersion: 3.2
+  
+RSpec/FilePath:
+  SpecSuffixOnly: true
+
+RSpec/ExampleLength:
+  Max: 10
+  Exclude:
+    - 'spec/easy_talk/examples/**/*'
 
 Metrics/BlockLength:
   Exclude:
@@ -12,3 +24,7 @@ Lint/ConstantDefinitionInBlock:
 Layout/LineLength:
   Exclude:
     - 'spec/**/*'
+  
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/easy_talk/examples/**/*'

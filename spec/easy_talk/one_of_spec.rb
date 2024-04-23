@@ -2,28 +2,32 @@
 
 require 'spec_helper'
 
-RSpec.describe 'Compositional Keywords' do
-  class SomeModel
-    include EasyTalk::Model
+RSpec.describe EasyTalk::Types::OneOf do
+  let(:phone_number) do
+    Class.new do
+      include EasyTalk::Model
 
-    def self.name
-      'SomeModel'
-    end
+      def self.name
+        'PhoneNumber'
+      end
 
-    define_schema do
-      property :name, String
+      define_schema do
+        property :phone_number, String, format: 'phone'
+      end
     end
   end
 
-  class AnotherModel
-    include EasyTalk::Model
+  let(:email_address) do
+    Class.new do
+      include EasyTalk::Model
 
-    def self.name
-      'AnotherModel'
-    end
+      def self.name
+        'EmailAddress'
+      end
 
-    define_schema do
-      property :number, Integer
+      define_schema do
+        property :email, String, format: 'email'
+      end
     end
   end
 
@@ -34,110 +38,125 @@ RSpec.describe 'Compositional Keywords' do
       def self.name
         'User'
       end
-
-      define_schema do
-        property :name, String
-        compose T::OneOf[SomeModel, AnotherModel]
-      end
     end
   end
 
-  context 'OneOf as a root node' do
+  context 'with OneOf as a root node' do
+    let(:expected_json_schema) do
+      {
+        "type": 'object',
+        "$defs": {
+          "PhoneNumber": {
+            "type": 'object',
+            "properties": {
+              "phone_number": {
+                "type": 'string',
+                "format": 'phone'
+              }
+            }
+          },
+          "EmailAddress": {
+            "type": 'object',
+            "properties": {
+              "email": {
+                "type": 'string',
+                "format": 'email'
+              }
+            }
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": '#/$defs/PhoneNumber'
+          },
+          {
+            "$ref": '#/$defs/EmailAddress'
+          }
+        ]
+      }
+    end
+
     it 'returns the object with the definitions and references' do
-      expect(user.json_schema).to include_json({
-                                                 "type": 'object',
-                                                 "$defs": {
-                                                   "SomeModel": {
-                                                     "type": 'object',
-                                                     "properties": {
-                                                       "name": {
-                                                         "type": 'string'
-                                                       }
-                                                     },
-                                                     "required": [
-                                                       'name'
-                                                     ]
-                                                   },
-                                                   "AnotherModel": {
-                                                     "type": 'object',
-                                                     "properties": {
-                                                       "number": {
-                                                         "type": 'integer'
-                                                       }
-                                                     },
-                                                     "required": [
-                                                       'number'
-                                                     ]
-                                                   }
-                                                 },
-                                                 "oneOf": [
-                                                   {
-                                                     "$ref": '#/$defs/SomeModel'
-                                                   },
-                                                   {
-                                                     "$ref": '#/$defs/AnotherModel'
-                                                   }
-                                                 ]
-                                               })
+      stub_const('PhoneNumber', phone_number)
+      stub_const('EmailAddress', email_address)
+
+      user.define_schema do
+        property :name, String
+        compose T::OneOf[PhoneNumber, EmailAddress]
+      end
+      expect(user.json_schema).to include_json(expected_json_schema)
     end
   end
 
-  context 'OneOf within a model property' do
-    class PhoneNumber
-      include EasyTalk::Model
-
-      define_schema do
-        property :phone_number, String, format: 'phone'
-      end
-    end
-
-    class EmailAddress
-      include EasyTalk::Model
-
-      define_schema do
-        property :email, String, format: 'email'
-      end
+  context 'with OneOf within a model property' do
+    let(:expected_json_schema) do
+      {
+        "type": 'object',
+        "title": 'User',
+        "properties": {
+          "contactDetail": {
+            "oneOf": [
+              {
+                "type": 'object',
+                "properties": {
+                  "phone_number": {
+                    "type": 'string',
+                    "format": 'phone'
+                  }
+                }
+              },
+              {
+                "type": 'object',
+                "properties": {
+                  "email": {
+                    "type": 'string',
+                    "format": 'email'
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "required": ['contactDetail']
+      }
     end
 
     it 'not supported yet' do
+      stub_const('PhoneNumber', phone_number)
+      stub_const('EmailAddress', email_address)
+
       user.define_schema do
         title 'User'
         property :contactDetail, T::OneOf[PhoneNumber, EmailAddress]
       end
 
-      expect(user.json_schema).to include_json({
-                                                 "type": 'object',
-                                                 "title": 'User',
-                                                 "properties": {
-                                                   "contactDetail": {
-                                                     "oneOf": [
-                                                       {
-                                                         "type": 'object',
-                                                         "properties": {
-                                                           "phone_number": {
-                                                             "type": 'string',
-                                                             "format": 'phone'
-                                                           }
-                                                         }
-                                                       },
-                                                       {
-                                                         "type": 'object',
-                                                         "properties": {
-                                                           "email": {
-                                                             "type": 'string',
-                                                             "format": 'email'
-                                                           }
-                                                         }
-                                                       }
-                                                     ]
-                                                   }
-                                                 },
-                                                 "required": ['contactDetail']
-                                               })
+      expect(user.json_schema).to include_json(expected_json_schema)
     end
   end
 
-  context 'OneOf with fields' do
+  context 'with the `field` keyword' do
+    let(:expected_schema) do
+      {
+        "type": 'object',
+        "title": 'User',
+        "properties": {
+          "contactDetail": {
+            "oneOf": [
+              {
+                "type": 'string',
+                "format": 'email'
+              },
+              {
+                "type": 'string',
+                "format": 'phone'
+              }
+            ]
+          }
+        },
+        "required": ['contactDetail']
+      }
+    end
+
     pending 'not supported yet' do
       user.define_schema do
         title 'User'
@@ -146,25 +165,7 @@ RSpec.describe 'Compositional Keywords' do
         property :contactDetail, T::OneOf[:phone_number, :email]
       end
 
-      expect(user.json_schema).to include_json({
-                                                 "type": 'object',
-                                                 "title": 'User',
-                                                 "properties": {
-                                                   "contactDetail": {
-                                                     "oneOf": [
-                                                       {
-                                                         "type": 'string',
-                                                         "format": 'email'
-                                                       },
-                                                       {
-                                                         "type": 'string',
-                                                         "format": 'phone'
-                                                       }
-                                                     ]
-                                                   }
-                                                 },
-                                                 "required": ['contactDetail']
-                                               })
+      expect(user.json_schema).to include_json(expected_schema)
     end
   end
 end
