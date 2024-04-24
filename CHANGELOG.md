@@ -1,3 +1,6 @@
+## [0.1.8] - 2024-04-24
+- mostly refactoring without changes to the public API.
+
 ## [0.1.7] - 2024-04-16
 - general cleanup and refactoring.
 
