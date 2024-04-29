@@ -1,3 +1,13 @@
+## [0.1.9] - 2024-04-29
+- Added the ability to describe an object schema withing the define_schema block. Example:
+```ruby
+...
+property :email, :object do
+    property :address, :string
+    property :verified, :boolean
+end
+```
+
 ## [0.1.8] - 2024-04-24
 - mostly refactoring without changes to the public API.
 
