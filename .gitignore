@@ -9,6 +9,8 @@
 /spec/reports/
 /tmp/
 easy_talk*.gem
+Gemfile.lock
+.ruby-version
 
 
 # rspec failure tracking

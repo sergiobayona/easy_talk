@@ -32,10 +32,19 @@ module EasyTalk
       @schema[:subschemas] += subschemas
     end
 
-    sig { params(name: Symbol, type: T.untyped, constraints: T.untyped).void }
-    def property(name, type, **constraints)
+    sig do
+      params(name: T.any(Symbol, String), type: T.untyped, constraints: T.untyped, blk: T.nilable(T.proc.void)).void
+    end
+    def property(name, type, **constraints, &blk)
       @schema[:properties] ||= {}
-      @schema[:properties][name] = { type:, constraints: }
+
+      if block_given?
+        property_schema = SchemaDefinition.new(name)
+        property_schema.instance_eval(&blk)
+        @schema[:properties][name] = property_schema
+      else
+        @schema[:properties][name] = { type:, constraints: }
+      end
     end
   end
 end

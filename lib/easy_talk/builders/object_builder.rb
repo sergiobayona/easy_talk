@@ -11,7 +11,7 @@ module EasyTalk
       attr_reader :schema
 
       VALID_OPTIONS = {
-        properties: { type: T::Hash[Symbol, T.untyped], key: :properties },
+        properties: { type: T::Hash[T.any(Symbol, String), T.untyped], key: :properties },
         additional_properties: { type: T::Boolean, key: :additionalProperties },
         subschemas: { type: T::Array[T.untyped], key: :subschemas },
         required: { type: T::Array[Symbol], key: :required },
@@ -33,41 +33,57 @@ module EasyTalk
 
       private
 
-      def properties_from_schema_definition(properties)
+      def properties_from_schema_definition
+        properties = schema.delete(:properties) || {}
         properties.each_with_object({}) do |(property_name, options), context|
-          @required_properties << property_name unless options[:type].respond_to?(:nilable?) && options[:type].nilable?
-          context[property_name] = Property.new(property_name, options[:type], options[:constraints])
+          add_required_property(property_name, options)
+          context[property_name] = build_property(property_name, options)
         end
       end
 
-      def subschemas_from_schema_definition(subschemas)
-        subschemas.each do |subschema|
-          definitions = subschema.items.each_with_object({}) do |item, hash|
-            hash[item.name] = item.schema
-          end
-          schema[:defs] = definitions
-          references = subschema.items.map do |item|
-            { '$ref': item.ref_template }
-          end
-          schema[subschema.name] = references
+      def add_required_property(property_name, options)
+        return unless options.is_a?(Hash) && !(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
+
+        @required_properties << property_name
+      end
+
+      def build_property(property_name, options)
+        if options.is_a?(EasyTalk::SchemaDefinition)
+          ObjectBuilder.new(options).build
+        else
+          Property.new(property_name, options[:type], options[:constraints])
         end
+      end
+
+      def subschemas_from_schema_definition
+        subschemas = schema.delete(:subschemas) || []
+        subschemas.each do |subschema|
+          add_definitions(subschema)
+          add_references(subschema)
+        end
+      end
+
+      def add_definitions(subschema)
+        definitions = subschema.items.each_with_object({}) do |item, hash|
+          hash[item.name] = item.schema
+        end
+        schema[:defs] = definitions
+      end
+
+      def add_references(subschema)
+        references = subschema.items.map do |item|
+          { '$ref': item.ref_template }
+        end
+        schema[subschema.name] = references
       end
 
       def options
-        subschemas_from_schema_definition(subschemas)
         @options = schema
-        @options[:properties] = properties_from_schema_definition(properties)
+        subschemas_from_schema_definition
+        @options[:properties] = properties_from_schema_definition
         @options[:required] = @required_properties
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
         @options
-      end
-
-      def properties
-        schema.delete(:properties) || {}
-      end
-
-      def subschemas
-        schema.delete(:subschemas) || []
       end
     end
   end
