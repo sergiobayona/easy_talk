@@ -1,3 +1,6 @@
+## [0.1.10] - 2024-04-29
+- Accept `:optional` key as constraint which excludes property from required node.
+- Spec fixes
 ## [0.1.9] - 2024-04-29
 - Added the ability to describe an object schema withing the define_schema block. Example:
 ```ruby
