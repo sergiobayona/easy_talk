@@ -15,7 +15,8 @@ module EasyTalk
         max_length: { type: Integer, key: :maxLength },
         enum: { type: T::Array[String], key: :enum },
         const: { type: String, key: :const },
-        default: { type: String, key: :default }
+        default: { type: String, key: :default },
+        optional: { type: T::Boolean, key: :optional }
       }.freeze
 
       sig { params(name: Symbol, constraints: Hash).void }

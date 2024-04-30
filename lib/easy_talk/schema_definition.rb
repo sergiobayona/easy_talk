@@ -16,8 +16,8 @@ module EasyTalk
 
     attr_reader :name, :schema
 
-    def initialize(name)
-      @schema = {}
+    def initialize(name, schema = {})
+      @schema = schema
       @name = name
     end
 
@@ -39,12 +39,16 @@ module EasyTalk
       @schema[:properties] ||= {}
 
       if block_given?
-        property_schema = SchemaDefinition.new(name)
+        property_schema = SchemaDefinition.new(name, constraints)
         property_schema.instance_eval(&blk)
         @schema[:properties][name] = property_schema
       else
         @schema[:properties][name] = { type:, constraints: }
       end
+    end
+
+    def optional?
+      @schema[:optional]
     end
   end
 end

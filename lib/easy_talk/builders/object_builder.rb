@@ -14,7 +14,7 @@ module EasyTalk
         properties: { type: T::Hash[T.any(Symbol, String), T.untyped], key: :properties },
         additional_properties: { type: T::Boolean, key: :additionalProperties },
         subschemas: { type: T::Array[T.untyped], key: :subschemas },
-        required: { type: T::Array[Symbol], key: :required },
+        required: { type: T::Array[T.any(Symbol, String)], key: :required },
         defs: { type: T.untyped, key: :$defs },
         allOf: { type: T.untyped, key: :allOf },
         anyOf: { type: T.untyped, key: :anyOf },
@@ -42,7 +42,9 @@ module EasyTalk
       end
 
       def add_required_property(property_name, options)
-        return unless options.is_a?(Hash) && !(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
+        return if options.is_a?(Hash) && !!(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
+
+        return if options.respond_to?(:optional?) && options.optional?
 
         @required_properties << property_name
       end

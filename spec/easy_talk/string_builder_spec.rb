@@ -57,7 +57,7 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
 
   context 'with invalid keys' do
     it 'raises an error' do
-      error_msg = 'Unknown key: :invalid. Valid keys are: :title, :description, :format, :pattern, :min_length, :max_length, :enum, :const, :default'
+      error_msg = 'Unknown key: :invalid. Valid keys are: :title, :description, :optional, :format, :pattern, :min_length, :max_length, :enum, :const, :default'
       expect do
         described_class.new(:name, invalid: 'invalid').build
       end.to raise_error(ArgumentError, error_msg)

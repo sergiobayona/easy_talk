@@ -101,6 +101,7 @@ RSpec.describe 'User routing table' do
           },
           "required": %w[
             phrases
+            parameter
             path
           ]
         },
@@ -141,6 +142,7 @@ RSpec.describe 'User routing table' do
           },
           "required": %w[
             phrases
+            parameter
             path
           ]
         },
@@ -181,15 +183,22 @@ RSpec.describe 'User routing table' do
           },
           "required": %w[
             phrases
+            parameters
             path
           ]
         }
-      }
+      },
+      "required": [
+        'user/:id',
+        'user/:email',
+        'user/:id/authenticate'
+      ]
     }
   end
 
   it 'returns a json schema for the book class' do
     stub_const('UserRouting', user_routing)
+    puts UserRouting.json_schema.to_json
     expect(UserRouting.json_schema).to include_json(expected_json_schema)
   end
 end
