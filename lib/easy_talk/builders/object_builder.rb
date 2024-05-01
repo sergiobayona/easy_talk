@@ -41,6 +41,7 @@ module EasyTalk
         end
       end
 
+      # rubocop:disable Style/DoubleNegation
       def add_required_property(property_name, options)
         return if options.is_a?(Hash) && !!(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
 
@@ -48,6 +49,7 @@ module EasyTalk
 
         @required_properties << property_name
       end
+      # rubocop:enable Style/DoubleNegation
 
       def build_property(property_name, options)
         if options.is_a?(EasyTalk::SchemaDefinition)

@@ -6,6 +6,7 @@ require 'active_support/core_ext'
 require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
+require 'active_model'
 require 'json-schema'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
@@ -20,42 +21,24 @@ module EasyTalk
     #
     # Example usage:
     #
-    #   class MyModel
-    #     extend ClassMethods
+    #   class Person
+    #     include EasyTalk::Model
     #
     #     define_schema do
-    #       # schema definition goes here
+    #       property :name, String, description: 'The person\'s name'
+    #       property :age, Integer, description: 'The person\'s age'
     #     end
     #   end
     #
-    #   MyModel.json_schema #=> returns the JSON schema for MyModel
-    #
-    #   MyModel.schema_definition #=> returns the unvalidated schema definition for MyModel
-    #
-    #   MyModel.ref_template #=> returns the reference template for MyModel
-    #
-    #   MyModel.inherits_schema? #=> returns false
-    #
-    #   MyModel.schema #=> returns the validated schema for MyModel
-    #
-    #   MyModel.schema_definition #=> returns the unvalidated schema definition for MyModel
-    #
-    #   MyModel.json_schema #=> returns the JSON schema for MyModel
+    #   Person.json_schema #=> returns the JSON schema for Person
+    #   jim = Person.new(name: 'Jim', age: 30)
+    #   jim.valid? #=> returns true
     #
     # @see SchemaDefinition
     #
     def self.included(base)
+      base.include ActiveModel::API # Include ActiveModel::API in the class including EasyTalk::Model
       base.extend(ClassMethods)
-    end
-
-    # Initializes a new instance of the Model class.
-    #
-    # @param properties [Hash] The properties to set for the instance.
-    def initialize(properties = {})
-      properties.each do |key, value|
-        instance_variable_set("@#{key}", value)
-        self.class.class_eval { attr_reader key }
-      end
     end
 
     # Checks if the model is valid.
@@ -103,6 +86,14 @@ module EasyTalk
         name.humanize.titleize
       end
 
+      def properties
+        @properties ||= begin
+          return unless schema[:properties].present?
+
+          schema[:properties].keys.map(&:to_sym)
+        end
+      end
+
       # Validates the given JSON against the model's JSON schema.
       #
       # @param json [Hash] The JSON to validate.
@@ -127,6 +118,9 @@ module EasyTalk
 
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.instance_eval(&block)
+        attr_accessor(*properties)
+
+        @schema_defintion
       end
 
       # Returns the unvalidated schema definition for the model.
