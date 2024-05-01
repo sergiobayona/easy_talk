@@ -1,3 +1,6 @@
+## [0.2.0] - 2024-05-01
+- Added ActiveModel::API functionality to EasyTalk::Model module. That means you get all the benefits of ActiveModel::API including attribute assignment, introspections, validations, translation (i18n) and more. See https://api.rubyonrails.org/classes/ActiveModel/API.html for more information.
+
 ## [0.1.10] - 2024-04-29
 - Accept `:optional` key as constraint which excludes property from required node.
 - Spec fixes
