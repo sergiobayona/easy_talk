@@ -12,7 +12,7 @@ RSpec.describe 'User routing table' do
       end
 
       define_schema do
-        property 'user/:id', :object do
+        property 'user_id', :object do
           description 'Get a user by id'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -27,7 +27,7 @@ RSpec.describe 'User routing table' do
           end
           property :path, String, description: 'The route path to get the user by id'
         end
-        property 'user/:email', :object do
+        property 'user_email', :object do
           description 'Get a user by email'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -42,7 +42,7 @@ RSpec.describe 'User routing table' do
           end
           property :path, String, const: 'user/:email', description: 'The route path to get the user by email'
         end
-        property 'user/:id/authenticate', :object do
+        property 'user_id_authenticate', :object do
           description 'Authenticate a user'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -65,7 +65,7 @@ RSpec.describe 'User routing table' do
     {
       "type": 'object',
       "properties": {
-        "user/:id": {
+        "user_id": {
           "type": 'object',
           "description": 'Get a user by id',
           "properties": {
@@ -105,7 +105,7 @@ RSpec.describe 'User routing table' do
             path
           ]
         },
-        "user/:email": {
+        "user_email": {
           "type": 'object',
           "description": 'Get a user by email',
           "properties": {
@@ -146,7 +146,7 @@ RSpec.describe 'User routing table' do
             path
           ]
         },
-        "user/:id/authenticate": {
+        "user_id_authenticate": {
           "type": 'object',
           "description": 'Authenticate a user',
           "properties": {
@@ -188,17 +188,16 @@ RSpec.describe 'User routing table' do
           ]
         }
       },
-      "required": [
-        'user/:id',
-        'user/:email',
-        'user/:id/authenticate'
+      "required": %w[
+        user_id
+        user_email
+        user_id_authenticate
       ]
     }
   end
 
   it 'returns a json schema for the book class' do
     stub_const('UserRouting', user_routing)
-    puts UserRouting.json_schema.to_json
     expect(UserRouting.json_schema).to include_json(expected_json_schema)
   end
 end

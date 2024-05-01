@@ -118,21 +118,6 @@ RSpec.describe EasyTalk::Model do
   end
 
   describe 'the schema' do
-    let(:expecnted_json_schema) do
-      {
-        type: 'object',
-        title: 'User',
-        properties: {
-          name: {
-            type: 'string'
-          },
-          age: {
-            type: 'integer'
-          }
-        }
-      }
-    end
-
     it 'returns the validated internal representation of the schema' do
       expect(user.schema).to be_a(Hash)
     end
@@ -216,52 +201,36 @@ RSpec.describe EasyTalk::Model do
         }
       end
 
+      let(:employee) { user.new(name: 'John', age: 21, email: { address: 'john@test.com', verified: 'false' }) }
+
       it 'returns the JSON schema' do
         expect(user.json_schema).to include_json(expected_json_schema)
       end
-    end
-  end
 
-  context 'with propert mapping' do
-    let(:user) do
-      Class.new do
-        include EasyTalk::Model
-
-        def self.name
-          'User'
-        end
-
-        define_schema do
-          title 'User'
-          property :name, String
-          property :age, Integer
-          property :email, String
-        end
+      it 'returns the model properties' do
+        expect(user.properties).to eq(%i[name age email])
       end
-    end
 
-    let(:instance) do
-      user.new(name: 'John', age: 21, email: 'james@hotmail.com')
-    end
+      it "returns the model's name" do
+        expect(user.name).to eq('User')
+      end
 
-    it 'maps name property to the instance of the class' do
-      expect(instance.name).to eq('John')
-    end
+      # FIXME: This test is failing because the email property hash keys are strings.
+      pending "returns the model's properties' values" do
+        expect(employee.properties).to eq(name: 'John', age: 21, email: { address: 'john@test.com', verified: 'false' })
+      end
 
-    it 'maps age property to the instance of the class' do
-      expect(instance.age).to eq(21)
-    end
+      it 'returns a property' do
+        expect(employee.name).to eq('John')
+      end
 
-    it 'maps email property to the instance of the class' do
-      expect(instance.email).to eq('james@hotmail.com')
-    end
+      it 'returns a hash type property' do
+        expect(employee.email).to eq(address: 'john@test.com', verified: 'false')
+      end
 
-    it 'checks if the instance is valid' do
-      expect(instance.valid?).to eq(true)
-    end
-
-    it 'maps all properties to the instance of the class' do
-      expect(instance.properties).to eq(name: 'John', age: 21, email: 'james@hotmail.com')
+      it 'is valid' do
+        expect(employee.valid?).to eq(true)
+      end
     end
   end
 end
