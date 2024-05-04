@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'activemodel', '~> 7.0'
   spec.add_dependency 'activesupport', '~> 7.0'
-  spec.add_dependency 'json-schema', '~> 4'
+  spec.add_dependency 'json_schemer'
   spec.add_dependency 'sorbet-runtime', '~> 0.5'
   spec.add_development_dependency 'pry-byebug', '>= 3.10'
   spec.add_development_dependency 'rake', '~> 13.1'
