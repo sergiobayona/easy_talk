@@ -1,6 +1,16 @@
 # EasyTalk
 
-EasyTalk is a Ruby library for defining and generating JSON Schema.
+EasyTalk is a Ruby library that simplifies defining and generating JSON Schema documents, and validates that JSON data conforms to these schemas.
+
+Key Features
+* Intuitive Schema Definition: Use Ruby classes and methods to define JSON Schema documents easily.
+* JSON Schema Compliance: Implements the JSON Schema specification to ensure compatibility and standards adherence.
+* LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT-3.5-turbo and GPT-4. EasyTalk enables you to effortlessly create JSON Schema documents needed to describe the inputs and outputs of LLM function calls.
+* Validation: Validates JSON inputs and outputs against defined schemas to ensure they meet expected formats and types. Write custom validations using ActiveModel's validations.
+* Integration with ActiveModel: EasyTalk integrates with ActiveModel to provide additional functionality such as attribute assignment, introspections, validations, translation (i18n), and more.
+
+Inspiration
+Inspired by Python's Pydantic library, EasyTalk brings similar functionality to the Ruby ecosystem, providing a Ruby-friendly approach to JSON Schema operations.
 
 Example Use:
 
