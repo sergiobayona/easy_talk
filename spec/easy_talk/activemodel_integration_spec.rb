@@ -57,4 +57,11 @@ RSpec.describe 'validing json' do
     expect(jim.errors.size).to eq(1)
     expect(jim.errors[:email]).to eq(['must end with @test.com'])
   end
+
+  it 'runs after validation callback' do
+    jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
+    expect(jim.age).to eq(30)
+    expect(jim.valid?).to be true
+    expect(jim.age).to eq(500)
+  end
 end

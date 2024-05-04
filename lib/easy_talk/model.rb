@@ -38,6 +38,7 @@ module EasyTalk
     def self.included(base)
       base.include ActiveModel::API # Include ActiveModel::API in the class including EasyTalk::Model
       base.include ActiveModel::Validations
+      base.extend ActiveModel::Callbacks
       base.validates_with SchemaValidator
       base.extend(ClassMethods)
     end
