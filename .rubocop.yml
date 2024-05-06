@@ -28,3 +28,6 @@ Layout/LineLength:
 RSpec/DescribeClass:
   Exclude:
     - 'spec/easy_talk/examples/**/*'
+
+RSpec/MultipleExpectations:
+  Max: 4

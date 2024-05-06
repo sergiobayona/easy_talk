@@ -1,4 +1,4 @@
-## [0.2.0] - 2024-05-01
+## [0.2.1] - 2024-05-06
 - Run JSON Schema validations using ActiveModel's validations.
 
 ## [0.2.0] - 2024-05-01
