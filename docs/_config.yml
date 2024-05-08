@@ -21,8 +21,7 @@
 title: EasyTalk 
 email: bayona.sergio@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-EasyTalk is a Ruby library that simplifies defining and generating
-JSON Schema documents, and validates that JSON data conforms to these schemas.
+  EasyTalk: define and generate JSON Schema documents.
 baseurl: "/easy_talk" # the subpath of your site, e.g. /blog
 url: "https://sergiobayona.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: sergiobayona
