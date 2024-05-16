@@ -76,10 +76,16 @@ module EasyTalk
     #
     # @return [Object] The built property.
     def build
-      return type.respond_to?(:schema) ? type.schema : 'object' unless builder
+      # return type.respond_to?(:schema) ? type.schema : 'object' unless builder
 
-      args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
-      builder.new(*args).build
+      # args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
+      # builder.new(*args).build
+      if builder
+        args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
+        builder.new(*args).build
+      else
+        type.respond_to?(:schema) ? type.schema : 'object'
+      end
     end
 
     # Converts the object to a JSON representation.
@@ -97,7 +103,7 @@ module EasyTalk
     #
     # @return [Builder] The builder associated with the property type.
     def builder
-      TYPE_TO_BUILDER[type.class.name.to_s] || TYPE_TO_BUILDER[type.name.to_s]
+      @builder ||= TYPE_TO_BUILDER[type.class.name.to_s] || TYPE_TO_BUILDER[type.name.to_s]
     end
   end
 end

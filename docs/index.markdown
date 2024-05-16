@@ -4,3 +4,4 @@
 
 layout: home
 ---
+EasyTalk is a Ruby library that simplifies defining and generating JSON Schema documents, and validates that JSON data conforms to these schemas.
