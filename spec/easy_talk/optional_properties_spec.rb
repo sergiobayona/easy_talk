@@ -172,7 +172,7 @@ RSpec.describe 'optional properties' do
         end
       end
 
-      it 'excludes the nilable property' do
+      it 'nilable property is not required' do
         stub_const('User', user)
         stub_const('Email', email)
 
@@ -184,7 +184,22 @@ RSpec.describe 'optional properties' do
         base_level_requires = User.json_schema['required']
         nested_level_requires = User.json_schema['properties']['email']['required']
 
-        puts User.json_schema
+        expect(base_level_requires).to eq(%w[name age])
+        expect(nested_level_requires).to eq(%w[address verified])
+      end
+
+      it 'optional property is not required' do
+        stub_const('User', user)
+        stub_const('Email', email)
+
+        User.define_schema do
+          property :name, String
+          property :age, Integer
+          property :email, Email, optional: true
+        end
+        base_level_requires = User.json_schema['required']
+        nested_level_requires = User.json_schema['properties']['email']['required']
+
         expect(base_level_requires).to eq(%w[name age])
         expect(nested_level_requires).to eq(%w[address verified])
       end
