@@ -34,36 +34,49 @@ module EasyTalk
       private
 
       def properties_from_schema_definition
-        properties = schema.delete(:properties) || {}
-        properties.each_with_object({}) do |(property_name, options), context|
-          add_required_property(property_name, options)
-          context[property_name] = build_property(property_name, options)
+        @properties_cache ||= begin
+          properties = schema.delete(:properties) || {}
+          properties.each_with_object({}) do |(property_name, options), context|
+            add_required_property(property_name, options)
+            context[property_name] = build_property(property_name, options)
+          end
         end
       end
 
       # rubocop:disable Style/DoubleNegation
       def add_required_property(property_name, options)
         return if options.is_a?(Hash) && !!(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
-
         return if options.respond_to?(:optional?) && options.optional?
+        return if options.is_a?(Hash) && options.dig(:constraints, :optional)
 
         @required_properties << property_name
       end
       # rubocop:enable Style/DoubleNegation
 
       def build_property(property_name, options)
-        if options.is_a?(EasyTalk::SchemaDefinition)
-          ObjectBuilder.new(options).build
-        else
-          Property.new(property_name, options[:type], options[:constraints])
+        @property_cache ||= {}
+
+        @property_cache[property_name] ||= if options.is_a?(EasyTalk::SchemaDefinition)
+                                             ObjectBuilder.new(options).build
+                                           else
+                                             handle_option_type(options)
+                                             Property.new(property_name, options[:type], options[:constraints])
+                                           end
+      end
+
+      def handle_option_type(options)
+        if options[:type].respond_to?(:nilable?) && options[:type].nilable? && options[:type].unwrap_nilable.class != T::Types::TypedArray
+          options[:type] = options[:type].unwrap_nilable.raw_type
         end
       end
 
       def subschemas_from_schema_definition
-        subschemas = schema.delete(:subschemas) || []
-        subschemas.each do |subschema|
-          add_definitions(subschema)
-          add_references(subschema)
+        @subschemas_cache ||= begin
+          subschemas = schema.delete(:subschemas) || []
+          subschemas.each do |subschema|
+            add_definitions(subschema)
+            add_references(subschema)
+          end
         end
       end
 
