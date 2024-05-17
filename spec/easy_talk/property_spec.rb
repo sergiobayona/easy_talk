@@ -95,18 +95,67 @@ RSpec.describe EasyTalk::Property do
   end
 
   # unsure if this should be supported
-  context 'with a plain class as the array item' do
+  context 'with a model' do
     let(:custom_class) do
       Class.new do
+        include EasyTalk::Model
+
         def self.name
           'CustomClass'
+        end
+
+        define_schema do
+          property :name, String
         end
       end
     end
 
-    pending 'returns an array of custom class type' do
-      prop = described_class.new(:name, T::Array[custom_class]).build
-      expect(prop).to eq(type: 'array', items: { type: 'object' })
+    context 'when the model is an array item' do
+      it 'returns an array of custom class type' do
+        prop = described_class.new(:name, T::Array[custom_class]).as_json
+        expect(prop).to include_json({
+                                       'type': 'array',
+                                       "items": {
+                                         "type": 'object',
+                                         "properties": {
+                                           "name": {
+                                             "type": 'string'
+                                           }
+                                         },
+                                         "required": ['name']
+                                       }
+                                     })
+      end
+    end
+
+    context 'when the model is a property' do
+      it 'returns a custom class type' do
+        prop = described_class.new(:name, custom_class).as_json
+        expect(prop).to include_json({
+                                       'type': 'object',
+                                       "properties": {
+                                         "name": {
+                                           "type": 'string'
+                                         }
+                                       },
+                                       "required": ['name']
+                                     })
+      end
+
+      pending 'returns a custom class type with options' do
+        prop = described_class.new(:name, custom_class, title: 'Custom Class', description: 'some description').as_json
+        expect(prop).to include_json({
+                                       'type': 'object',
+                                       "title": 'Custom Class',
+                                       "description": 'some description',
+                                       "properties": {
+                                         "name": {
+                                           "type": 'string'
+                                         }
+                                       },
+                                       "required": ['name']
+                                     })
+      end
     end
   end
 
