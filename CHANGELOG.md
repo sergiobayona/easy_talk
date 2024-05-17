@@ -1,3 +1,6 @@
+## [0.2.2] - 2024-05-17
+- Fixed a bug where optional properties were not excluded from the required list.
+
 ## [0.2.1] - 2024-05-06
 - Run JSON Schema validations using ActiveModel's validations.
 
