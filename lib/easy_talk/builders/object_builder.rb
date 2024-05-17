@@ -34,7 +34,7 @@ module EasyTalk
       private
 
       def properties_from_schema_definition
-        @properties_cache ||= begin
+        @properties_from_schema_definition ||= begin
           properties = schema.delete(:properties) || {}
           properties.each_with_object({}) do |(property_name, options), context|
             add_required_property(property_name, options)
@@ -71,7 +71,7 @@ module EasyTalk
       end
 
       def subschemas_from_schema_definition
-        @subschemas_cache ||= begin
+        @subschemas_from_schema_definition ||= begin
           subschemas = schema.delete(:subschemas) || []
           subschemas.each do |subschema|
             add_definitions(subschema)
