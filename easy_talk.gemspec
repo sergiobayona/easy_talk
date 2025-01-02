@@ -31,16 +31,16 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'activemodel', '~> 7.0'
-  spec.add_dependency 'activesupport', '~> 7.0'
+  spec.add_dependency 'activemodel', '>= 7.0'
+  spec.add_dependency 'activesupport', '>= 7.0'
   spec.add_dependency 'json_schemer'
-  spec.add_dependency 'sorbet-runtime', '~> 0.5'
+  spec.add_dependency 'sorbet-runtime', '>= 0.5'
   spec.add_development_dependency 'pry-byebug', '>= 3.10'
-  spec.add_development_dependency 'rake', '~> 13.1'
-  spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'rspec-json_expectations', '~> 2.0'
-  spec.add_development_dependency 'rspec-mocks', '~> 3.13'
-  spec.add_development_dependency 'rubocop', '~> 1.21'
-  spec.add_development_dependency 'rubocop-rake', '~> 0.6'
-  spec.add_development_dependency 'rubocop-rspec', '~> 2.29'
+  spec.add_development_dependency 'rake', '>= 13.1'
+  spec.add_development_dependency 'rspec', '>= 3.0'
+  spec.add_development_dependency 'rspec-json_expectations', '>= 2.0'
+  spec.add_development_dependency 'rspec-mocks', '>= 3.13'
+  spec.add_development_dependency 'rubocop', '>= 1.21'
+  spec.add_development_dependency 'rubocop-rake', '>= 0.6'
+  spec.add_development_dependency 'rubocop-rspec', '>= 2.29'
 end
