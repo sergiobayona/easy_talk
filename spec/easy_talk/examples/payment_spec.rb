@@ -103,8 +103,8 @@ RSpec.describe 'Payment object example' do
                 },
                 "CardExpYear": {
                   "type": 'integer',
-                  "minimum": 2024,
-                  "maximum": 2034
+                  "minimum": 2025,
+                  "maximum": 2035
                 },
                 "CardCVV": {
                   "type": 'string',

@@ -39,9 +39,10 @@ RSpec.describe 'validing json' do
     end
   end
 
-  it 'errors on missing email' do
+  it 'is valid' do
     jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
     expect(jim.valid?).to be true
+    expect(jim.errors.size).to eq(0)
   end
 
   it 'errors on invalid age' do
@@ -56,5 +57,22 @@ RSpec.describe 'validing json' do
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
     expect(jim.errors[:email]).to eq(['must end with @test.com'])
+  end
+
+  it 'responds to #invalid?' do
+    jim = user.new(name: 'Jim', age: 18, height: 5.9, email: { address: 'jim@test.com', verified: false })
+    expect(jim.invalid?).to be true
+  end
+
+  it 'responds to #errors' do
+    jim = user.new(name: 'Jim', age: 18, height: 5.9, email: { address: 'jim@test.com', verified: false })
+    jim.valid?
+    expect(jim.errors).to be_a(ActiveModel::Errors)
+  end
+
+  it 'responds to #errors.messages' do
+    jim = user.new(name: 'Jim', age: 18, height: 5.9, email: { address: 'jim@test.com', verified: false })
+    jim.valid?
+    expect(jim.errors.messages).to eq(age: ['must be greater than 21'])
   end
 end
