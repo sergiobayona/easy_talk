@@ -119,7 +119,7 @@ module EasyTalk
         @schema_definition.instance_eval(&block)
         attr_accessor(*properties)
 
-        @schema_defintion
+        @schema_definition
       end
 
       # Returns the unvalidated schema definition for the model.
