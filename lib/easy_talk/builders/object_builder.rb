@@ -1,10 +1,8 @@
-# frozen_string_literal: true
-
 require_relative 'base_builder'
+require 'set'
 
 module EasyTalk
   module Builders
-    # Builder class for json schema objects.
     class ObjectBuilder < BaseBuilder
       extend T::Sig
 
@@ -26,7 +24,7 @@ module EasyTalk
       def initialize(schema_definition)
         @schema_definition = schema_definition
         @schema = schema_definition.schema.dup
-        @required_properties = []
+        @required_properties = Set.new
         name = schema_definition.name ? schema_definition.name.to_sym : :klass
         super(name, { type: 'object' }, options, VALID_OPTIONS)
       end
@@ -43,25 +41,23 @@ module EasyTalk
         end
       end
 
-      # rubocop:disable Style/DoubleNegation
       def add_required_property(property_name, options)
         return if options.is_a?(Hash) && !!(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
         return if options.respond_to?(:optional?) && options.optional?
         return if options.is_a?(Hash) && options.dig(:constraints, :optional)
 
-        @required_properties << property_name
+        @required_properties.add(property_name)
       end
-      # rubocop:enable Style/DoubleNegation
 
       def build_property(property_name, options)
         @property_cache ||= {}
 
         @property_cache[property_name] ||= if options.is_a?(EasyTalk::SchemaDefinition)
-                                             ObjectBuilder.new(options).build
-                                           else
-                                             handle_option_type(options)
-                                             Property.new(property_name, options[:type], options[:constraints])
-                                           end
+          ObjectBuilder.new(options).build
+        else
+          handle_option_type(options)
+          Property.new(property_name, options[:type], options[:constraints])
+        end
       end
 
       def handle_option_type(options)
@@ -98,7 +94,7 @@ module EasyTalk
         @options = schema
         subschemas_from_schema_definition
         @options[:properties] = properties_from_schema_definition
-        @options[:required] = @required_properties
+        @options[:required] = @required_properties.to_a
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
         @options
       end
