@@ -31,7 +31,7 @@ module EasyTalk
 
             model.instructions
           else
-            "Correctly extracted `#{model.name}` with all the required parameters with correct types"
+            "Correctly extracted `#{model.name}` with all the required parameters and correct types."
           end
         end
       end

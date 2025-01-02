@@ -22,8 +22,8 @@ RSpec.describe EasyTalk::Tools::FunctionBuilder do
       {
         type: 'function',
         function: {
-          name: 'Mymodel',
-          description: 'Correctly extracted `MyModel` with all the required parameters with correct types',
+          name: 'MyModel',
+          description: 'Correctly extracted `MyModel` with all the required parameters and correct types.',
           parameters: {
             type: 'object',
             properties: {
