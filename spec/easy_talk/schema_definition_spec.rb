@@ -133,4 +133,39 @@ RSpec.describe EasyTalk::SchemaDefinition do
       expect(model.schema_definition.schema[:content_encoding]).to eq('ContentEncoding')
     end
   end
+
+  describe 'compose' do
+    let(:subschema) do
+      {
+        title: 'Subschema',
+        properties: {
+          foo: {
+            constraints: {},
+            type: Integer
+          }
+        }
+      }
+    end
+
+    let(:expected_schema) do
+      {
+        properties: {
+          name: {
+            constraints: {
+              maximum: 100,
+              minimum: 1
+            },
+            type: String
+          }
+        },
+        subschemas: [subschema],
+        title: 'Model'
+      }
+    end
+
+    it 'appends a subschema to the model.schema_definition.schema' do
+      model.schema_definition.compose(subschema)
+      expect(model.schema_definition.schema).to eq(expected_schema)
+    end
+  end
 end
