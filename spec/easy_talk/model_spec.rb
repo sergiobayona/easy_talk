@@ -15,7 +15,7 @@ RSpec.describe EasyTalk::Model do
         title 'User'
         property :name, String
         property :age, Integer
-        property :email, :object do
+        property :email, Hash do
           property :address, String
           property :verified, String
         end

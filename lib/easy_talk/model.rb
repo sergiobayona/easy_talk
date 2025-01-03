@@ -7,8 +7,6 @@ require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
 require 'active_model'
-require 'json_schemer'
-require_relative 'schema_errors_mapper'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 
@@ -45,16 +43,7 @@ module EasyTalk
 
     class SchemaValidator < ActiveModel::Validator
       def validate(record)
-        result = schema_validation(record)
-        result.errors.each do |key, error_msg|
-          record.errors.add key.to_sym, error_msg
-        end
-      end
-
-      def schema_validation(record)
-        schema = JSONSchemer.schema(record.class.json_schema)
-        errors = schema.validate(record.properties)
-        SchemaErrorsMapper.new(errors)
+        # binding.pry
       end
     end
 

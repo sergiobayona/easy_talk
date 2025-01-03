@@ -101,7 +101,7 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer
-            property :email, :object, optional: true do
+            property :email, Hash, optional: true do
               property :address, String
               property :verified, String
             end
