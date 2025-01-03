@@ -43,14 +43,13 @@ module EasyTalk
 
       def add_required_property(property_name, options)
         return if property_optional?(options)
+
         @required_properties.add(property_name)
       end
 
       def property_optional?(options)
         type_obj = options[:type]
-        if type_obj.respond_to?(:nilable?) && type_obj.nilable?
-          return true
-        end
+        return true if type_obj.respond_to?(:nilable?) && type_obj.nilable?
 
         return true if options.dig(:constraints, :optional)
 
@@ -61,11 +60,11 @@ module EasyTalk
         @property_cache ||= {}
 
         @property_cache[property_name] ||= if options[:properties]
-          ObjectBuilder.new(options[:properties]).build
-        else
-          handle_option_type(options)
-          Property.new(property_name, options[:type], options[:constraints])
-        end
+                                             ObjectBuilder.new(options[:properties]).build
+                                           else
+                                             handle_option_type(options)
+                                             Property.new(property_name, options[:type], options[:constraints])
+                                           end
       end
 
       def handle_option_type(options)

@@ -35,7 +35,7 @@ module EasyTalk
     sig do
       params(name: T.any(Symbol, String), type: T.untyped, constraints: T.untyped, blk: T.nilable(T.proc.void)).void
     end
-    def property(name, type, constraints={}, &blk)
+    def property(name, type, constraints = {}, &blk)
       @schema[:properties] ||= {}
 
       if block_given?
@@ -43,12 +43,12 @@ module EasyTalk
         property_schema.instance_eval(&blk)
 
         @schema[:properties][name] = {
-          type: type,
-          constraints: constraints,
+          type:,
+          constraints:,
           properties: property_schema
         }
       else
-        @schema[:properties][name] = { type: type, constraints: constraints }
+        @schema[:properties][name] = { type:, constraints: }
       end
     end
 
