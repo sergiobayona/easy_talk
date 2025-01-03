@@ -31,8 +31,8 @@ module EasyTalk
 
       private
 
-      def properties_from_schema_definition
-        @properties_from_schema_definition ||= begin
+      def build_properties
+        @build_properties ||= begin
           properties = schema.delete(:properties) || {}
           properties.each_with_object({}) do |(property_name, options), context|
             add_required_property(property_name, options)
@@ -101,7 +101,7 @@ module EasyTalk
       def options
         @options = schema
         subschemas_from_schema_definition
-        @options[:properties] = properties_from_schema_definition
+        @options[:properties] = build_properties
         @options[:required] = @required_properties.to_a
         @options.reject! { |_key, value| [nil, [], {}].include?(value) }
         @options
