@@ -168,4 +168,18 @@ RSpec.describe EasyTalk::SchemaDefinition do
       expect(model.schema_definition.schema).to eq(expected_schema)
     end
   end
+
+  describe 'with invalid property name' do
+    it 'raises an error when it starts with a number' do
+      expect { model.schema_definition.property('1name', String) }.to raise_error(EasyTalk::InvalidPropertyNameError)
+    end
+
+    it 'raises an error when it contains a special character' do
+      expect { model.schema_definition.property('name!', String) }.to raise_error(EasyTalk::InvalidPropertyNameError)
+    end
+
+    it 'raises an error when it contains a space' do
+      expect { model.schema_definition.property('name name', String) }.to raise_error(EasyTalk::InvalidPropertyNameError)
+    end
+  end
 end
