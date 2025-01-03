@@ -42,11 +42,19 @@ module EasyTalk
       end
 
       def add_required_property(property_name, options)
-        return if options.is_a?(Hash) && !!(options[:type].respond_to?(:nilable?) && options[:type].nilable?)
-        return if options.respond_to?(:optional?) && options.optional?
-        return if options.is_a?(Hash) && options.dig(:constraints, :optional)
-
+        return if property_optional?(options)
         @required_properties.add(property_name)
+      end
+
+      def property_optional?(options)
+        type_obj = options[:type]
+        if type_obj.respond_to?(:nilable?) && type_obj.nilable?
+          return true
+        end
+
+        return true if options.dig(:constraints, :optional)
+
+        false
       end
 
       def build_property(property_name, options)
