@@ -39,17 +39,12 @@ module EasyTalk
       @schema[:properties] ||= {}
 
       if block_given?
-        # Create a clean copy of constraints to avoid mutation
-        original_constraints = constraints.dup
-
-        # Create property schema with nested properties
         property_schema = SchemaDefinition.new(name)
         property_schema.instance_eval(&blk)
 
-        # Set the properties separately from constraints
         @schema[:properties][name] = {
           type: type,
-          constraints: original_constraints,
+          constraints: constraints,
           properties: property_schema
         }
       else

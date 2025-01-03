@@ -60,8 +60,8 @@ module EasyTalk
       def build_property(property_name, options)
         @property_cache ||= {}
 
-        @property_cache[property_name] ||= if options.is_a?(EasyTalk::SchemaDefinition)
-          ObjectBuilder.new(options).build
+        @property_cache[property_name] ||= if options[:properties]
+          ObjectBuilder.new(options[:properties]).build
         else
           handle_option_type(options)
           Property.new(property_name, options[:type], options[:constraints])
