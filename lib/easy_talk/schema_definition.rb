@@ -35,15 +35,25 @@ module EasyTalk
     sig do
       params(name: T.any(Symbol, String), type: T.untyped, constraints: T.untyped, blk: T.nilable(T.proc.void)).void
     end
-    def property(name, type, **constraints, &blk)
+    def property(name, type, constraints={}, &blk)
       @schema[:properties] ||= {}
 
       if block_given?
-        property_schema = SchemaDefinition.new(name, constraints)
+        # Create a clean copy of constraints to avoid mutation
+        original_constraints = constraints.dup
+
+        # Create property schema with nested properties
+        property_schema = SchemaDefinition.new(name)
         property_schema.instance_eval(&blk)
-        @schema[:properties][name] = property_schema
+
+        # Set the properties separately from constraints
+        @schema[:properties][name] = {
+          type: type,
+          constraints: original_constraints,
+          properties: property_schema
+        }
       else
-        @schema[:properties][name] = { type:, constraints: }
+        @schema[:properties][name] = { type: type, constraints: constraints }
       end
     end
 
