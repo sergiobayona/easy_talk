@@ -46,11 +46,6 @@ module EasyTalk
       end
     end
 
-    # Returns the properties of the model as a hash with symbolized keys.
-    def properties
-      as_json.symbolize_keys!
-    end
-
     # Module containing class-level methods for defining and accessing the schema of a model.
     module ClassMethods
       # Returns the schema for the model.
@@ -60,25 +55,11 @@ module EasyTalk
         @schema ||= build_schema(schema_definition)
       end
 
-      # Returns true if the class inherits a schema.
-      #
-      # @return [Boolean] `true` if the class inherits a schema, `false` otherwise.
-      def inherits_schema?
-        false
-      end
-
       # Returns the reference template for the model.
       #
       # @return [String] The reference template for the model.
       def ref_template
         "#/$defs/#{name}"
-      end
-
-      # Returns the name of the model as a human-readable function name.
-      #
-      # @return [String] The human-readable function name of the model.
-      def function_name
-        name.humanize.titleize
       end
 
       def properties

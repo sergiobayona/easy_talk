@@ -57,16 +57,8 @@ RSpec.describe EasyTalk::Model do
     expect(user.schema_definition.name).to eq 'User'
   end
 
-  # it 'returns the schema' do
-  #   expect(user.schema_definition.schema).to eq(expected_internal_schema)
-  # end
-
-  it "returns the function name 'User'" do
-    expect(user.function_name).to eq('User')
-  end
-
-  it 'does not inherit schema' do
-    expect(user.inherits_schema?).to eq(false)
+  it 'returns its attributes' do
+    expect(user.properties).to eq(%i[name age email])
   end
 
   it 'returns a ref template' do
@@ -203,11 +195,6 @@ RSpec.describe EasyTalk::Model do
 
       it "returns the model's name" do
         expect(user.name).to eq('User')
-      end
-
-      # FIXME: This test is failing because the email property hash keys are strings.
-      pending "returns the model's properties' values" do
-        expect(employee.properties).to eq(name: 'John', age: 21, email: { address: 'john@test.com', verified: 'false' })
       end
 
       it 'returns a property' do
