@@ -46,7 +46,7 @@ RSpec.describe 'Ticketing system' do
                 "description": 'Priority level',
                 "enum": %w[
                   High
-                  Meidum
+                  Medium
                   Low
                 ]
               },
@@ -145,7 +145,7 @@ RSpec.describe 'Ticketing system' do
       property :id, Integer, description: 'Unique identifier for the ticket'
       property :name, String, description: 'Title of the ticket'
       property :description, String, description: 'Detailed description of the task'
-      property :priority, String, enum: %w[High Meidum Low], description: 'Priority level'
+      property :priority, String, enum: %w[High Medium Low], description: 'Priority level'
       property :assignees, T::Array[String], description: 'List of users assigned to the task'
       property :subtasks, T.nilable(T::Array[Subtask]), description: 'List of subtasks associated with the main task'
       property :dependencies, T.nilable(T::Array[Integer]), description: 'List of ticket IDs that this ticket depends on'
