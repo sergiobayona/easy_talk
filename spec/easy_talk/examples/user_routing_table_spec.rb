@@ -12,7 +12,7 @@ RSpec.describe 'User routing table' do
       end
 
       define_schema do
-        property 'user_id', :object do
+        property 'user_id', Hash do
           description 'Get a user by id'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -22,12 +22,12 @@ RSpec.describe 'User routing table' do
                      'search for user by id {id}',
                      'user id {id}'
                    ]
-          property :parameter, :object do
+          property :parameter, Hash do
             property :id, String, description: 'The user id'
           end
           property :path, String, description: 'The route path to get the user by id'
         end
-        property 'user_email', :object do
+        property 'user_email', Hash do
           description 'Get a user by email'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -37,12 +37,12 @@ RSpec.describe 'User routing table' do
                      'search for user by email {email}',
                      'user email {email}'
                    ]
-          property :parameter, :object do
+          property :parameter, Hash do
             property :email, String, description: 'the user email address'
           end
           property :path, String, const: 'user/:email', description: 'The route path to get the user by email'
         end
-        property 'user_id_authenticate', :object do
+        property 'user_id_authenticate', Hash do
           description 'Authenticate a user'
           property :phrases, T::Array[String],
                    title: 'trigger phrase examples',
@@ -52,7 +52,7 @@ RSpec.describe 'User routing table' do
                      'authenticate user id {id}',
                      'authenticate user {id}'
                    ]
-          property :parameters, :object do
+          property :parameters, Hash do
             property :id, String, description: 'the user id'
           end
           property :path, String, const: 'user/:id/authenticate', description: 'The route path to authenticate a user'

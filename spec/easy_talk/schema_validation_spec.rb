@@ -15,7 +15,7 @@ RSpec.describe 'validating json' do
         property :name, String
         property :age, Integer
         property :height, Float
-        property :email, :object do
+        property :email, Hash do
           property :address, String
           property :verified, String
         end
@@ -39,7 +39,6 @@ RSpec.describe 'validating json' do
     pending 'validates age attribute is not present' do
       jim = user.new(name: 'Jim', height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
       expect(jim.valid?).to be false
-      binding.pry
       expect(jim.errors.size).to eq(1)
       expect(jim.errors[:age]).to eq(['is not a valid integer'])
     end

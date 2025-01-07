@@ -22,7 +22,7 @@ class User
     title "User"
     description "A user of the system"
     property :name, String, description: "The user's name", title: "Full Name"
-    property :email, :object do
+    property :email, Hash do
       property :address, String, format: "email", description: "The user's email", title: "Email Address"
       property :verified, T::Boolean, description: "Whether the email is verified"
     end

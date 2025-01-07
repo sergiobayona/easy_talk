@@ -31,7 +31,7 @@ RSpec.describe 'validing json' do
         property :name, String
         property :age, Integer
         property :height, Float
-        property :email, :object do
+        property :email, Hash do
           property :address, String
           property :verified, T::Boolean
         end
