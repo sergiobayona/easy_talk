@@ -8,6 +8,7 @@ RSpec.describe 'validing json' do
       include EasyTalk::Model
 
       validates :age, comparison: { greater_than: 21 }
+      validates :height, presence: true, numericality: { greater_than: 0 }
 
       validate do |person|
         MyValidator.new(person).validate
@@ -39,6 +40,23 @@ RSpec.describe 'validing json' do
     end
   end
 
+  describe 'validating properties without ActiveModel validations' do
+    it 'does not validate the nil name' do
+      jim = user.new(name: nil, age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
+      expect(jim.valid?).to be true
+    end
+
+    it 'does not validate the empty name' do
+      jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
+      expect(jim.valid?).to be true
+    end
+
+    it 'does not validate the property that is not present' do
+      jim = user.new(age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
+      expect(jim.valid?).to be true
+    end
+  end
+
   it 'is valid' do
     jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: false })
     expect(jim.valid?).to be true
@@ -57,6 +75,18 @@ RSpec.describe 'validing json' do
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
     expect(jim.errors[:email]).to eq(['must end with @test.com'])
+  end
+
+  it 'errors on missing height' do
+    jim = user.new(name: 'Jim', age: 30, email: { address: 'jim@gmailcom', verified: false })
+    expect(jim.valid?).to be false
+    expect(jim.errors[:height]).to eq(["can't be blank", 'is not a number'])
+  end
+
+  it 'errors on invalid height' do
+    jim = user.new(name: 'Jim', age: 30, height: -5.9, email: { address: 'jim@gmailcom', verified: false })
+    expect(jim.valid?).to be false
+    expect(jim.errors[:height]).to eq(['must be greater than 0'])
   end
 
   it 'responds to #invalid?' do
