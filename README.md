@@ -26,7 +26,7 @@ class User
       property :address, String, format: "email", description: "The user's email", title: "Email Address"
       property :verified, T::Boolean, description: "Whether the email is verified"
     end
-    property :group, String, enum: [1, 2, 3], default: 1, description: "The user's group"
+    property :group, Integer, enum: [1, 2, 3], default: 1, description: "The user's group"
     property :age, Integer, minimum: 18, maximum: 100, description: "The user's age"
     property :tags, T::Array[String], min_items: 1, unique_item: true, description: "The user's tags"
   end
@@ -66,7 +66,7 @@ Calling `User.json_schema` will return the JSON Schema for the User class:
             ]
         },
         "group": {
-            "type": "number",
+            "type": "integer",
             "enum": [1, 2, 3],
             "default": 1,
             "description": "The user's group"
