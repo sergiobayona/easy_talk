@@ -4,10 +4,9 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema d
 
 Key Features
 * Intuitive Schema Definition: Use Ruby classes and methods to define JSON Schema documents easily.
-* JSON Schema Compliance: Implements the JSON Schema specification to ensure compatibility and standards adherence.
-* LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT-3.5-turbo and GPT-4. EasyTalk enables you to effortlessly create JSON Schema documents needed to describe the inputs and outputs of LLM function calls.
-* Validation: Validates JSON inputs and outputs against defined schemas to ensure they meet expected formats and types. Write custom validations using ActiveModel's validations.
-* Integration with ActiveModel: EasyTalk integrates with ActiveModel to provide additional functionality such as attribute assignment, introspections, validations, translation (i18n), and more.
+* LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series models EasyTalk enables you to effortlessly create JSON Schema documents needed to describe the inputs and outputs of LLM function calls.
+* Schema Composition: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
+* Validation: Write validations using ActiveModel's validations.
 
 Inspiration
 Inspired by Python's Pydantic library, EasyTalk brings similar functionality to the Ruby ecosystem, providing a Ruby-friendly approach to JSON Schema operations.
@@ -112,6 +111,10 @@ Simply include the `EasyTalk::Model` module in your Ruby class, define the schem
 
 In the example above, the `define_schema` method is used to add a description and a title to the schema document. The `property` method is used to define the properties of the schema document. The `property` method accepts the name of the property as a symbol, the type, which can be a generic Ruby type or a [Sorbet type](https://sorbet.org/docs/stdlib-generics), and a hash of constraints as options.
 
+## Why Sortbet-style types?
+
+Ruby does not have a way to define complex types like `Array[String]` or `Array[Integer]`. Sorbet-style types provide a way to define these complex types. EasyTalk uses Sorbet-style types to define the property types.
+
 ## Property Constraints
 
 Property constraints are type-dependent. Refer to the [CONSTRAINTS.md](CONSTRAINTS.md) file for a list of constraints supported by the JSON Schema generator.
@@ -178,7 +181,7 @@ Here is an example where we define a schema for a payment object that can be a c
 
 ## Type Checking and Schema Constraints
 
-EasyTalk uses [Sorbet](https://sorbet.org/) to perform type checking on the property constraint values. The `property` method accepts a type as the second argument. The type can be a Ruby class or a Sorbet type. For example, `String`, `Integer`, `T::Array[String]`, etc.
+EasyTalk uses [Sorbet](https://sorbet.org/) to perform type checking on the property constraint values only. The `property` method accepts a type as the second argument. The type can be a Ruby class or a Sorbet type. For example, `String`, `Integer`, `T::Array[String]`, etc.
 
 EasyTalk raises an error if the constraint values do not match the property type. For example, if you specify the `enum` constraint with the values [1,2,3], but the property type is `String`, EasyTalk will raise a type error.
 
@@ -186,13 +189,11 @@ EasyTalk also raises an error if the constraints are not valid for the property 
 
 ## Schema Validation
 
-EasyTalk does not yet perform JSON validation. So far, it only aims to generate a valid JSON Schema document. You can use the `json_schema` method to generate the JSON Schema and use a JSON Schema validator library like [JSONSchemer](https://github.com/davishmcclurg/json_schemer) to validate JSON against. See https://json-schema.org/implementations#validators-ruby for a list of JSON Schema validator libraries for Ruby.
-
-The goal is to introduce JSON validation in the near future.
+You can instantiate an EasyTalk model with a hash of attributes and validate the instance using ActiveModel's validations. EasyTalk does not validate by default. You must explicitly define ActiveModel validations in your EasyTalk model to validate an instance. See the [spec/easy_talk/activemodel_integration_spec.rb](ActiveModel Integration Spec) for an examples.
 
 ## JSON Schema Specifications
 
-EasyTalk is currently very loose about JSON Schema specifications. It does not enforce the use of the latest JSON Schema specifications. Support for the dictionary of JSON Schema keywords varies depending on the keyword. The goal is to have robust support for the latest JSON Schema specifications in the near future.
+EasyTalk is currently very loose about JSON Schema specifications. It does not enforce or adhere to using a given JSON Schema specification vesion. Support for the dictionary of JSON Schema keywords varies depending on the keyword. The goal is to have robust support for the latest JSON Schema specifications in the near future.
 
 To learn about the current EasyTalk capabilities, take a look at the [spec/easy_talk/examples](https://github.com/sergiobayona/easy_talk/tree/main/spec/easy_talk/examples) folder. The examples are used to test the JSON Schema generation.
 
