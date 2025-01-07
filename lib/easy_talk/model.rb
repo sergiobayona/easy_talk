@@ -9,6 +9,7 @@ require 'active_support/json'
 require 'active_model'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
+require_relative 'validators/type_validator'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -37,13 +38,8 @@ module EasyTalk
       base.include ActiveModel::API # Include ActiveModel::API in the class including EasyTalk::Model
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
-      base.validates_with SchemaValidator
+      base.validates_with EasyTalk::Validators::TypeValidator
       base.extend(ClassMethods)
-    end
-
-    class SchemaValidator < ActiveModel::Validator
-      def validate(record)
-      end
     end
 
     # Module containing class-level methods for defining and accessing the schema of a model.

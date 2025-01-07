@@ -81,9 +81,19 @@ module EasyTalk
       def build_properties(properties_hash)
         return {} unless properties_hash.is_a?(Hash)
 
+        # Cache with a key based on property name and its full configuration
+        @properties_cache ||= {}
+
         properties_hash.each_with_object({}) do |(prop_name, prop_options), result|
-          mark_required_unless_optional(prop_name, prop_options)
-          result[prop_name] = build_property(prop_name, prop_options)
+          cache_key = [prop_name, prop_options].hash
+
+          # Use cache if the exact property and configuration have been processed before
+          @properties_cache[cache_key] ||= begin
+            mark_required_unless_optional(prop_name, prop_options)
+            build_property(prop_name, prop_options)
+          end
+
+          result[prop_name] = @properties_cache[cache_key]
         end
       end
 
@@ -105,9 +115,7 @@ module EasyTalk
         type_obj = prop_options[:type]
 
         # Check Sorbet's nilable (like T.nilable(String))
-        if type_obj.respond_to?(:nilable?) && type_obj.nilable?
-          return true
-        end
+        return true if type_obj.respond_to?(:nilable?) && type_obj.nilable?
 
         # Check constraints[:optional]
         return true if prop_options.dig(:constraints, :optional)
@@ -124,13 +132,13 @@ module EasyTalk
 
         # Memoize so we only build each property once
         @property_cache[prop_name] ||= if prop_options[:properties]
-          # This indicates block-style definition => nested schema
-          nested_schema_builder(prop_options)
-        else
-          # Normal property: e.g. { type: String, constraints: {...} }
-          handle_nilable_type(prop_options)
-          Property.new(prop_name, prop_options[:type], prop_options[:constraints])
-        end
+                                         # This indicates block-style definition => nested schema
+                                         nested_schema_builder(prop_options)
+                                       else
+                                         # Normal property: e.g. { type: String, constraints: {...} }
+                                         handle_nilable_type(prop_options)
+                                         Property.new(prop_name, prop_options[:type], prop_options[:constraints])
+                                       end
       end
 
       ##
@@ -152,9 +160,9 @@ module EasyTalk
         return unless type_obj.respond_to?(:nilable?) && type_obj.nilable?
 
         # If the underlying raw_type isn't T::Types::TypedArray, then we unwrap it
-        if type_obj.unwrap_nilable.class != T::Types::TypedArray
-          prop_options[:type] = type_obj.unwrap_nilable.raw_type
-        end
+        return unless type_obj.unwrap_nilable.class != T::Types::TypedArray
+
+        prop_options[:type] = type_obj.unwrap_nilable.raw_type
       end
 
       ##
