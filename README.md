@@ -27,74 +27,50 @@ class User
     end
     property :group, Integer, enum: [1, 2, 3], default: 1, description: "The user's group"
     property :age, Integer, minimum: 18, maximum: 100, description: "The user's age"
-    property :tags, T::Array[String], min_items: 1, unique_item: true, description: "The user's tags"
+    property :tags, T::Array[String], min_items: 1, unique_items: true, description: "The user's tags"
   end
 end
 ```
 
 Calling `User.json_schema` will return the JSON Schema for the User class:
 
-```json
+```ruby
 {
-    "title": "User",
-    "description": "A user of the system",
-    "type": "object",
-    "properties": {
-        "name": {
-            "title": "Full Name",
-            "description": "The user's name",
-            "type": "string"
-        },
-        "email": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "title": "Email Address",
-                    "description": "The user's email",
-                    "type": "string",
-                    "format": "email"
-                },
-                "verified": {
-                    "type": "boolean",
-                    "description": "Whether the email is verified"
-                }
-            },
-            "required": [
-                "address",
-                "verified"
-            ]
-        },
-        "group": {
-            "type": "integer",
-            "enum": [1, 2, 3],
-            "default": 1,
-            "description": "The user's group"
-        },
-        "age": {
-            "type": "integer",
-            "minimum": 18,
-            "maximum": 100,
-            "description": "The user's age"
-        },
-        "tags": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            },
-            "minItems": 1,
-            "uniqueItems": true,
-            "description": "The user's tags"
-        }
+  "type" => "object",
+  "title" => "User",
+  "description" => "A user of the system",
+  "properties" => {
+    "name" => {
+      "type" => "string", "title" => "Full Name", "description" => "The user's name"
     },
-    "required:": [
-        "name",
-        "email",
-        "group",
-        "age",
-        "tags"
-    ]
+    "email" => {
+      "type" => "object",
+      "properties" => {
+        "address" => {
+          "type" => "string", "title" => "Email Address", "description" => "The user's email", "format" => "email"
+        }, "verified" => {
+          "type" => "boolean", "description" => "Whether the email is verified"
+        }
+      },
+      "required" => ["address", "verified"]
+    },
+    "group" => {
+      "type" => "integer", "description" => "The user's group", "enum" => [1, 2, 3], "default" => 1
+    },
+    "age" => {
+      "type" => "integer", "description" => "The user's age", "minimum" => 18, "maximum" => 100
+    },
+    "tags" => {
+      "type" => "array", "items" => {
+        "type" => "string"
+      }, "description" => "The user's tags", "minItems" => 1, "uniqueItems" => true
+    }
+  },
+  "required" => ["name", "email", "group", "age", "tags"]
 }
 ```
+
+## Inst
 
 ## Installation
 
