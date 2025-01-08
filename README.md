@@ -17,6 +17,9 @@ Example Use:
 class User
   include EasyTalk::Model
 
+  validates :name, :email, :group, presence: true
+  validates :age, numericality: { greater_than_or_equal_to: 18, less_than_or_equal_to: 100 }
+
   define_schema do
     title "User"
     description "A user of the system"
@@ -32,7 +35,7 @@ class User
 end
 ```
 
-Calling `User.json_schema` will return the JSON Schema for the User class:
+Calling `User.json_schema` will return the Ruby representation of the JSON Schema for the User class:
 
 ```ruby
 {
@@ -70,7 +73,16 @@ Calling `User.json_schema` will return the JSON Schema for the User class:
 }
 ```
 
-## Inst
+Instantiate a User object and validate it using ActiveModel's validations:
+
+```ruby
+user = User.new(name: "John Doe", email: { address: "john@test.com", verified: true }, group: 1, age: 25, tags: ["tag1", "tag2"])
+user.valid? # => true
+user.name = nil
+user.valid? # => false
+user.errors.full_messages # => ["Name can't be blank"]
+user.errors["name"] # => ["can't be blank"]
+``
 
 ## Installation
 
@@ -157,7 +169,7 @@ Here is an example where we define a schema for a payment object that can be a c
 
 ## Type Checking and Schema Constraints
 
-EasyTalk uses [Sorbet](https://sorbet.org/) to perform type checking on the property constraint values only. The `property` method accepts a type as the second argument. The type can be a Ruby class or a Sorbet type. For example, `String`, `Integer`, `T::Array[String]`, etc.
+EasyTalk uses Ruby standard types (i.e. String, Integer), [Sorbet](https://sorbet.org/) types (i.e. T::Boolean, T::Array[String]) and custom Sorbet-style types (i.e T::AnyOf[], T::OneOf[]) to perform type checking on the property constraint values only. The `property` method accepts a type as the second argument. The type can be a Ruby class or a Sorbet type. For example, `String`, `Integer`, `T::Array[String]`, etc.
 
 EasyTalk raises an error if the constraint values do not match the property type. For example, if you specify the `enum` constraint with the values [1,2,3], but the property type is `String`, EasyTalk will raise a type error.
 
