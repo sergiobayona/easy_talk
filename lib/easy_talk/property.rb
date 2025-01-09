@@ -76,21 +76,15 @@ module EasyTalk
     #
     # @return [Object] The built property.
     def build
-      # return type.respond_to?(:schema) ? type.schema : 'object' unless builder
-
-      # args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
-      # builder.new(*args).build
       if builder
         args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
         builder.new(*args).build
+      elsif type.respond_to?(:schema)
+        # merge the top-level constraints from *this* property
+        # e.g. :title, :description, :default, etc
+        type.schema.merge!(constraints)
       else
-        if type.respond_to?(:schema)
-          # merge the top-level constraints from *this* property
-          # e.g. :title, :description, :default, etc
-          type.schema.merge!(constraints)
-        else
-          'object'
-        end
+        'object'
       end
     end
 

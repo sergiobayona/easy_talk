@@ -39,14 +39,13 @@ RSpec.describe 'json for user model' do
       property :owner, Owner, title: 'Owner', description: 'The company owner'
     end
 
-
     expected_schema = {
       'type' => 'object',
       'title' => 'Company',
       'properties' => {
         'name' => {
           'type' => 'string'
-          },
+        },
         'owner' => {
           'type' => 'object',
           'title' => 'Owner',

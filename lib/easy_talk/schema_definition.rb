@@ -4,13 +4,13 @@ require_relative 'keywords'
 
 module EasyTalk
   class InvalidPropertyNameError < StandardError; end
+
   #
   #= EasyTalk \SchemaDefinition
   # SchemaDefinition provides the methods for defining a schema within the define_schema block.
   # The @schema is a hash that contains the unvalidated schema definition for the model.
   # A SchemaDefinition instanace is the passed to the Builder.build_schema method to validate and compile the schema.
   class SchemaDefinition
-
     extend T::Sig
     extend T::AnyOf
     extend T::OneOf
@@ -56,9 +56,10 @@ module EasyTalk
     end
 
     def validate_property_name(name)
-      unless name.to_s.match?(/^[A-Za-z_][A-Za-z0-9_]*$/)
-        raise InvalidPropertyNameError, "Invalid property name '#{name}'. Must start with letter/underscore and contain only letters, numbers, underscores"
-      end
+      return if name.to_s.match?(/^[A-Za-z_][A-Za-z0-9_]*$/)
+
+      raise InvalidPropertyNameError,
+            "Invalid property name '#{name}'. Must start with letter/underscore and contain only letters, numbers, underscores"
     end
 
     def optional?

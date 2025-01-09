@@ -4,4 +4,4 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem "dartsass-rails", ">= 0.5.0"
+gem 'dartsass-rails', '>= 0.5.0'
