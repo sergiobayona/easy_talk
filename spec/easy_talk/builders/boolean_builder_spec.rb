@@ -37,55 +37,53 @@ RSpec.describe EasyTalk::Builders::BooleanBuilder do
 
       it 'combines multiple constraints' do
         builder = described_class.new(:active,
-          title: 'Account Status',
-          description: 'Whether the account is active',
-          default: true,
-          enum: [true, false]
-        )
+                                      title: 'Account Status',
+                                      description: 'Whether the account is active',
+                                      default: true,
+                                      enum: [true, false])
 
         expect(builder.build).to eq({
-          type: 'boolean',
-          title: 'Account Status',
-          description: 'Whether the account is active',
-          default: true,
-          enum: [true, false]
-        })
+                                      type: 'boolean',
+                                      title: 'Account Status',
+                                      description: 'Whether the account is active',
+                                      default: true,
+                                      enum: [true, false]
+                                    })
       end
     end
 
     context 'with invalid configurations' do
       it 'raises ArgumentError for unknown constraints' do
-        expect {
+        expect do
           described_class.new(:active, invalid_option: 'value').build
-        }.to raise_error(ArgumentError, /Unknown key/)
+        end.to raise_error(ArgumentError, /Unknown key/)
       end
 
       it 'raises TypeError when enum contains non-boolean values' do
-        expect {
+        expect do
           described_class.new(:active, enum: [true, 'false']).build
-        }.to raise_error(TypeError)
+        end.to raise_error(TypeError)
       end
 
       it 'raises TypeError when default is not a boolean' do
-        expect {
+        expect do
           described_class.new(:active, default: 'true').build
-        }.to raise_error(TypeError)
+        end.to raise_error(TypeError)
       end
 
       it 'raises TypeError when enum is not an array' do
-        expect {
+        expect do
           described_class.new(:active, enum: 'true,false').build
-        }.to raise_error(TypeError)
+        end.to raise_error(TypeError)
       end
     end
 
     context 'with nil values' do
       it 'excludes constraints with nil values' do
         builder = described_class.new(:active,
-          default: nil,
-          enum: nil,
-          description: nil
-        )
+                                      default: nil,
+                                      enum: nil,
+                                      description: nil)
         expect(builder.build).to eq({ type: 'boolean' })
       end
     end
@@ -98,7 +96,7 @@ RSpec.describe EasyTalk::Builders::BooleanBuilder do
 
       it 'excludes optional flag when false' do
         builder = described_class.new(:subscribed, optional: false)
-        expect(builder.build).to eq({ type: 'boolean', optional: false})
+        expect(builder.build).to eq({ type: 'boolean', optional: false })
       end
     end
 
