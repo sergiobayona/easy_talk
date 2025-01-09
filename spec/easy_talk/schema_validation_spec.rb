@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe 'validing json' do
+RSpec.describe 'validating json' do
   let(:user) do
     Class.new do
       include EasyTalk::Model
@@ -15,7 +15,7 @@ RSpec.describe 'validing json' do
         property :name, String
         property :age, Integer
         property :height, Float
-        property :email, :object do
+        property :email, Hash do
           property :address, String
           property :verified, String
         end
@@ -23,39 +23,54 @@ RSpec.describe 'validing json' do
     end
   end
 
-  it 'errors on missing email' do
-    jim = user.new(name: 'Jim', age: 30, height: 5.9)
-    expect(jim.valid?).to be false
-    expect(jim.errors.size).to eq(1)
-    expect(jim.errors[:email]).to eq(['object at root is missing required properties: email'])
+  describe 'top level properties' do
+    pending 'validates the nil name' do
+      jim = user.new(name: nil, age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
+      expect(jim.valid?).to be false
+      expect(jim.errors.size).to eq(1)
+      expect(jim.errors[:name]).to eq(['is not a valid string'])
+    end
+
+    pending 'passes validation on empty name' do
+      jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
+      expect(jim.valid?).to be false
+    end
+
+    pending 'validates age attribute is not present' do
+      jim = user.new(name: 'Jim', height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
+      expect(jim.valid?).to be false
+      expect(jim.errors.size).to eq(1)
+      expect(jim.errors[:age]).to eq(['is not a valid integer'])
+    end
+
+    pending 'validates email attribute is not present' do
+      jim = user.new(name: 'Jim', age: 30, height: 5.9)
+      expect(jim.valid?).to be false
+      expect(jim.errors.size).to eq(1)
+      expect(jim.errors[:email]).to eq(["can't be blank"])
+    end
+
+    pending 'validates an empty email hash' do
+      jim = user.new(name: 'Jim', age: 30, height: 5.9, email: {})
+      expect(jim.valid?).to be false
+      expect(jim.errors.size).to eq(1)
+      expect(jim.errors['email']).to eq(["can't be blank"])
+    end
   end
 
-  it 'errors on invalid age, missing email' do
+  describe 'properties on nested objects' do
+    pending 'validates nested properties' do
+      jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'test@test.com' })
+      jim.valid?
+      expect(jim.errors['email.verified']).to eq(["can't be blank"])
+    end
+  end
+
+  pending 'errors on invalid age' do
     jim = user.new(name: 'Jim', age: 'thirty', height: 4.5, email: { address: 'test@jim.com', verified: 'true' })
+    # binding.pry
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
-    expect(jim.errors[:age]).to eq(['value at `/age` is not an integer'])
-  end
-
-  it 'errors on missing age email and height' do
-    jim = user.new(name: 'Jim', email: { address: 'jim@tst.com', verified: 'true' })
-    expect(jim.valid?).to be false
-    expect(jim.errors.size).to eq(2)
-    expect(jim.errors[:age]).to eq(['object at root is missing required properties: age'])
-    expect(jim.errors[:height]).to eq(['object at root is missing required properties: height'])
-  end
-
-  it 'errors on invalid name, email and age' do
-    jim = user.new(name: nil, email: 'test@jim', age: 'thirty')
-    expect(jim.valid?).to be false
-    expect(jim.errors[:name]).to eq(['value at `/name` is not a string'])
-    expect(jim.errors[:email]).to eq(['value at `/email` is not an object'])
-    expect(jim.errors[:age]).to eq(['value at `/age` is not an integer'])
-  end
-
-  it 'errors on verified' do
-    jim = user.new(name: 'Jim', email: { address: 'test@jim.com', verified: false }, age: 21, height: 5.9)
-    expect(jim.valid?).to be(false)
-    expect(jim.errors['email.verified']).to eq(['value at `/email/verified` is not a string'])
+    expect(jim.errors[:age]).to eq(['is not a valid integer'])
   end
 end

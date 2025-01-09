@@ -7,8 +7,6 @@ require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
 require 'active_model'
-require 'json_schemer'
-require_relative 'schema_errors_mapper'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 
@@ -39,28 +37,7 @@ module EasyTalk
       base.include ActiveModel::API # Include ActiveModel::API in the class including EasyTalk::Model
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
-      base.validates_with SchemaValidator
       base.extend(ClassMethods)
-    end
-
-    class SchemaValidator < ActiveModel::Validator
-      def validate(record)
-        result = schema_validation(record)
-        result.errors.each do |key, error_msg|
-          record.errors.add key.to_sym, error_msg
-        end
-      end
-
-      def schema_validation(record)
-        schema = JSONSchemer.schema(record.class.json_schema)
-        errors = schema.validate(record.properties)
-        SchemaErrorsMapper.new(errors)
-      end
-    end
-
-    # Returns the properties of the model as a hash with symbolized keys.
-    def properties
-      as_json.symbolize_keys!
     end
 
     # Module containing class-level methods for defining and accessing the schema of a model.
@@ -72,25 +49,11 @@ module EasyTalk
         @schema ||= build_schema(schema_definition)
       end
 
-      # Returns true if the class inherits a schema.
-      #
-      # @return [Boolean] `true` if the class inherits a schema, `false` otherwise.
-      def inherits_schema?
-        false
-      end
-
       # Returns the reference template for the model.
       #
       # @return [String] The reference template for the model.
       def ref_template
         "#/$defs/#{name}"
-      end
-
-      # Returns the name of the model as a human-readable function name.
-      #
-      # @return [String] The human-readable function name of the model.
-      def function_name
-        name.humanize.titleize
       end
 
       def properties
@@ -119,7 +82,7 @@ module EasyTalk
         @schema_definition.instance_eval(&block)
         attr_accessor(*properties)
 
-        @schema_defintion
+        @schema_definition
       end
 
       # Returns the unvalidated schema definition for the model.

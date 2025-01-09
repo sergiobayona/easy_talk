@@ -14,7 +14,7 @@ RSpec.describe 'optional properties' do
       define_schema do
         property :name, String
         property :age, Integer
-        property :email, :object do
+        property :email, Hash do
           property :address, String
           property :verified, String
         end
@@ -43,7 +43,7 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer
-            property :email, :object do
+            property :email, Hash do
               property :address, String
               property :verified, String, optional: true
             end
@@ -72,7 +72,7 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer, optional: true
-            property :email, :object do
+            property :email, Hash do
               property :address, String
               property :verified, String
             end
@@ -101,7 +101,7 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer
-            property :email, :object, optional: true do
+            property :email, Hash, optional: true do
               property :address, String
               property :verified, String
             end
@@ -130,7 +130,7 @@ RSpec.describe 'optional properties' do
         define_schema do
           property :name, String
           property :age, T.nilable(Integer)
-          property :email, :object do
+          property :email, Hash do
             property :address, String
             property :verified, String
           end

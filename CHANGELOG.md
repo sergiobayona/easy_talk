@@ -1,3 +1,18 @@
+## [1.0.0] - 2024-06-01
+- Use `Hash` instead of `:object` for inline object schema definition.
+example:
+```ruby
+    property :email, Hash do
+        property :address, :string
+        property :verified, :boolean
+    end
+```
+- Loosen up the gemspec version requirement. Makes it flexible to use the library with future versions of Rails (i.e 8.*).
+- Removed JSONScheemer gem dependency. 
+- The library does not validate by default anymore. Validating an instance requires that you explicitly define ActiveModel validations in your EasyTalk model. See: https://github.com/sergiobayona/easy_talk/blob/main/spec/easy_talk/activemodel_integration_spec.rb.
+- Internal improvements to `EasyTalk::ObjectBuilder` class. No changes to the public API.
+- Expanded the test suite.
+
 ## [0.2.2] - 2024-05-17
 - Fixed a bug where optional properties were not excluded from the required list.
 
