@@ -142,7 +142,7 @@ RSpec.describe EasyTalk::Property do
                                      })
       end
 
-      pending 'returns a custom class type with options' do
+      it 'returns a custom class type with options' do
         prop = described_class.new(:name, custom_class, title: 'Custom Class', description: 'some description').as_json
         expect(prop).to include_json({
                                        'type': 'object',

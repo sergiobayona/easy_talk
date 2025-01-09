@@ -68,7 +68,6 @@ RSpec.describe 'validating json' do
 
   pending 'errors on invalid age' do
     jim = user.new(name: 'Jim', age: 'thirty', height: 4.5, email: { address: 'test@jim.com', verified: 'true' })
-    # binding.pry
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
     expect(jim.errors[:age]).to eq(['is not a valid integer'])

@@ -36,7 +36,7 @@ RSpec.describe 'json for user model' do
     Company.define_schema do
       title 'Company'
       property :name, String
-      property :owner, Owner
+      property :owner, Owner, title: 'Owner', description: 'The company owner'
     end
 
 
@@ -49,6 +49,8 @@ RSpec.describe 'json for user model' do
           },
         'owner' => {
           'type' => 'object',
+          'title' => 'Owner',
+          'description' => 'The company owner',
           'properties' => {
             'first_name' => {
               'type' => 'string'

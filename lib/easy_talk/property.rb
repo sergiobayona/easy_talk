@@ -84,7 +84,13 @@ module EasyTalk
         args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
         builder.new(*args).build
       else
-        type.respond_to?(:schema) ? type.schema : 'object'
+        if type.respond_to?(:schema)
+          # merge the top-level constraints from *this* property
+          # e.g. :title, :description, :default, etc
+          type.schema.merge!(constraints)
+        else
+          'object'
+        end
       end
     end
 
