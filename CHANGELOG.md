@@ -7,7 +7,7 @@ example:
         property :verified, :boolean
     end
 ```
-- Loosen up the gemspec version requirement. Makes it mor flexible to be able to use the library with future versions of Rails (i.e 8.*).
+- Loosen up the gemspec version requirement. Makes it flexible to use the library with future versions of Rails (i.e 8.*).
 - Removed JSONScheemer gem dependency. 
 - The library does not validate by default anymore. Validating an instance requires that you explicitly define ActiveModel validations in your EasyTalk model. See: https://github.com/sergiobayona/easy_talk/blob/main/spec/easy_talk/activemodel_integration_spec.rb.
 - Internal improvements to `EasyTalk::ObjectBuilder` class. No changes to the public API.
