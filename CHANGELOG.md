@@ -1,3 +1,5 @@
+## [1.0.1] - 2024-09-01
+- Fixed that property with custom type does not ignore the constraints hash https://github.com/sergiobayona/easy_talk/issues/17
 ## [1.0.0] - 2024-06-01
 - Use `Hash` instead of `:object` for inline object schema definition.
 example:
