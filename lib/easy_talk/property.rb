@@ -76,7 +76,9 @@ module EasyTalk
     #
     # @return [Object] The built property.
     def build
-      if builder
+      if nilable_type?
+        build_nilable_schema
+      elsif builder
         args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
         builder.new(*args).build
       elsif type.respond_to?(:schema)
@@ -104,6 +106,28 @@ module EasyTalk
     # @return [Builder] The builder associated with the property type.
     def builder
       @builder ||= TYPE_TO_BUILDER[type.class.name.to_s] || TYPE_TO_BUILDER[type.name.to_s]
+    end
+
+    private
+
+    def nilable_type?
+      return unless type.respond_to?(:types)
+      return unless type.types.all? { |t| t.respond_to?(:raw_type) }
+
+      type.types.any? { |t| t.raw_type == NilClass }
+    end
+
+    def build_nilable_schema
+      # Extract the non-nil type from the Union
+      actual_type = type.types.find { |t| t != NilClass }
+
+      # Create a property with the actual type
+      non_nil_schema = Property.new(name, actual_type, constraints).build
+
+      # Merge the types into an array
+      non_nil_schema.merge(
+        type: [non_nil_schema[:type], 'null']
+      )
     end
   end
 end

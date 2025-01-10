@@ -70,7 +70,7 @@ RSpec.describe 'json for user model' do
                 ]
               },
               "department": {
-                "type": 'string'
+                "type": %w[string null]
               },
               "hire_date": {
                 "type": 'string',
@@ -142,7 +142,7 @@ RSpec.describe 'json for user model' do
       description 'Company employee'
       property :name, String, title: 'Full Name'
       property :gender, String, enum: %w[male female other]
-      property :department, String
+      property :department, T.nilable(String)
       property :hire_date, Date
       property :active, T::Boolean, default: true
       property :addresses, T.nilable(T::Array[Address])

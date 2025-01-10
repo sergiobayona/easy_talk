@@ -138,12 +138,17 @@ RSpec.describe 'optional properties' do
       end
     end
 
-    it 'excludes the nilable property' do
+    it 'still requires the nilable property but allows null' do
       base_level_requires = user.json_schema['required']
       nested_level_requires = user.json_schema['properties']['email']['required']
 
-      expect(base_level_requires).to eq(%w[name email])
+      # "age" is in `required` because the key must exist.
+      expect(base_level_requires).to eq(%w[name age email])
       expect(nested_level_requires).to eq(%w[address verified])
+    end
+
+    it "includes 'null' in the type array" do
+      expect(user.json_schema['properties']['age']['type']).to eq(%w[integer null])
     end
 
     context 'with a compound model' do
@@ -170,22 +175,6 @@ RSpec.describe 'optional properties' do
             'User'
           end
         end
-      end
-
-      it 'nilable property is not required' do
-        stub_const('User', user)
-        stub_const('Email', email)
-
-        User.define_schema do
-          property :name, String
-          property :age, Integer
-          property :email, T.nilable(Email)
-        end
-        base_level_requires = User.json_schema['required']
-        nested_level_requires = User.json_schema['properties']['email']['required']
-
-        expect(base_level_requires).to eq(%w[name age])
-        expect(nested_level_requires).to eq(%w[address verified])
       end
 
       it 'optional property is not required' do
