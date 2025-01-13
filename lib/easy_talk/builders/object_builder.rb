@@ -8,7 +8,7 @@ module EasyTalk
     # into a validated JSON Schema hash. It:
     #
     # 1) Recursively processes the schema’s :properties,
-    # 2) Determines which properties are required (unless nilable or optional),
+    # 2) Determines which properties are required (unless optional),
     # 3) Handles sub-schema composition (allOf, anyOf, oneOf, not),
     # 4) Produces the final object-level schema hash.
     #
@@ -108,15 +108,9 @@ module EasyTalk
       end
 
       ##
-      # Returns true if the property is declared optional or is T.nilable(...).
+      # Returns true if the property is declared optional.
       #
       def property_optional?(prop_options)
-        # For convenience, treat :type as an object
-        type_obj = prop_options[:type]
-
-        # Check Sorbet's nilable (like T.nilable(String))
-        return true if type_obj.respond_to?(:nilable?) && type_obj.nilable?
-
         # Check constraints[:optional]
         return true if prop_options.dig(:constraints, :optional)
 
@@ -136,7 +130,6 @@ module EasyTalk
                                          nested_schema_builder(prop_options)
                                        else
                                          # Normal property: e.g. { type: String, constraints: {...} }
-                                         handle_nilable_type(prop_options)
                                          Property.new(prop_name, prop_options[:type], prop_options[:constraints])
                                        end
       end
@@ -147,22 +140,7 @@ module EasyTalk
       def nested_schema_builder(prop_options)
         child_schema_def = prop_options[:properties]
         # If user used T.nilable(...) with a block, unwrap the nilable
-        handle_nilable_type(prop_options)
         ObjectBuilder.new(child_schema_def).build
-      end
-
-      ##
-      # If the type is T.nilable(SomeType), unwrap it so we produce the correct schema.
-      # This logic is borrowed from the old #handle_option_type method.
-      #
-      def handle_nilable_type(prop_options)
-        type_obj = prop_options[:type]
-        return unless type_obj.respond_to?(:nilable?) && type_obj.nilable?
-
-        # If the underlying raw_type isn't T::Types::TypedArray, then we unwrap it
-        return unless type_obj.unwrap_nilable.class != T::Types::TypedArray
-
-        prop_options[:type] = type_obj.unwrap_nilable.raw_type
       end
 
       ##

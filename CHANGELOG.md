@@ -1,3 +1,33 @@
+## [1.0.2] - 2024-13-01
+- Support "AdditionalProperties". see https://json-schema.org/understanding-json-schema/reference/object#additionalproperties
+You can now define a schema that allows any additional properties. 
+```ruby
+class Company
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    additional_properties true # or false
+  end
+end
+```
+
+You can then do:
+```ruby
+company = Company.new
+company.name = "Acme Corp" # Defined property
+company.location = "New York" # Additional property
+company.employee_count = 100 # Additional property
+```
+
+company.as_json
+# => {
+#      "name" => "Acme Corp",
+#      "location" => "New York",
+#      "employee_count" => 100
+#    }
+```
+- Fix that we don't conflate nilable properties with optional properties.
 ## [1.0.1] - 2024-09-01
 - Fixed that property with custom type does not ignore the constraints hash https://github.com/sergiobayona/easy_talk/issues/17
 ## [1.0.0] - 2024-06-01

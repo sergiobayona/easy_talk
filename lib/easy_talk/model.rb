@@ -38,6 +38,50 @@ module EasyTalk
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
       base.extend(ClassMethods)
+      base.include(InstanceMethods)
+    end
+
+    module InstanceMethods
+      def initialize(attributes = {})
+        @additional_properties = {}
+        super
+      end
+
+      def method_missing(method_name, *args)
+        method_string = method_name.to_s
+        if method_string.end_with?('=')
+          property_name = method_string.chomp('=')
+          if self.class.additional_properties_allowed?
+            @additional_properties[property_name] = args.first
+          else
+            super
+          end
+        elsif self.class.additional_properties_allowed? && @additional_properties.key?(method_string)
+          @additional_properties[method_string]
+        else
+          super
+        end
+      end
+
+      def respond_to_missing?(method_name, include_private = false)
+        method_string = method_name.to_s
+        method_string.end_with?('=') ? method_string.chomp('=') : method_string
+        self.class.additional_properties_allowed? || super
+      end
+
+      # Add to_hash method to convert defined properties to hash
+      def to_hash
+        return {} unless self.class.properties
+
+        self.class.properties.each_with_object({}) do |prop, hash|
+          hash[prop.to_s] = send(prop)
+        end
+      end
+
+      # Override as_json to include both defined and additional properties
+      def as_json(_options = {})
+        to_hash.merge(@additional_properties)
+      end
     end
 
     # Module containing class-level methods for defining and accessing the schema of a model.
@@ -90,6 +134,10 @@ module EasyTalk
       # @return [SchemaDefinition] The unvalidated schema definition for the model.
       def schema_definition
         @schema_definition ||= {}
+      end
+
+      def additional_properties_allowed?
+        @schema_definition&.schema&.fetch(:additional_properties, false)
       end
 
       private

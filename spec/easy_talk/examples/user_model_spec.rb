@@ -24,7 +24,7 @@ RSpec.describe 'json for user model' do
       define_schema do
         title 'Phone'
         description 'A phone number'
-        property :number, String, title: 'Phone Number', format: 'phone'
+        property :number, String, title: 'Phone Number', format: 'phone' # "phone" is a custom format. It is not a standard format.
         property :type, String, title: 'Phone Type'
       end
     end
