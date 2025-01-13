@@ -176,6 +176,112 @@ class Payment
 end
 ```
 
+## Additional Properties
+
+EasyTalk supports the JSON Schema `additionalProperties` keyword, allowing you to control whether instances of your model can accept properties beyond those explicitly defined in the schema.
+
+### Usage
+
+Use the `additional_properties` keyword in your schema definition to specify whether additional properties are allowed:
+
+```ruby
+class Company
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    additional_properties true  # Allow additional properties
+  end
+end
+
+# Additional properties are allowed
+company = Company.new
+company.name = "Acme Corp"        # Defined property
+company.location = "New York"     # Additional property
+company.employee_count = 100      # Additional property
+
+company.as_json
+# => {
+#      "name" => "Acme Corp",
+#      "location" => "New York",
+#      "employee_count" => 100
+#    }
+```
+
+### Behavior
+
+When `additional_properties true`:
+- Instances can accept properties beyond those defined in the schema
+- Additional properties can be set both via the constructor and direct assignment
+- Additional properties are included in JSON serialization
+- Attempting to access an undefined additional property raises NoMethodError
+
+```ruby
+# Setting via constructor
+company = Company.new(
+  name: "Acme Corp",
+  location: "New York"  # Additional property
+)
+
+# Setting via assignment
+company.rank = 1        # Additional property
+
+# Accessing undefined properties
+company.undefined_prop  # Raises NoMethodError
+```
+
+When `additional_properties false` or not specified:
+- Only properties defined in the schema are allowed
+- Attempting to set or get undefined properties raises NoMethodError
+
+```ruby
+class RestrictedCompany
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    additional_properties false  # Restrict to defined properties only
+  end
+end
+
+company = RestrictedCompany.new
+company.name = "Acme Corp"     # OK - defined property
+company.location = "New York"  # Raises NoMethodError
+```
+
+### JSON Schema
+
+The `additional_properties` setting is reflected in the generated JSON Schema:
+
+```ruby
+Company.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" }
+#      },
+#      "required" => ["name"],
+#      "additionalProperties" => true
+#    }
+```
+
+### Best Practices
+
+1. **Default to Restrictive**: Unless you specifically need additional properties, it's recommended to leave `additional_properties` as false (the default) to maintain schema integrity.
+
+2. **Documentation**: If you enable additional properties, document the expected additional property types and their purpose.
+
+3. **Validation**: Consider implementing custom validation for additional properties if they need to conform to specific patterns or types.
+
+4. **Error Handling**: When working with instances that allow additional properties, use `respond_to?` or `try` to handle potentially undefined properties safely:
+
+```ruby
+# Safe property access
+value = company.try(:optional_property)
+# or
+value = company.optional_property if company.respond_to?(:optional_property)
+```
+
 ## Type Checking and Schema Constraints
 
 EasyTalk uses a combination of standard Ruby types (`String`, `Integer`), Sorbet types (`T::Boolean`, `T::Array[String]`, etc.), and custom Sorbet-style types (`T::AnyOf[]`, `T::OneOf[]`) to perform basic type checking. For example:
