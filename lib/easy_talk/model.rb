@@ -65,7 +65,7 @@ module EasyTalk
 
       def respond_to_missing?(method_name, include_private = false)
         method_string = method_name.to_s
-        property_name = method_string.end_with?('=') ? method_string.chomp('=') : method_string
+        method_string.end_with?('=') ? method_string.chomp('=') : method_string
         self.class.additional_properties_allowed? || super
       end
 
@@ -79,7 +79,7 @@ module EasyTalk
       end
 
       # Override as_json to include both defined and additional properties
-      def as_json(options = {})
+      def as_json(_options = {})
         to_hash.merge(@additional_properties)
       end
     end
