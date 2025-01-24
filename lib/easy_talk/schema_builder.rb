@@ -2,8 +2,8 @@ module EasyTalk
   class VirtualProperty
     def self.build(name, options)
       {
-        type: options[:type].to_s.downcase,
-        description: options[:description]
+        'type' => options[:type].to_s.downcase,
+        'description' => options[:description]
       }.compact
     end
   end
@@ -40,11 +40,11 @@ module EasyTalk
 
     def build
       {
-        title: build_title,
-        description: build_description,
-        type: 'object',
-        properties: build_properties,
-        required: required_properties
+        'title' => build_title,
+        'description' => build_description,
+        'type' => 'object',
+        'properties' => build_properties,
+        'required' => required_properties
       }.compact
     end
 
@@ -85,10 +85,10 @@ module EasyTalk
 
     def build_property(column, options)
       {
-        type: type_for_column(column),
-        format: format_for_column(column),
-        maxLength: length_for_column(column),
-        description: options[:description]
+        'type' => type_for_column(column),
+        'format' => format_for_column(column),
+        'maxLength' => length_for_column(column),
+        'description' => options[:description]
       }.compact
     end
 
@@ -107,11 +107,11 @@ module EasyTalk
     def build_association_property(association)
       case association.macro
       when :belongs_to, :has_one
-        { type: 'object' }
+        { 'type' => 'object' }
       when :has_many
         {
-          type: 'array',
-          items: { type: 'object' }
+          'type' => 'array',
+          'items' => { 'type' => 'object' }
         }
       end
     end

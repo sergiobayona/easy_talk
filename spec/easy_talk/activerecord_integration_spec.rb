@@ -63,10 +63,7 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
 
   describe '#enhance_schema' do
     it 'allows further customization of the schema' do
-      # Optionally, re-open the schema to add constraints or override columns
-      Company.enhance_schema do
-        property :employee_count, Integer, description: 'Number of employees'
-      end
+      Company.enhance_schema(properties: { employee_count: { description: 'Number of employees' } })
 
       schema = Company.json_schema
       expect(schema['properties']['employee_count']['description']).to eq('Number of employees')
