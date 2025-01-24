@@ -40,11 +40,11 @@ module EasyTalk
 
     def build
       {
-        title: build_title,
-        description: build_description,
-        type: 'object',
-        properties: build_properties,
-        required: required_properties
+        'title' => build_title,
+        'description' => build_description,
+        'type' => 'object',
+        'properties' => build_properties,
+        'required' => required_properties
       }.compact
     end
 
@@ -107,11 +107,11 @@ module EasyTalk
     def build_association_property(association)
       case association.macro
       when :belongs_to, :has_one
-        { type: 'object' }
+        { 'type' => 'object' }
       when :has_many
         {
-          type: 'array',
-          items: { type: 'object' }
+          'type' => 'array',
+          'items' => { 'type' => 'object' }
         }
       end
     end
