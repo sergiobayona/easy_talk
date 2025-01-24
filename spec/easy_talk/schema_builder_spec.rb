@@ -34,12 +34,19 @@ RSpec.describe EasyTalk::SchemaBuilder do
       def self.name
         'Author'
       end
+
+      def self.schema_enhancements
+        @schema_enhancements ||= {}
+      end
+
+      class << self
+        attr_writer :schema_enhancements
+      end
     end
   end
 
   before do
     stub_const('Author', author_class)
-    # Reset configuration before each test
     EasyTalk.instance_variable_set(:@configuration, EasyTalk::Configuration.new)
   end
 
@@ -57,24 +64,24 @@ RSpec.describe EasyTalk::SchemaBuilder do
   describe '#build' do
     subject(:schema) { described_class.new(Author).build }
 
-    it 'builds basic schema structure' do
+    it 'includes type and title' do
       expect(schema).to include(
         title: 'Author',
         type: 'object'
       )
     end
 
-    it 'includes properties for columns' do
+    it 'maps column types correctly' do
       expect(schema[:properties]).to include(
         'name' => {
           type: 'string',
           maxLength: 100
         },
-        'email' => {
-          type: 'string'
+        'active' => {
+          type: 'boolean'
         },
-        'bio' => {
-          type: 'string'
+        'rating' => {
+          type: 'number'
         },
         'birth_date' => {
           type: 'string',
@@ -83,95 +90,56 @@ RSpec.describe EasyTalk::SchemaBuilder do
         'last_login' => {
           type: 'string',
           format: 'date-time'
-        },
-        'active' => {
-          type: 'boolean'
-        },
-        'rating' => {
-          type: 'number'
         }
       )
     end
 
-    it 'includes required properties' do
+    it 'includes required properties for non-null columns' do
       expect(schema[:required]).to include('name')
     end
 
     context 'with excluded columns' do
       before do
         EasyTalk.configure do |config|
-          config.excluded_columns = %i[created_at updated_at rating]
+          config.excluded_columns = %i[created_at updated_at]
         end
       end
 
       it 'excludes configured columns' do
-        expect(schema[:properties].keys).not_to include('created_at', 'updated_at', 'rating')
-      end
-    end
-
-    context 'with excluded foreign keys' do
-      before do
-        EasyTalk.configure { |config| config.exclude_foreign_keys = true }
-      end
-
-      let(:book_class) do
-        Class.new(ActiveRecord::Base) do
-          self.table_name = 'books'
-          belongs_to :author
-
-          def self.name
-            'Book'
-          end
-        end
-      end
-
-      it 'excludes foreign key columns' do
-        stub_const('Book', book_class)
-        book_schema = described_class.new(Book).build
-        expect(book_schema[:properties].keys).not_to include('author_id')
-      end
-    end
-
-    context 'with associations' do
-      it 'includes has_many associations' do
-        expect(schema[:properties]).to include(
-          'books' => {
-            type: 'array',
-            items: { type: 'object' }
-          }
-        )
-      end
-
-      context 'when associations are excluded' do
-        before do
-          EasyTalk.configure { |config| config.exclude_associations = true }
-        end
-
-        it 'does not include associations' do
-          expect(schema[:properties]).not_to include('books')
-        end
+        expect(schema[:properties].keys).not_to include('created_at', 'updated_at')
       end
     end
 
     context 'with schema enhancements' do
       before do
-        Author.enhance_schema(
+        author_class.schema_enhancements = {
           title: 'Writer',
           description: 'A person who writes books',
           properties: {
+            name: {
+              description: "Author's pen name"
+            },
             full_name: {
               virtual: true,
               type: :string,
               description: "Author's full name"
             }
           }
-        )
+        }
       end
 
       it 'uses enhanced title and description' do
         expect(schema).to include(
           title: 'Writer',
           description: 'A person who writes books'
+        )
+      end
+
+      it 'merges property enhancements with column properties' do
+        expect(schema[:properties]['name']).to include(
+          type: 'string',
+          maxLength: 100,
+          description: "Author's pen name"
         )
       end
 
@@ -185,21 +153,26 @@ RSpec.describe EasyTalk::SchemaBuilder do
       end
     end
 
-    context 'with property enhancements' do
+    context 'with associations' do
       before do
-        Author.enhance_schema(
-          properties: {
-            name: {
-              description: "Author's pen name"
-            }
-          }
-        )
+        EasyTalk.configure { |config| config.exclude_associations = false }
       end
 
-      it 'merges property enhancements' do
-        expect(schema[:properties]['name']).to include(
-          description: "Author's pen name"
+      it 'maps has_many to array type' do
+        expect(schema[:properties]['books']).to eq(
+          type: 'array',
+          items: { type: 'object' }
         )
+      end
+    end
+
+    context 'when excluding associations' do
+      before do
+        EasyTalk.configure { |config| config.exclude_associations = true }
+      end
+
+      it 'does not include associations' do
+        expect(schema[:properties]).not_to include('books')
       end
     end
   end

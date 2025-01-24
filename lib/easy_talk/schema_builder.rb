@@ -35,7 +35,7 @@ module EasyTalk
 
         required_properties << column.name unless column.null
         options = schema_enhancements.dig(:properties, column.name.to_sym) || {}
-        @properties[column.name] = build_property(column, options)
+        @properties[column.name.to_s] = build_property(column, options)
       end
     end
 
@@ -51,7 +51,7 @@ module EasyTalk
       return unless schema_enhancements[:properties]
 
       schema_enhancements[:properties].select { |_, v| v[:virtual] }.each do |name, options|
-        @properties[name] = build_virtual_property(name, options)
+        @properties[name.to_s] = build_virtual_property(name, options)
       end
     end
 
