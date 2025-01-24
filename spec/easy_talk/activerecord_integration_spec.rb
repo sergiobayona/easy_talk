@@ -28,10 +28,10 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
       include EasyTalk::ActiveRecordModel
 
       # If you like, you can immediately call enhance_schema here, or do so in the tests
-      enhance_schema do
-        title 'Company'
-        description 'A minimal example of an ActiveRecord model using EasyTalk'
-      end
+      enhance_schema({
+                       title: 'Company',
+                       description: 'A minimal example of an ActiveRecord model using EasyTalk'
+                     })
     end
   end
 

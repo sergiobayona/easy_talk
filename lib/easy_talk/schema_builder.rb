@@ -1,5 +1,33 @@
 module EasyTalk
+  class VirtualProperty
+    def self.build(name, options)
+      {
+        type: options[:type].to_s.downcase,
+        description: options[:description]
+      }.compact
+    end
+  end
+
   class SchemaBuilder
+    COLUMN_TYPE_MAP = {
+      string: 'string',
+      text: 'string',
+      integer: 'integer',
+      bigint: 'integer',
+      float: 'number',
+      decimal: 'number',
+      boolean: 'boolean',
+      date: 'string',
+      datetime: 'string',
+      timestamp: 'string'
+    }.freeze
+
+    DATETIME_FORMATS = {
+      date: 'date',
+      datetime: 'date-time',
+      timestamp: 'date-time'
+    }.freeze
+
     attr_reader :model, :required_properties
 
     def initialize(model)
@@ -35,7 +63,7 @@ module EasyTalk
 
         required_properties << column.name unless column.null
         options = schema_enhancements.dig(:properties, column.name.to_sym) || {}
-        @properties[column.name.to_s] = build_property(column, options)
+        @properties[column.name] = build_property(column, options)
       end
     end
 
@@ -51,17 +79,29 @@ module EasyTalk
       return unless schema_enhancements[:properties]
 
       schema_enhancements[:properties].select { |_, v| v[:virtual] }.each do |name, options|
-        @properties[name.to_s] = build_virtual_property(name, options)
+        @properties[name.to_s] = VirtualProperty.build(name, options)
       end
     end
 
     def build_property(column, options)
       {
-        type: column_type_to_json_type(column.type),
-        format: column_format(column),
-        maxLength: column.limit,
+        type: type_for_column(column),
+        format: format_for_column(column),
+        maxLength: length_for_column(column),
         description: options[:description]
       }.compact
+    end
+
+    def type_for_column(column)
+      COLUMN_TYPE_MAP.fetch(column.type, 'string')
+    end
+
+    def format_for_column(column)
+      DATETIME_FORMATS[column.type]
+    end
+
+    def length_for_column(column)
+      column.limit if column.type == :string
     end
 
     def build_association_property(association)
@@ -76,34 +116,8 @@ module EasyTalk
       end
     end
 
-    def build_virtual_property(name, options)
-      {
-        type: options[:type].to_s.downcase,
-        description: options[:description]
-      }.compact
-    end
-
     def columns
       model.columns.reject { |c| EasyTalk.configuration.excluded_columns.include?(c.name.to_sym) }
-    end
-
-    def column_type_to_json_type(type)
-      case type
-      when :string, :text then 'string'
-      when :integer, :bigint then 'integer'
-      when :float, :decimal then 'number'
-      when :boolean then 'boolean'
-      when :date then 'string'
-      when :datetime, :timestamp then 'string'
-      else 'string'
-      end
-    end
-
-    def column_format(column)
-      case column.type
-      when :date then 'date'
-      when :datetime, :timestamp then 'date-time'
-      end
     end
 
     def build_title
