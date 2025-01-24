@@ -5,6 +5,7 @@ module EasyTalk
   class Error < StandardError; end
   require 'sorbet-runtime'
   require 'easy_talk/sorbet_extension'
+  require 'easy_talk/configuration'
   require 'easy_talk/types/any_of'
   require 'easy_talk/types/all_of'
   require 'easy_talk/types/one_of'
