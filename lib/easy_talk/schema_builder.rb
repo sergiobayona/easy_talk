@@ -120,25 +120,6 @@ module EasyTalk
       model.columns.reject { |c| EasyTalk.configuration.excluded_columns.include?(c.name.to_sym) }
     end
 
-    def column_type_to_json_type(type)
-      case type
-      when :string, :text then 'string'
-      when :integer, :bigint then 'integer'
-      when :float, :decimal then 'number'
-      when :boolean then 'boolean'
-      when :date then 'string'
-      when :datetime, :timestamp then 'string'
-      else 'string'
-      end
-    end
-
-    def column_format(column)
-      case column.type
-      when :date then 'date'
-      when :datetime, :timestamp then 'date-time'
-      end
-    end
-
     def build_title
       schema_enhancements['title'] || model.name.demodulize.humanize
     end
