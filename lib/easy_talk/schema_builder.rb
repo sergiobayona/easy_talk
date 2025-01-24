@@ -3,7 +3,8 @@ module EasyTalk
     attr_reader :model, :required_properties
 
     def initialize(model)
-      raise ArgumentError, "Class must be an ActiveRecord model" unless model.ancestors.include?(ActiveRecord::Base)
+      raise ArgumentError, 'Class must be an ActiveRecord model' unless model.ancestors.include?(ActiveRecord::Base)
+
       @model = model
       @properties = {}
       @required_properties = []
@@ -13,7 +14,7 @@ module EasyTalk
       {
         title: build_title,
         description: build_description,
-        type: "object",
+        type: 'object',
         properties: build_properties,
         required: required_properties
       }.compact
@@ -30,7 +31,7 @@ module EasyTalk
 
     def add_column_properties
       columns.each do |column|
-        next if column.name.end_with?("_id") && EasyTalk.configuration.exclude_foreign_keys
+        next if column.name.end_with?('_id') && EasyTalk.configuration.exclude_foreign_keys
 
         required_properties << column.name unless column.null
         options = schema_enhancements.dig(:properties, column.name.to_sym) || {}
@@ -42,7 +43,7 @@ module EasyTalk
       return if EasyTalk.configuration.exclude_associations
 
       model.reflect_on_all_associations.each do |association|
-        @properties[association.name] = build_association_property(association)
+        @properties[association.name.to_s] = build_association_property(association)
       end
     end
 
@@ -66,11 +67,11 @@ module EasyTalk
     def build_association_property(association)
       case association.macro
       when :belongs_to, :has_one
-        { type: "object" }
+        { type: 'object' }
       when :has_many
         {
-          type: "array",
-          items: { type: "object" }
+          type: 'array',
+          items: { type: 'object' }
         }
       end
     end
@@ -88,20 +89,20 @@ module EasyTalk
 
     def column_type_to_json_type(type)
       case type
-      when :string, :text then "string"
-      when :integer, :bigint then "integer"
-      when :float, :decimal then "number"
-      when :boolean then "boolean"
-      when :date then "string"
-      when :datetime, :timestamp then "string"
-      else "string"
+      when :string, :text then 'string'
+      when :integer, :bigint then 'integer'
+      when :float, :decimal then 'number'
+      when :boolean then 'boolean'
+      when :date then 'string'
+      when :datetime, :timestamp then 'string'
+      else 'string'
       end
     end
 
     def column_format(column)
       case column.type
-      when :date then "date"
-      when :datetime, :timestamp then "date-time"
+      when :date then 'date'
+      when :datetime, :timestamp then 'date-time'
       end
     end
 
