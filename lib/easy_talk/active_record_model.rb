@@ -4,10 +4,9 @@ require 'active_support/concern'
 module EasyTalk
   module ActiveRecordModel
     extend ActiveSupport::Concern
+    include Model
 
     included do
-      include EasyTalk::Model
-
       def self.json_schema
         @json_schema ||= SchemaBuilder.new(self).build
       end
@@ -18,7 +17,6 @@ module EasyTalk
 
       def self.enhance_schema(enhancements)
         @schema_enhancements = enhancements
-        @json_schema = nil
       end
     end
   end
