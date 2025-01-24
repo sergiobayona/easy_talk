@@ -18,6 +18,7 @@ module EasyTalk
 
       def self.enhance_schema(enhancements)
         @schema_enhancements = enhancements
+        @json_schema = nil
       end
     end
   end
