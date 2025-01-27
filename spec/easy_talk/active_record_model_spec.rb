@@ -46,12 +46,12 @@ RSpec.describe EasyTalk::ActiveRecordModel do
     describe '.json_schema' do
       it 'returns schema for model' do
         expect(post_class.json_schema).to include(
-          type: 'object',
-          title: 'Post',
-          properties: include(
-            'title' => include(type: 'string'),
-            'content' => include(type: 'string'),
-            'published' => include(type: 'boolean')
+          'type' => 'object',
+          'title' => 'Post',
+          'properties' => include(
+            'title' => include('type' => 'string'),
+            'content' => include('type' => 'string'),
+            'published' => include('type' => 'boolean')
           )
         )
       end
@@ -70,36 +70,37 @@ RSpec.describe EasyTalk::ActiveRecordModel do
 
       it 'maintains enhancements between calls' do
         post_class.enhance_schema(title: 'Blog Post')
+
         expect(post_class.schema_enhancements[:title]).to eq('Blog Post')
       end
     end
 
     describe '.enhance_schema' do
       it 'allows setting schema title' do
-        post_class.enhance_schema(title: 'Blog Post')
-        expect(post_class.json_schema[:title]).to eq('Blog Post')
+        post_class.enhance_schema("title": 'Blog Post')
+        expect(post_class.json_schema['title']).to eq('Blog Post')
       end
 
       it 'allows setting schema description' do
-        post_class.enhance_schema(description: 'A blog post')
-        expect(post_class.json_schema[:description]).to eq('A blog post')
+        post_class.enhance_schema('description': 'A blog post')
+        expect(post_class.json_schema['description']).to eq('A blog post')
       end
 
       it 'allows adding virtual properties' do
         post_class.enhance_schema(
-          properties: {
-            word_count: {
-              virtual: true,
-              type: :integer,
-              description: 'Number of words in content'
+          'properties' => {
+            'word_count' => {
+              'virtual' => true,
+              'type' => :integer,
+              'description' => 'Number of words in content'
             }
           }
         )
 
-        expect(post_class.json_schema[:properties]).to include(
+        expect(post_class.json_schema['properties']).to include(
           'word_count' => include(
-            type: 'integer',
-            description: 'Number of words in content'
+            'type' => 'integer',
+            'description' => 'Number of words in content'
           )
         )
       end
@@ -113,15 +114,15 @@ RSpec.describe EasyTalk::ActiveRecordModel do
           }
         )
 
-        expect(post_class.json_schema[:properties]['title']).to include(
-          description: 'The title of the blog post'
+        expect(post_class.json_schema['properties']['title']).to include(
+          'description' => 'The title of the blog post'
         )
       end
 
       it 'overwrites previous enhancements' do
         post_class.enhance_schema(title: 'Blog Post')
         post_class.enhance_schema(title: 'Article')
-        expect(post_class.json_schema[:title]).to eq('Article')
+        expect(post_class.json_schema['title']).to eq('Article')
       end
 
       it 'resets schema cache when called' do
@@ -130,7 +131,7 @@ RSpec.describe EasyTalk::ActiveRecordModel do
         new_schema = post_class.json_schema
 
         expect(new_schema).not_to be(original_schema)
-        expect(new_schema[:title]).to eq('New Title')
+        expect(new_schema['title']).to eq('New Title')
       end
     end
   end

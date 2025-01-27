@@ -66,36 +66,36 @@ RSpec.describe EasyTalk::SchemaBuilder do
 
     it 'includes type and title' do
       expect(schema).to include(
-        title: 'Author',
-        type: 'object'
+        'title' => 'Author',
+        'type' => 'object'
       )
     end
 
     it 'maps column types correctly' do
-      expect(schema[:properties]).to include(
+      expect(schema['properties']).to include(
         'name' => {
-          type: 'string',
-          maxLength: 100
+          'type' => 'string',
+          'maxLength' => 100
         },
         'active' => {
-          type: 'boolean'
+          'type' => 'boolean'
         },
         'rating' => {
-          type: 'number'
+          'type' => 'number'
         },
         'birth_date' => {
-          type: 'string',
-          format: 'date'
+          'type' => 'string',
+          'format' => 'date'
         },
         'last_login' => {
-          type: 'string',
-          format: 'date-time'
+          'type' => 'string',
+          'format' => 'date-time'
         }
       )
     end
 
     it 'includes required properties for non-null columns' do
-      expect(schema[:required]).to include('name')
+      expect(schema['required']).to include('name')
     end
 
     context 'with excluded columns' do
@@ -106,7 +106,7 @@ RSpec.describe EasyTalk::SchemaBuilder do
       end
 
       it 'excludes configured columns' do
-        expect(schema[:properties].keys).not_to include('created_at', 'updated_at')
+        expect(schema['properties'].keys).not_to include('created_at', 'updated_at')
       end
     end
 
@@ -130,24 +130,24 @@ RSpec.describe EasyTalk::SchemaBuilder do
 
       it 'uses enhanced title and description' do
         expect(schema).to include(
-          title: 'Writer',
-          description: 'A person who writes books'
+          'title' => 'Writer',
+          'description' => 'A person who writes books'
         )
       end
 
       it 'merges property enhancements with column properties' do
-        expect(schema[:properties]['name']).to include(
-          type: 'string',
-          maxLength: 100,
-          description: "Author's pen name"
+        expect(schema['properties']['name']).to include(
+          'type' => 'string',
+          'maxLength' => 100,
+          'description' => "Author's pen name"
         )
       end
 
       it 'includes virtual properties' do
-        expect(schema[:properties]).to include(
+        expect(schema['properties']).to include(
           'full_name' => {
-            type: 'string',
-            description: "Author's full name"
+            'type' => 'string',
+            'description' => "Author's full name"
           }
         )
       end
@@ -159,9 +159,9 @@ RSpec.describe EasyTalk::SchemaBuilder do
       end
 
       it 'maps has_many to array type' do
-        expect(schema[:properties]['books']).to eq(
-          type: 'array',
-          items: { type: 'object' }
+        expect(schema['properties']['books']).to eq(
+          'type' => 'array',
+          'items' => { 'type' => 'object' }
         )
       end
     end
@@ -172,7 +172,7 @@ RSpec.describe EasyTalk::SchemaBuilder do
       end
 
       it 'does not include associations' do
-        expect(schema[:properties]).not_to include('books')
+        expect(schema['properties']).not_to include('books')
       end
     end
   end

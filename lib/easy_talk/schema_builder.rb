@@ -2,8 +2,8 @@ module EasyTalk
   class VirtualProperty
     def self.build(name, options)
       {
-        'type' => options[:type].to_s.downcase,
-        'description' => options[:description]
+        'type' => options['type'].to_s.downcase,
+        'description' => options['description']
       }.compact
     end
   end
@@ -62,7 +62,8 @@ module EasyTalk
         next if column.name.end_with?('_id') && EasyTalk.configuration.exclude_foreign_keys
 
         required_properties << column.name unless column.null
-        options = schema_enhancements.dig(:properties, column.name.to_sym) || {}
+
+        options = schema_enhancements.dig('properties', column.name) || {}
         @properties[column.name] = build_property(column, options)
       end
     end
@@ -76,9 +77,9 @@ module EasyTalk
     end
 
     def add_virtual_properties
-      return unless schema_enhancements[:properties]
+      return unless schema_enhancements['properties']
 
-      schema_enhancements[:properties].select { |_, v| v[:virtual] }.each do |name, options|
+      schema_enhancements['properties'].select { |_, v| v['virtual'] }.each do |name, options|
         @properties[name.to_s] = VirtualProperty.build(name, options)
       end
     end
@@ -88,7 +89,7 @@ module EasyTalk
         'type' => type_for_column(column),
         'format' => format_for_column(column),
         'maxLength' => length_for_column(column),
-        'description' => options[:description]
+        'description' => options['description']
       }.compact
     end
 
@@ -121,15 +122,15 @@ module EasyTalk
     end
 
     def build_title
-      schema_enhancements[:title] || model.name.demodulize.humanize
+      schema_enhancements['title'] || model.name.demodulize.humanize
     end
 
     def build_description
-      schema_enhancements[:description]
+      schema_enhancements['description']
     end
 
     def schema_enhancements
-      @schema_enhancements ||= model.respond_to?(:schema_enhancements) ? model.schema_enhancements : {}
+      @schema_enhancements ||= model.respond_to?(:schema_enhancements) ? model.schema_enhancements.deep_transform_keys(&:to_s) : {}
     end
   end
 end
