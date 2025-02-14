@@ -62,7 +62,7 @@ module EasyTalk
         next if column.name.end_with?('_id') && EasyTalk.configuration.exclude_foreign_keys
 
         required_properties << column.name unless column.null
-        options = schema_enhancements.dig(:properties, column.name.to_sym) || {}
+        options = schema_enhancements.dig('properties', column.name) || {}
         @properties[column.name.to_s] = build_property(column, options)
       end
     end
