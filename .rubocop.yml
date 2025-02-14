@@ -4,9 +4,12 @@ require:
 
 AllCops:
   TargetRubyVersion: 3.2
-  
-RSpec/FilePath:
-  SpecSuffixOnly: true
+
+RSpec/SpecFilePathFormat:
+  Enabled: true
+
+RSpec/SpecFilePathSuffix:
+  Enabled: true
 
 RSpec/ExampleLength:
   Max: 10
