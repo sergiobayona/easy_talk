@@ -1,20 +1,13 @@
 require 'spec_helper'
 require 'easy_talk/builders/base_builder'
-require 'active_support/core_ext/hash/keys' # for assert_valid_keys
+require 'active_support/core_ext/hash/keys'
+require 'sorbet-runtime'
 
 RSpec.describe EasyTalk::Builders::BaseBuilder do
-  # A dummy type to simulate type-checking using recursively_valid?
-  class DummyType
-    def recursively_valid?(value)
-      # Only "valid_value" is acceptable
-      value == 'valid_value'
-    end
-  end
-
   let(:name)   { :dummy_property }
   let(:schema) { { type: 'object' } }
 
-  context 'when initialized with valid options' do
+  context 'when initialized with valid common options' do
     let(:options) { { title: 'A Title', description: 'A description', optional: false } }
     let(:builder) { described_class.new(name, schema.dup, options) }
 
@@ -25,7 +18,7 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
     end
 
     it 'merges common options and applies them in build' do
-      # build should add keys to the schema using the mapping from COMMON_OPTIONS
+      # The build method should add keys to the schema using COMMON_OPTIONS mapping.
       result = builder.build
       expect(result).to include(
         type: 'object',
@@ -72,6 +65,14 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
   end
 
   context 'when type checking via recursively_valid?' do
+    # --- Tests using a custom dummy type ---
+    # Define a dummy type as a class with a class method recursively_valid?
+    class DummyType
+      def self.recursively_valid?(value)
+        value == 'valid_value'
+      end
+    end
+
     let(:custom_valid_options) { { custom: { type: DummyType, key: :custom_key } } }
 
     context 'and the provided value does not pass recursively_valid?' do
@@ -91,6 +92,52 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
       it 'includes the custom option in the built schema' do
         result = builder.build
         expect(result).to include(custom_key: 'valid_value')
+      end
+    end
+  end
+
+  context 'when the valid option is an array type' do
+    context 'with T::Array[String] and a valid array' do
+      let(:custom_valid_options) { { array_option: { type: T::Array[String], key: :array_key } } }
+      let(:options) { { array_option: %w[a b c] } }
+      let(:builder) { described_class.new(name, schema.dup, options, custom_valid_options) }
+
+      it 'includes the array option in the built schema' do
+        result = builder.build
+        expect(result).to include(array_key: %w[a b c])
+      end
+    end
+
+    context 'with T::Array[String] and an invalid array' do
+      let(:custom_valid_options) { { array_option: { type: T::Array[String], key: :array_key } } }
+      let(:options) { { array_option: ['a', 2, 'c'] } }
+      let(:builder) { described_class.new(name, schema.dup, options, custom_valid_options) }
+
+      it 'raises a TypeError with a proper message' do
+        expect { builder.build }
+          .to raise_error(TypeError, /Invalid type for array_option/)
+      end
+    end
+
+    context 'with T::Array[Integer] and a valid array' do
+      let(:custom_valid_options) { { int_array: { type: T::Array[Integer], key: :int_array_key } } }
+      let(:options) { { int_array: [1, 2, 3] } }
+      let(:builder) { described_class.new(name, schema.dup, options, custom_valid_options) }
+
+      it 'includes the integer array option in the built schema' do
+        result = builder.build
+        expect(result).to include(int_array_key: [1, 2, 3])
+      end
+    end
+
+    context 'with T::Array[Integer] and an invalid array' do
+      let(:custom_valid_options) { { int_array: { type: T::Array[Integer], key: :int_array_key } } }
+      let(:options) { { int_array: [1, '2', 3] } }
+      let(:builder) { described_class.new(name, schema.dup, options, custom_valid_options) }
+
+      it 'raises a TypeError with a proper message' do
+        expect { builder.build }
+          .to raise_error(TypeError, /Invalid type for int_array/)
       end
     end
   end
