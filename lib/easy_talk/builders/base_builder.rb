@@ -42,15 +42,18 @@ module EasyTalk
       # Builds the schema object based on the provided options.
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
-        @valid_options.each_with_object(schema) do |(key, value), obj|
-          next if @options[key].nil?
+        @valid_options.each_with_object(schema) do |(constraint_name, value), obj|
+          next if @options[constraint_name].nil?
 
-          # Work around for Sorbet's default inability to type check the items inside an array
-          if value[:type].respond_to?(:recursively_valid?) && !value[:type].recursively_valid?(@options[key])
-            raise TypeError, "Invalid type for #{key}"
-          end
+          # Use our centralized validation
+          ErrorHelper.validate_constraint_value(
+            property_name: property_name,
+            constraint_name: constraint_name,
+            value_type: value[:type],
+            value: @options[constraint_name]
+          )
 
-          obj[value[:key]] = T.let(@options[key], value[:type])
+          obj[value[:key]] = @options[constraint_name]
         end
       end
 

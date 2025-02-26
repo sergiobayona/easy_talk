@@ -110,7 +110,7 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
     it 'raises an error' do
       expect do
         described_class.new(:name, T::Array[Integer], enum: %w[one two three]).build
-      end.to raise_error(TypeError, 'Invalid type for enum')
+      end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'enum' at index 0 expects Integer, but received \"one\" (String).")
     end
   end
 end

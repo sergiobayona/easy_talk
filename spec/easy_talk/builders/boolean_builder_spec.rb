@@ -62,19 +62,19 @@ RSpec.describe EasyTalk::Builders::BooleanBuilder do
       it 'raises TypeError when enum contains non-boolean values' do
         expect do
           described_class.new(:active, enum: [true, 'false']).build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'active': Constraint 'enum' expects Boolean (true or false), but received [true, \"false\"] (Array).")
       end
 
       it 'raises TypeError when default is not a boolean' do
         expect do
           described_class.new(:active, default: 'true').build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'active': Constraint 'default' expects Boolean (true or false), but received \"true\" (String).")
       end
 
       it 'raises TypeError when enum is not an array' do
         expect do
           described_class.new(:active, enum: 'true,false').build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'active': Constraint 'enum' expects Boolean (true or false), but received \"true,false\" (String).")
       end
     end
 

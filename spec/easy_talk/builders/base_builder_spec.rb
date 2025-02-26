@@ -74,33 +74,6 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
     end
   end
 
-  context 'when type checking via recursively_valid?' do
-    # Use DummyType (a subclass of String) as the type constraint.
-    let(:custom_valid_options) { { custom: { type: DummyType, key: :custom_key } } }
-
-    context 'and the provided value does not pass recursively_valid?' do
-      # Here we pass a value that is an instance of DummyType but with invalid content.
-      let(:custom_options) { { custom: DummyType.new('invalid_value') } }
-      let(:builder) { described_class.new(property_name, schema.dup, custom_options, custom_valid_options) }
-
-      it 'raises a TypeError with a proper message' do
-        expect { builder.build }
-          .to raise_error(TypeError, /Invalid type for custom/)
-      end
-    end
-
-    context 'and the provided value passes recursively_valid?' do
-      # Pass an instance of DummyType whose value is "valid_value".
-      let(:custom_options) { { custom: DummyType.new('valid_value') } }
-      let(:builder) { described_class.new(property_name, schema.dup, custom_options, custom_valid_options) }
-
-      it 'includes the custom option in the built schema' do
-        result = builder.build
-        expect(result).to include(custom_key: DummyType.new('valid_value'))
-      end
-    end
-  end
-
   context 'when the valid option is an array type' do
     context 'with T::Array[String] and a valid array' do
       let(:custom_valid_options) { { array_option: { type: T::Array[String], key: :array_key } } }
@@ -120,7 +93,7 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
 
       it 'raises a TypeError with a proper message' do
         expect { builder.build }
-          .to raise_error(TypeError, /Invalid type for array_option/)
+          .to raise_error(EasyTalk::ConstraintError, "Error in property 'dummy_property': Constraint 'array_option' at index 1 expects String, but received 2 (Integer).")
       end
     end
 
@@ -142,7 +115,7 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
 
       it 'raises a TypeError with a proper message' do
         expect { builder.build }
-          .to raise_error(TypeError, /Invalid type for int_array/)
+          .to raise_error(EasyTalk::ConstraintError, "Error in property 'dummy_property': Constraint 'int_array' at index 1 expects Integer, but received \"2\" (String).")
       end
     end
   end

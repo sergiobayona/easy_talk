@@ -22,7 +22,7 @@ module EasyTalk
     options.each_key do |k|
       next if valid_keys.include?(k)
 
-      ErrorHelper.raise_unknown_option_error(property: property_name, option: options, valid_options: valid_keys)
+      ErrorHelper.raise_unknown_option_error(property_name: property_name, option: options, valid_options: valid_keys)
     end
   end
 end
