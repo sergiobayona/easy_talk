@@ -15,11 +15,11 @@ module EasyTalk
         optional: { type: T.nilable(T::Boolean), key: :optional }
       }.freeze
 
-      attr_reader :name, :schema, :options
+      attr_reader :property_name, :schema, :options
 
       sig do
         params(
-          name: Symbol,
+          property_name: Symbol,
           schema: T::Hash[Symbol, T.untyped],
           options: T::Hash[Symbol, String],
           valid_options: T::Hash[Symbol, T.untyped]
@@ -27,14 +27,14 @@ module EasyTalk
       end
       # Initializes a new instance of the BaseBuilder class.
       #
-      # @param name [Symbol] The name of the property.
+      # @param property_name [Symbol] The name of the property.
       # @param schema [Hash] A hash representing a json schema object.
       # @param options [Hash] The options for the builder (default: {}).
       # @param valid_options [Hash] The acceptable options for the given property type (default: {}).
-      def initialize(name, schema, options = {}, valid_options = {})
+      def initialize(property_name, schema, options = {}, valid_options = {})
         @valid_options = COMMON_OPTIONS.merge(valid_options)
-        options.assert_valid_keys(@valid_options.keys)
-        @name = name
+        EasyTalk.assert_valid_property_options(property_name, options, @valid_options.keys)
+        @property_name = property_name
         @schema = schema
         @options = options
       end

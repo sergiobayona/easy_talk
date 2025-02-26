@@ -7,6 +7,7 @@ module EasyTalk
     end
 
     def self.raise_unknown_option_error(property:, option:, valid_options:)
+      option = option.keys.first if option.is_a?(Hash)
       message = "Unknown option '#{option}' for property '#{property}'. " \
                 "Valid options are: #{valid_options.join(', ')}."
       raise UnknownOptionError, message

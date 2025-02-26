@@ -2,7 +2,6 @@
 
 # The EasyTalk module is the main namespace for the gem.
 module EasyTalk
-  class Error < StandardError; end
   require 'sorbet-runtime'
   require 'easy_talk/sorbet_extension'
   require 'easy_talk/errors'
@@ -18,6 +17,12 @@ module EasyTalk
   require 'easy_talk/tools/function_builder'
   require 'easy_talk/version'
 
-  class UnsupportedTypeError < ArgumentError; end
-  class UnsupportedConstraintError < ArgumentError; end
+  def self.assert_valid_property_options(property_name, options, *valid_keys)
+    valid_keys.flatten!
+    options.each_key do |k|
+      next if valid_keys.include?(k)
+
+      ErrorHelper.raise_unknown_option_error(property: property_name, option: options, valid_options: valid_keys)
+    end
+  end
 end

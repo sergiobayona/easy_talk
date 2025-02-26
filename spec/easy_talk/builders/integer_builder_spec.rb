@@ -64,7 +64,7 @@ RSpec.describe EasyTalk::Builders::IntegerBuilder do
     it 'raises an error' do
       expect do
         described_class.new(:name, invalid: 'option').build
-      end.to raise_error(ArgumentError)
+      end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option 'invalid' for property 'name'. Valid options are:/)
     end
   end
 

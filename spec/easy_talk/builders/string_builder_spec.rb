@@ -76,7 +76,7 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
       it 'raises ArgumentError for unknown constraints' do
         expect do
           described_class.new(:name, invalid_option: 'value').build
-        end.to raise_error(ArgumentError, /Unknown key: :invalid_option/)
+        end.to raise_error(EasyTalk::UnknownOptionError, "Unknown option 'invalid_option' for property 'name'. Valid options are: title, description, optional, format, pattern, min_length, max_length, enum, const, default.")
       end
 
       it 'raises TypeError when format is not a string' do
