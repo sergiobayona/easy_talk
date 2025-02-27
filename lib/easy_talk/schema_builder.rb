@@ -60,6 +60,7 @@ module EasyTalk
     def add_column_properties
       columns.each do |column|
         next if column.name.end_with?('_id') && EasyTalk.configuration.exclude_foreign_keys
+        next if ignored_columns.include?(column.name.to_sym)
 
         required_properties << column.name unless column.null
         options = schema_enhancements.dig('properties', column.name) || {}
@@ -130,6 +131,16 @@ module EasyTalk
 
     def schema_enhancements
       @schema_enhancements ||= model.respond_to?(:schema_enhancements) ? model.schema_enhancements.deep_transform_keys(&:to_s) : {}
+    end
+
+    # New method to handle ignored columns
+    def ignored_columns
+      @ignored_columns ||= begin
+        model_exclusions = schema_enhancements['ignore'] || []
+
+        # Convert to symbols for consistent comparison
+        model_exclusions.map(&:to_sym)
+      end
     end
   end
 end

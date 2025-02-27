@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'active_record'
 require 'easy_talk/schema_builder'
@@ -98,15 +100,108 @@ RSpec.describe EasyTalk::SchemaBuilder do
       expect(schema['required']).to include('name')
     end
 
-    context 'with excluded columns' do
+    context 'with excluded columns via global configuration' do
       before do
         EasyTalk.configure do |config|
           config.excluded_columns = %i[created_at updated_at]
         end
       end
 
-      it 'excludes configured columns' do
+      it 'excludes globally configured columns' do
         expect(schema['properties'].keys).not_to include('created_at', 'updated_at')
+      end
+    end
+
+    context 'with model-specific column ignoring' do
+      before do
+        author_class.schema_enhancements = {
+          ignore: %i[bio email]
+        }
+      end
+
+      it 'excludes model-specific ignored columns' do
+        expect(schema['properties'].keys).not_to include('bio', 'email')
+        expect(schema['properties'].keys).to include('name', 'birth_date', 'last_login')
+      end
+    end
+
+    context 'with both global and model-specific column exclusions' do
+      before do
+        EasyTalk.configure do |config|
+          config.excluded_columns = %i[created_at updated_at]
+        end
+
+        author_class.schema_enhancements = {
+          ignore: %i[bio email]
+        }
+      end
+
+      it 'combines both global and model-specific exclusions' do
+        expect(schema['properties'].keys).not_to include(
+          'bio', 'email', 'created_at', 'updated_at'
+        )
+        expect(schema['properties'].keys).to include('name', 'birth_date', 'last_login')
+      end
+    end
+
+    context 'with string keys in ignore array' do
+      before do
+        author_class.schema_enhancements = {
+          ignore: %w[bio email]
+        }
+      end
+
+      it 'handles string keys in ignore array properly' do
+        expect(schema['properties'].keys).not_to include('bio', 'email')
+      end
+    end
+
+    context 'with required properties and ignored columns' do
+      before do
+        author_class.schema_enhancements = {
+          ignore: [:name] # name is non-null in the database
+        }
+      end
+
+      it 'does not include ignored columns in required properties' do
+        expect(schema['properties'].keys).not_to include('name')
+        expect(schema['required']).not_to include('name')
+      end
+    end
+
+    context 'with foreign keys exclusion and ignored columns' do
+      before do
+        EasyTalk.configure do |config|
+          config.exclude_foreign_keys = true
+        end
+
+        # Using a book class for this test since it has a foreign key
+        book_class = Class.new(ActiveRecord::Base) do
+          self.table_name = 'books'
+          belongs_to :author
+
+          def self.name
+            'Book'
+          end
+
+          def self.schema_enhancements
+            @schema_enhancements ||= {}
+          end
+
+          class << self
+            attr_writer :schema_enhancements
+          end
+        end
+
+        stub_const('Book', book_class)
+        book_class.schema_enhancements = {
+          ignore: [:title]
+        }
+      end
+
+      it 'respects both ignore settings and foreign keys exclusion' do
+        book_schema = described_class.new(Book).build
+        expect(book_schema['properties'].keys).not_to include('title', 'author_id')
       end
     end
 

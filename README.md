@@ -301,6 +301,165 @@ If you define `minimum: 1` on a `String` property, it raises an error because mi
 
 You can instantiate an EasyTalk model with a hash of attributes and validate it using standard ActiveModel validations. EasyTalk does not automatically validate instances; you must explicitly define ActiveModel validations in your EasyTalk model. See [spec/easy_talk/activemodel_integration_spec.rb](ActiveModel Integration Spec) for examples.
 
+## ActiveRecord Integration
+
+EasyTalk provides seamless integration with ActiveRecord models, automatically generating JSON schemas based on your database tables.
+
+### Getting Started with ActiveRecord Models
+
+To use EasyTalk with your ActiveRecord models, include the `EasyTalk::ActiveRecordModel` module:
+
+```ruby
+class Product < ActiveRecord::Base
+  include EasyTalk::ActiveRecordModel
+end
+```
+
+This automatically builds a JSON schema from your table structure, including:
+- Mapping column types to JSON schema types (strings, integers, booleans, etc.)
+- Setting columns with `null: false` as required properties
+- Handling date and time formats
+- Managing associations (optional)
+
+### Enhancing Your Schema
+
+You can enhance the auto-generated schema with additional information:
+
+```ruby
+class Product < ActiveRecord::Base
+  include EasyTalk::ActiveRecordModel
+  
+  enhance_schema({
+    title: "Retail Product",
+    description: "A product available for purchase",
+    properties: {
+      name: {
+        description: "Product display name",
+        title: "Product Name"
+      },
+      price: {
+        description: "Retail price in USD"
+      }
+    }
+  })
+end
+```
+
+The `enhance_schema` method merges your custom information with the schema generated from the database columns.
+
+### Virtual Properties
+
+You can add properties that don't exist as database columns:
+
+```ruby
+class Product < ActiveRecord::Base
+  include EasyTalk::ActiveRecordModel
+  
+  enhance_schema({
+    properties: {
+      full_details: {
+        virtual: true,
+        type: :string,
+        description: "Complete product information"
+      }
+    }
+  })
+end
+```
+
+### Ignoring Columns
+
+There are often database columns you don't want to include in your JSON schema (like internal IDs or timestamps). EasyTalk gives you two ways to exclude columns:
+
+#### 1. Global Configuration
+
+Set columns to exclude across all ActiveRecord models:
+
+```ruby
+EasyTalk.configure do |config|
+  config.excluded_columns = [:created_at, :updated_at, :deleted_at]
+  config.exclude_foreign_keys = true  # Excludes columns ending with '_id'
+  config.exclude_associations = true  # Excludes has_many/belongs_to relationships
+end
+```
+
+#### 2. Model-Specific Column Ignoring
+
+For more granular control, specify columns to ignore at the model level:
+
+```ruby
+class Product < ActiveRecord::Base
+  include EasyTalk::ActiveRecordModel
+  
+  enhance_schema({
+    title: "Retail Product",
+    description: "A product available for purchase",
+    ignore: [:id, :sku_internal, :created_at, :updated_at]
+  })
+end
+```
+
+Both approaches can be combined - the schema will exclude both globally configured columns and model-specific ignored columns.
+
+### Associations and Foreign Keys
+
+By default, EasyTalk includes your model's associations in the schema. You can control this behavior with configuration:
+
+```ruby
+EasyTalk.configure do |config|
+  config.exclude_associations = true    # Don't include associations  
+  config.exclude_foreign_keys = true    # Don't include foreign key columns
+end
+```
+
+For associations, EasyTalk will map:
+- `has_many` to an array type
+- `belongs_to` and `has_one` to an object type
+
+### Example: Complete ActiveRecord Integration
+
+Here's a full example showing the ActiveRecord integration features:
+
+```ruby
+# Configure global settings
+EasyTalk.configure do |config|
+  config.excluded_columns = [:created_at, :updated_at]
+end
+
+class Product < ActiveRecord::Base
+  include EasyTalk::ActiveRecordModel
+  belongs_to :category
+  has_many :reviews
+  
+  enhance_schema({
+    title: "Retail Product",
+    description: "A product in our catalog",
+    ignore: [:internal_ref_id],
+    properties: {
+      name: {
+        description: "The display name of the product",
+        title: "Product Name"
+      },
+      average_rating: {
+        virtual: true,
+        type: :number,
+        description: "Average customer rating (1-5 stars)"
+      }
+    }
+  })
+end
+
+# Later, get the schema:
+schema = Product.json_schema
+```
+
+The resulting schema will:
+- Include all database columns except `created_at`, `updated_at`, and `internal_ref_id`
+- Include properly typed properties based on database column types
+- Contain enhanced documentation for the `name` property
+- Include the virtual `average_rating` property
+- Include associations unless globally configured not to
+
 ## JSON Schema Specifications
 
 EasyTalk is currently loose about JSON Schema versions. It doesn’t strictly enforce or adhere to any particular version of the specification. The goal is to add more robust support for the latest JSON Schema specs in the future.
