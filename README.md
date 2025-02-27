@@ -193,12 +193,25 @@ class Company
     additional_properties true  # Allow additional properties
   end
 end
+```
 
+```ruby
 # Additional properties are allowed
 company = Company.new
 company.name = "Acme Corp"        # Defined property
 company.location = "New York"     # Additional property
 company.employee_count = 100      # Additional property
+```
+
+Or..
+
+```ruby
+  company = Company.new(
+    name: "Acme Corp",
+    location: "New York",
+    employee_count: 100
+  )
+```
 
 company.as_json
 # => {
