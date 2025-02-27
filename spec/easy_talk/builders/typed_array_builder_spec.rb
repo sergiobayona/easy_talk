@@ -101,8 +101,8 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
     it 'raises an error' do
       expect do
         described_class.new(:name, String, invalid: 'key').build
-      end.to raise_error(ArgumentError,
-                         'Unknown key: :invalid. Valid keys are: :title, :description, :optional, :min_items, :max_items, :unique_items, :enum, :const')
+      end.to raise_error(EasyTalk::UnknownOptionError,
+                         "Unknown option 'invalid' for property 'name'. Valid options are: title, description, optional, min_items, max_items, unique_items, enum, const.")
     end
   end
 
@@ -110,7 +110,7 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
     it 'raises an error' do
       expect do
         described_class.new(:name, T::Array[Integer], enum: %w[one two three]).build
-      end.to raise_error(TypeError, 'Invalid type for enum')
+      end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'enum' at index 0 expects Integer, but received \"one\" (String).")
     end
   end
 end

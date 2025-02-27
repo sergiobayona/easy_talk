@@ -108,9 +108,9 @@ In the example above, the define_schema method adds a title and description to t
 * A type (generic Ruby type like String/Integer, a Sorbet type like T::Boolean, or one of the custom types like T::AnyOf[...])
 * A hash of constraints (e.g., minimum: 18, enum: [1, 2, 3], etc.)
 
-## Why Sortbet-style types?
+## Why Sorbet-style types?
 
-Ruby doesn’t natively allow complex types like Array[String] or Array[Integer]. Sorbet-style types let you define these compound types clearly. EasyTalk uses this style to handle property types such as T::Array[String] or T::AnyOf[ClassA, ClassB].
+Ruby doesn’t natively allow complex types like `Array[String]` or `Array[Integer]`. Sorbet-style types let you define these compound types clearly. EasyTalk uses this style to handle property types such as `T::Array[String]` or `T::AnyOf[ClassA, ClassB]`.
 
 ## Property Constraints
 
@@ -199,6 +199,14 @@ company = Company.new
 company.name = "Acme Corp"        # Defined property
 company.location = "New York"     # Additional property
 company.employee_count = 100      # Additional property
+
+# Or..
+
+  company = Company.new(
+    name: "Acme Corp",
+    location: "New York",
+    employee_count: 100
+  )
 
 company.as_json
 # => {

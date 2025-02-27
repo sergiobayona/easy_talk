@@ -8,7 +8,7 @@ RSpec.describe EasyTalk::Builders::NumberBuilder do
     let(:builder) { described_class.new(:age, minimum: 18, maximum: 100) }
 
     it 'sets the name' do
-      expect(builder.name).to eq(:age)
+      expect(builder.property_name).to eq(:age)
     end
 
     it 'sets the constraint options' do

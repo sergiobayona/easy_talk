@@ -15,11 +15,11 @@ module EasyTalk
         optional: { type: T.nilable(T::Boolean), key: :optional }
       }.freeze
 
-      attr_reader :name, :schema, :options
+      attr_reader :property_name, :schema, :options
 
       sig do
         params(
-          name: Symbol,
+          property_name: Symbol,
           schema: T::Hash[Symbol, T.untyped],
           options: T::Hash[Symbol, String],
           valid_options: T::Hash[Symbol, T.untyped]
@@ -27,14 +27,14 @@ module EasyTalk
       end
       # Initializes a new instance of the BaseBuilder class.
       #
-      # @param name [Symbol] The name of the property.
+      # @param property_name [Symbol] The name of the property.
       # @param schema [Hash] A hash representing a json schema object.
       # @param options [Hash] The options for the builder (default: {}).
       # @param valid_options [Hash] The acceptable options for the given property type (default: {}).
-      def initialize(name, schema, options = {}, valid_options = {})
+      def initialize(property_name, schema, options = {}, valid_options = {})
         @valid_options = COMMON_OPTIONS.merge(valid_options)
-        options.assert_valid_keys(@valid_options.keys)
-        @name = name
+        EasyTalk.assert_valid_property_options(property_name, options, @valid_options.keys)
+        @property_name = property_name
         @schema = schema
         @options = options
       end
@@ -42,16 +42,18 @@ module EasyTalk
       # Builds the schema object based on the provided options.
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
-        @valid_options.each_with_object(schema) do |(key, value), obj|
-          next if @options[key].nil?
+        @valid_options.each_with_object(schema) do |(constraint_name, value), obj|
+          next if @options[constraint_name].nil?
 
-          # Work around for Sorbet's default inability to type check the items inside an array
+          # Use our centralized validation
+          ErrorHelper.validate_constraint_value(
+            property_name: property_name,
+            constraint_name: constraint_name,
+            value_type: value[:type],
+            value: @options[constraint_name]
+          )
 
-          if value[:type].respond_to?(:recursively_valid?) && !value[:type].recursively_valid?(@options[key])
-            raise TypeError, "Invalid type for #{key}"
-          end
-
-          obj[value[:key]] = T.let(@options[key], value[:type])
+          obj[value[:key]] = @options[constraint_name]
         end
       end
 

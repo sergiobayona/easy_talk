@@ -76,43 +76,43 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
       it 'raises ArgumentError for unknown constraints' do
         expect do
           described_class.new(:name, invalid_option: 'value').build
-        end.to raise_error(ArgumentError, /Unknown key: :invalid_option/)
+        end.to raise_error(EasyTalk::UnknownOptionError, "Unknown option 'invalid_option' for property 'name'. Valid options are: title, description, optional, format, pattern, min_length, max_length, enum, const, default.")
       end
 
       it 'raises TypeError when format is not a string' do
         expect do
           described_class.new(:email, format: 123).build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'email': Constraint 'format' expects String, but received 123 (Integer).")
       end
 
       it 'raises TypeError when pattern is not a string' do
         expect do
           described_class.new(:zip, pattern: 123).build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'zip': Constraint 'pattern' expects String, but received 123 (Integer).")
       end
 
       it 'raises TypeError when minLength is not an integer' do
         expect do
           described_class.new(:name, min_length: '8').build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'min_length' expects Integer, but received \"8\" (String).")
       end
 
       it 'raises TypeError when maxLength is not an integer' do
         expect do
           described_class.new(:name, max_length: '20').build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'max_length' expects Integer, but received \"20\" (String).")
       end
 
       it 'raises TypeError when enum contains non-string values' do
         expect do
           described_class.new(:status, enum: ['active', 123, 'pending']).build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'status': Constraint 'enum' at index 1 expects String, but received 123 (Integer).")
       end
 
       it 'raises TypeError when const is not a string' do
         expect do
-          described_class.new(:type, const: 123).build
-        end.to raise_error(TypeError)
+          described_class.new(:hair_color, const: 123).build
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'hair_color': Constraint 'const' expects String, but received 123 (Integer).")
       end
     end
 
@@ -132,14 +132,14 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
         builder = described_class.new(:name, min_length: '')
         expect do
           builder.build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'min_length' expects Integer, but received \"\" (String).")
       end
 
       it 'raises a type error' do
         builder = described_class.new(:name, max_length: '')
         expect do
           builder.build
-        end.to raise_error(TypeError)
+        end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'max_length' expects Integer, but received \"\" (String).")
       end
     end
 

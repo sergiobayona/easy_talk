@@ -3,8 +3,6 @@
 require_relative 'keywords'
 
 module EasyTalk
-  class InvalidPropertyNameError < StandardError; end
-
   #
   #= EasyTalk \SchemaDefinition
   # SchemaDefinition provides the methods for defining a schema within the define_schema block.

@@ -64,7 +64,7 @@ RSpec.describe EasyTalk::Builders::IntegerBuilder do
     it 'raises an error' do
       expect do
         described_class.new(:name, invalid: 'option').build
-      end.to raise_error(ArgumentError)
+      end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option 'invalid' for property 'name'. Valid options are:/)
     end
   end
 
@@ -72,7 +72,7 @@ RSpec.describe EasyTalk::Builders::IntegerBuilder do
     it 'raises an error when the type is wrong' do
       expect do
         described_class.new(:name, minimum: '1').build
-      end.to raise_error(TypeError)
+      end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'minimum' expects Integer, but received \"1\" (String).")
     end
 
     it 'raises an error with nil value' do
@@ -83,13 +83,13 @@ RSpec.describe EasyTalk::Builders::IntegerBuilder do
     it "raises an error when the value isn't a number" do
       expect do
         described_class.new(:name, minimum: 'a').build
-      end.to raise_error(TypeError)
+      end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'minimum' expects Integer, but received \"a\" (String).")
     end
 
     it 'raises an error when the value is an empty string' do
       expect do
         described_class.new(:name, minimum: '').build
-      end.to raise_error(TypeError)
+      end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'minimum' expects Integer, but received \"\" (String).")
     end
   end
 end
