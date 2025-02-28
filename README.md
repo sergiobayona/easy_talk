@@ -275,7 +275,7 @@ Company.json_schema
 
 ### Best Practices
 
-1. **Default to Restrictive**: Unless you specifically need additional properties, it's recommended to leave `additional_properties` as false (the default) to maintain schema integrity.
+1. **Default is Restrictive**: By default, `additionalProperties` is set to `false`, which maintains schema integrity by only allowing defined properties. If you need to accept additional properties, you must explicitly set `additional_properties true` in your schema definition.
 
 2. **Documentation**: If you enable additional properties, document the expected additional property types and their purpose.
 

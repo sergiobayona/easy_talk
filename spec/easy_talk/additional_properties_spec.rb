@@ -194,8 +194,8 @@ RSpec.describe 'additional properties' do
     end
 
     describe 'schema generation' do
-      it 'does not include additionalProperties in the schema' do
-        expect(default_company.json_schema).not_to have_key('additionalProperties')
+      it 'does include additionalProperties in the schema' do
+        expect(default_company.json_schema).to have_key('additionalProperties')
       end
     end
 
