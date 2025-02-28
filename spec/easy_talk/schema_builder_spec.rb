@@ -270,5 +270,79 @@ RSpec.describe EasyTalk::SchemaBuilder do
         expect(schema['properties']).not_to include('books')
       end
     end
+
+    # New tests for primary key and timestamps exclusion
+    context 'with primary key and timestamps exclusion (default)' do
+      it 'excludes primary key' do
+        expect(schema['properties'].keys).not_to include('id')
+      end
+
+      it 'excludes timestamp columns' do
+        expect(schema['properties'].keys).not_to include('created_at', 'updated_at')
+      end
+    end
+
+    context 'when exclude_primary_key is false' do
+      before do
+        EasyTalk.configure { |config| config.exclude_primary_key = false }
+      end
+
+      it 'includes primary key' do
+        expect(schema['properties'].keys).to include('id')
+      end
+    end
+
+    context 'when exclude_timestamps is false' do
+      before do
+        EasyTalk.configure { |config| config.exclude_timestamps = false }
+      end
+
+      it 'includes timestamp columns' do
+        expect(schema['properties'].keys).to include('created_at', 'updated_at')
+      end
+    end
+
+    context 'with model-specific override for primary key' do
+      before do
+        EasyTalk.configure { |config| config.exclude_primary_key = false }
+        author_class.schema_enhancements = { ignore: [:id] }
+      end
+
+      it 'still excludes primary key based on model-specific ignore' do
+        expect(schema['properties'].keys).not_to include('id')
+      end
+    end
+
+    context 'with model-specific override for timestamps' do
+      before do
+        EasyTalk.configure { |config| config.exclude_timestamps = false }
+        author_class.schema_enhancements = { ignore: %i[created_at updated_at] }
+      end
+
+      it 'still excludes timestamps based on model-specific ignore' do
+        expect(schema['properties'].keys).not_to include('created_at', 'updated_at')
+      end
+    end
+
+    context 'with all exclusion options disabled' do
+      before do
+        EasyTalk.configure do |config|
+          config.exclude_primary_key = false
+          config.exclude_timestamps = false
+          config.exclude_foreign_keys = false
+          config.excluded_columns = []
+        end
+
+        author_class.schema_enhancements = { ignore: [] }
+      end
+
+      it 'includes all columns' do
+        # Primary key, regular columns, and timestamps should all be included
+        expect(schema['properties'].keys).to include(
+          'id', 'name', 'email', 'bio', 'birth_date', 'last_login',
+          'active', 'rating', 'created_at', 'updated_at'
+        )
+      end
+    end
   end
 end
