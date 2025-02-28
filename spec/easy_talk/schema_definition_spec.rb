@@ -28,7 +28,7 @@ RSpec.describe EasyTalk::SchemaDefinition do
   end
 
   it 'sets the schema' do
-    expect(model.schema_definition.schema).to eq({ title: 'Model', properties: { name: { type: String, constraints: { minimum: 1, maximum: 100 } } } })
+    expect(model.schema_definition.schema).to eq({ title: 'Model', properties: { name: { type: String, constraints: { minimum: 1, maximum: 100 } } }, additional_properties: false })
   end
 
   describe 'property' do
@@ -47,7 +47,8 @@ RSpec.describe EasyTalk::SchemaDefinition do
             type: String
           }
         },
-        title: 'Model'
+        title: 'Model',
+        additional_properties: false
       }
     end
 
@@ -159,7 +160,8 @@ RSpec.describe EasyTalk::SchemaDefinition do
           }
         },
         subschemas: [subschema],
-        title: 'Model'
+        title: 'Model',
+        additional_properties: false
       }
     end
 
