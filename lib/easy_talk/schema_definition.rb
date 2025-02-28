@@ -18,6 +18,7 @@ module EasyTalk
 
     def initialize(name, schema = {})
       @schema = schema
+      @schema[:additional_properties] = false unless schema.key?(:additional_properties)
       @name = name
     end
 
