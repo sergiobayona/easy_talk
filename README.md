@@ -4,9 +4,9 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema d
 
 Key Features
 * Intuitive Schema Definition: Use Ruby classes and methods to define JSON Schema documents easily.
-* LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI’s GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
+* LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
 * Schema Composition: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
-* Validation: Write validations using ActiveModel’s validations.
+* Validation: Write validations using ActiveModel's validations.
 
 Inspiration
 Inspired by Python's Pydantic library, EasyTalk brings similar functionality to the Ruby ecosystem, providing a Ruby-friendly approach to JSON Schema operations.
@@ -110,7 +110,7 @@ In the example above, the define_schema method adds a title and description to t
 
 ## Why Sorbet-style types?
 
-Ruby doesn’t natively allow complex types like `Array[String]` or `Array[Integer]`. Sorbet-style types let you define these compound types clearly. EasyTalk uses this style to handle property types such as `T::Array[String]` or `T::AnyOf[ClassA, ClassB]`.
+Ruby doesn't natively allow complex types like `Array[String]` or `Array[Integer]`. Sorbet-style types let you define these compound types clearly. EasyTalk uses this style to handle property types such as `T::Array[String]` or `T::AnyOf[ClassA, ClassB]`.
 
 ## Property Constraints
 
@@ -367,21 +367,34 @@ class Product < ActiveRecord::Base
 end
 ```
 
-### Ignoring Columns
+### Column Exclusion Options
 
-There are often database columns you don't want to include in your JSON schema (like internal IDs or timestamps). EasyTalk gives you two ways to exclude columns:
+EasyTalk provides several ways to exclude columns from your JSON schema to keep it clean and focused.
 
 #### 1. Global Configuration
 
-Set columns to exclude across all ActiveRecord models:
+Set global exclusion rules that apply to all ActiveRecord models:
 
 ```ruby
 EasyTalk.configure do |config|
+  # Exclude specific columns by name from all models
   config.excluded_columns = [:created_at, :updated_at, :deleted_at]
-  config.exclude_foreign_keys = true  # Excludes columns ending with '_id'
-  config.exclude_associations = true  # Excludes has_many/belongs_to relationships
+  
+  # Exclude all foreign key columns (columns ending with '_id')
+  config.exclude_foreign_keys = true   # Default: false
+  
+  # Exclude all primary key columns ('id')
+  config.exclude_primary_key = true    # Default: true
+  
+  # Exclude timestamp columns ('created_at', 'updated_at')
+  config.exclude_timestamps = true     # Default: true
+  
+  # Exclude all association properties
+  config.exclude_associations = true   # Default: false
 end
 ```
+
+By default, EasyTalk excludes primary keys and timestamps to produce cleaner schemas.
 
 #### 2. Model-Specific Column Ignoring
 
@@ -394,12 +407,22 @@ class Product < ActiveRecord::Base
   enhance_schema({
     title: "Retail Product",
     description: "A product available for purchase",
-    ignore: [:id, :sku_internal, :created_at, :updated_at]
+    ignore: [:internal_ref_id, :legacy_code]  # Model-specific exclusions
   })
 end
 ```
 
-Both approaches can be combined - the schema will exclude both globally configured columns and model-specific ignored columns.
+#### Precedence Rules
+
+If a column is excluded by any of the following methods, it will be excluded from the schema:
+
+1. Explicitly listed in `excluded_columns` global setting
+2. Listed in the model's `schema_enhancements[:ignore]` array
+3. Is a primary key when `exclude_primary_key` is true (default)
+4. Is a timestamp column when `exclude_timestamps` is true (default)
+5. Matches a foreign key pattern when `exclude_foreign_keys` is true
+
+This provides a flexible system for controlling schema generation while maintaining clean, focused schemas.
 
 ### Associations and Foreign Keys
 
@@ -423,7 +446,10 @@ Here's a full example showing the ActiveRecord integration features:
 ```ruby
 # Configure global settings
 EasyTalk.configure do |config|
-  config.excluded_columns = [:created_at, :updated_at]
+  config.excluded_columns = [:deleted_at]
+  config.exclude_primary_key = true     # Default behavior
+  config.exclude_timestamps = true      # Default behavior
+  config.exclude_foreign_keys = true
 end
 
 class Product < ActiveRecord::Base
@@ -434,7 +460,7 @@ class Product < ActiveRecord::Base
   enhance_schema({
     title: "Retail Product",
     description: "A product in our catalog",
-    ignore: [:internal_ref_id],
+    ignore: [:internal_ref_id],          # Model-specific exclusions
     properties: {
       name: {
         description: "The display name of the product",
@@ -454,15 +480,14 @@ schema = Product.json_schema
 ```
 
 The resulting schema will:
-- Include all database columns except `created_at`, `updated_at`, and `internal_ref_id`
-- Include properly typed properties based on database column types
+- Exclude primary key (`id`), timestamps (`created_at`, `updated_at`), foreign keys, and specifically ignored columns
+- Include all other database columns with proper type mappings
 - Contain enhanced documentation for the `name` property
 - Include the virtual `average_rating` property
-- Include associations unless globally configured not to
 
 ## JSON Schema Specifications
 
-EasyTalk is currently loose about JSON Schema versions. It doesn’t strictly enforce or adhere to any particular version of the specification. The goal is to add more robust support for the latest JSON Schema specs in the future.
+EasyTalk is currently loose about JSON Schema versions. It doesn't strictly enforce or adhere to any particular version of the specification. The goal is to add more robust support for the latest JSON Schema specs in the future.
 
 To learn about current capabilities, see the [spec/easy_talk/examples](https://github.com/sergiobayona/easy_talk/tree/main/spec/easy_talk/examples) folder. The examples illustrate how EasyTalk generates JSON Schema in different scenarios.
 
@@ -483,4 +508,3 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/sergio
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-

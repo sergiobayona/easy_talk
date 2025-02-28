@@ -118,7 +118,19 @@ module EasyTalk
     end
 
     def columns
-      model.columns.reject { |c| EasyTalk.configuration.excluded_columns.include?(c.name.to_sym) }
+      model.columns.reject do |column|
+        config = EasyTalk.configuration
+        # Exclude column if it's in the excluded_columns list
+        config.excluded_columns.include?(column.name.to_sym) ||
+          # Exclude primary key if configured to do so
+          (config.exclude_primary_key && column.name == model.primary_key) ||
+          # Exclude timestamp columns if configured to do so
+          (config.exclude_timestamps && timestamp_column?(column.name))
+      end
+    end
+
+    def timestamp_column?(column_name)
+      %w[created_at updated_at].include?(column_name)
     end
 
     def build_title
