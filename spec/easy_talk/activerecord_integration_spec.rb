@@ -80,4 +80,17 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
       expect(found.name).to eq('TestCo')
     end
   end
+
+  describe 'schema generation with additionalProperties' do
+    it 'includes additionalProperties: false by default' do
+      schema = Company.json_schema
+      expect(schema).to include('additionalProperties' => false)
+    end
+
+    it 'allows overriding the additionalProperties setting' do
+      Company.enhance_schema(additionalProperties: true)
+      schema = Company.json_schema
+      expect(schema).to include('additionalProperties' => true)
+    end
+  end
 end

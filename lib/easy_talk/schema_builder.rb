@@ -39,12 +39,19 @@ module EasyTalk
     end
 
     def build
+      # Get additionalProperties from enhancements or default to false
+      additional_props = if schema_enhancements.key?('additionalProperties')
+                           schema_enhancements['additionalProperties']
+                         else
+                           EasyTalk.configuration.default_additional_properties
+                         end
       {
         'title' => build_title,
         'description' => build_description,
         'type' => 'object',
         'properties' => build_properties,
-        'required' => required_properties
+        'required' => required_properties,
+        'additionalProperties' => additional_props
       }.compact
     end
 
