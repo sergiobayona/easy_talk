@@ -9,6 +9,7 @@ require 'active_support/json'
 require 'active_model'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
+require_relative 'active_record_schema_builder'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -39,6 +40,11 @@ module EasyTalk
       base.extend ActiveModel::Callbacks
       base.extend(ClassMethods)
       base.include(InstanceMethods)
+
+      # Apply ActiveRecord-specific functionality if appropriate
+      return unless defined?(ActiveRecord) && base.ancestors.include?(ActiveRecord::Base)
+
+      base.extend(ActiveRecordClassMethods)
     end
 
     module InstanceMethods
@@ -90,7 +96,16 @@ module EasyTalk
       #
       # @return [Schema] The schema for the model.
       def schema
-        @schema ||= build_schema(schema_definition)
+        @schema ||= if defined?(@schema_definition) && @schema_definition
+                      # Schema defined explicitly via define_schema
+                      build_schema(@schema_definition)
+                    elsif respond_to?(:active_record_schema_definition)
+                      # ActiveRecord model without explicit schema definition
+                      build_schema(active_record_schema_definition)
+                    else
+                      # Default case - empty schema
+                      {}
+                    end
       end
 
       # Returns the reference template for the model.
@@ -140,14 +155,42 @@ module EasyTalk
         @schema_definition&.schema&.fetch(:additional_properties, false)
       end
 
-      private
-
       # Builds the schema using the provided schema definition.
+      # This is the convergence point for all schema generation.
       #
       # @param schema_definition [SchemaDefinition] The schema definition.
       # @return [Schema] The validated schema.
       def build_schema(schema_definition)
         Builders::ObjectBuilder.new(schema_definition).build
+      end
+    end
+
+    # Module containing ActiveRecord-specific methods for schema generation
+    module ActiveRecordClassMethods
+      # Gets a SchemaDefinition that's built from the ActiveRecord database schema
+      #
+      # @return [SchemaDefinition] A schema definition built from the database
+      def active_record_schema_definition
+        @active_record_schema_definition ||= ActiveRecordSchemaBuilder.new(self).build_schema_definition
+      end
+
+      # Store enhancements to be applied to the schema
+      #
+      # @return [Hash] The schema enhancements
+      def schema_enhancements
+        @schema_enhancements ||= {}
+      end
+
+      # Enhance the generated schema with additional information
+      #
+      # @param enhancements [Hash] The schema enhancements
+      # @return [void]
+      def enhance_schema(enhancements)
+        @schema_enhancements = enhancements
+        # Clear cached values to force regeneration
+        @active_record_schema_definition = nil
+        @schema = nil
+        @json_schema = nil
       end
     end
   end

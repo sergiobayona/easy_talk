@@ -3,7 +3,6 @@
 require 'spec_helper'
 require 'active_record'
 require 'sqlite3'
-require 'easy_talk/active_record_model'
 
 RSpec.describe 'EasyTalk::ActiveRecordModel' do
   before(:all) do
@@ -25,7 +24,7 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
 
     # 3) Define a minimal Company model that includes your ActiveRecordModel mixin
     class Company < ActiveRecord::Base
-      include EasyTalk::ActiveRecordModel
+      include EasyTalk::Model
 
       # If you like, you can immediately call enhance_schema here, or do so in the tests
       enhance_schema({
