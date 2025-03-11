@@ -113,7 +113,7 @@ module EasyTalk
     # @return [Hash] The constraints hash
     def build_column_constraints(column, enhancements)
       constraints = {
-        optional: column.null,
+        optional: enhancements['optional'],
         description: enhancements['description'],
         title: enhancements['title']
       }
@@ -155,13 +155,13 @@ module EasyTalk
           schema_def.property(
             association.name,
             association.klass,
-            { optional: true, description: assoc_enhancements['description'] }.compact
+            { optional: assoc_enhancements['optional'], description: assoc_enhancements['description'] }.compact
           )
         when :has_many, :has_and_belongs_to_many
           schema_def.property(
             association.name,
             T::Array[association.klass],
-            { optional: true, description: assoc_enhancements['description'] }.compact
+            { optional: assoc_enhancements['optional'], description: assoc_enhancements['description'] }.compact
           )
         end
       end
@@ -183,7 +183,7 @@ module EasyTalk
         constraints = {
           description: options['description'],
           title: options['title'],
-          optional: options['optional'] || true,
+          optional: options['optional'],
           format: options['format'],
           default: options['default'],
           min_length: options['minLength'],
