@@ -1,9 +1,10 @@
 # EasyTalk
 
-EasyTalk is a Ruby library that simplifies defining and generating JSON Schema documents, and validates that JSON data conforms to these schemas.
+EasyTalk is a Ruby library that simplifies defining and generating JSON Schema.
 
 Key Features
 * Intuitive Schema Definition: Use Ruby classes and methods to define JSON Schema documents easily.
+* Works for plain Ruby classes and ActiveRecord models.
 * LLM Function Support: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
 * Schema Composition: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
 * Validation: Write validations using ActiveModel's validations.
@@ -307,27 +308,26 @@ EasyTalk provides seamless integration with ActiveRecord models, automatically g
 
 ### Getting Started with ActiveRecord Models
 
-To use EasyTalk with your ActiveRecord models, include the `EasyTalk::ActiveRecordModel` module:
+To use EasyTalk with your ActiveRecord models, include the `EasyTalk::Model` module:
 
 ```ruby
 class Product < ActiveRecord::Base
-  include EasyTalk::ActiveRecordModel
+  include EasyTalk::Model
 end
 ```
 
 This automatically builds a JSON schema from your table structure, including:
 - Mapping column types to JSON schema types (strings, integers, booleans, etc.)
-- Setting columns with `null: false` as required properties
 - Handling date and time formats
-- Managing associations (optional)
+- Managing associations (experimental)
 
 ### Enhancing Your Schema
 
-You can enhance the auto-generated schema with additional information:
+For ActiveRecord models, you can enhance the auto-generated schema with additional information:
 
 ```ruby
 class Product < ActiveRecord::Base
-  include EasyTalk::ActiveRecordModel
+  include EasyTalk::Model
   
   enhance_schema({
     title: "Retail Product",
@@ -353,7 +353,7 @@ You can add properties that don't exist as database columns:
 
 ```ruby
 class Product < ActiveRecord::Base
-  include EasyTalk::ActiveRecordModel
+  include EasyTalk::Model
   
   enhance_schema({
     properties: {
@@ -402,7 +402,7 @@ For more granular control, specify columns to ignore at the model level:
 
 ```ruby
 class Product < ActiveRecord::Base
-  include EasyTalk::ActiveRecordModel
+  include EasyTalk::Model
   
   enhance_schema({
     title: "Retail Product",
@@ -453,7 +453,7 @@ EasyTalk.configure do |config|
 end
 
 class Product < ActiveRecord::Base
-  include EasyTalk::ActiveRecordModel
+  include EasyTalk::Model
   belongs_to :category
   has_many :reviews
   
