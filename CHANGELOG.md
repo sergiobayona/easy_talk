@@ -1,3 +1,24 @@
+## [1.0.3] - 2025-03-11
+### Added
+- Unified schema generation for both plain Ruby classes and ActiveRecord models (#40)
+  - Single code path for generating schemas regardless of model type
+  - More consistent behavior between different model types
+  - Better handling of schema properties in ActiveRecord models
+
+### Changed
+- Improved error handling throughout the library (#31)
+  - Added custom error types for better error classification
+  - More descriptive error messages for constraint violations
+  - Centralized validation of constraint values
+  - Better type checking for array properties
+
+### Developer Experience
+- Removed unnecessary dependencies
+  - Removed dartsass-rails from development dependencies
+- Code quality improvements
+  - Better test coverage for error conditions
+  - More consistent return values in builder methods
+
 ## [1.0.2] - 2024-13-01
 - Support "AdditionalProperties". see https://json-schema.org/understanding-json-schema/reference/object#additionalproperties
 You can now define a schema that allows any additional properties. 
