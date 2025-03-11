@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'active_record'
 require 'sqlite3'
 
-RSpec.describe 'EasyTalk::ActiveRecordModel' do
+RSpec.describe 'EasyTalk::Model integration with ActiveRecord' do
   before(:all) do
     # 1) Connect to an in-memory SQLite database
     ActiveRecord::Base.establish_connection(
