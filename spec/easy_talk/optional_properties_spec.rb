@@ -55,6 +55,7 @@ RSpec.describe 'optional properties' do
         base_level_requires = user.json_schema['required']
         nested_level_requires = user.json_schema['properties']['email']['required']
 
+        expect(user.json_schema['properties']['email']['properties']['verified'].keys).not_to include('optional')
         expect(base_level_requires).to eq(%w[name age email])
         expect(nested_level_requires).to eq(%w[address])
       end
