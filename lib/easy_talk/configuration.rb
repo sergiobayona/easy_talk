@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EasyTalk
   class Configuration
     attr_accessor :exclude_foreign_keys, :exclude_associations, :excluded_columns,

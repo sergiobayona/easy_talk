@@ -206,7 +206,7 @@ RSpec.describe EasyTalk::Model do
       end
 
       it 'is valid' do
-        expect(employee.valid?).to eq(true)
+        expect(employee.valid?).to be(true)
       end
     end
   end

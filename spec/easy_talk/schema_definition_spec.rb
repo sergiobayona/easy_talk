@@ -111,12 +111,12 @@ RSpec.describe EasyTalk::SchemaDefinition do
 
     it 'sets additional_properties' do
       model.schema_definition.additional_properties(false)
-      expect(model.schema_definition.schema[:additional_properties]).to eq(false)
+      expect(model.schema_definition.schema[:additional_properties]).to be(false)
     end
 
     it 'sets unique_items' do
       model.schema_definition.unique_items(true)
-      expect(model.schema_definition.schema[:unique_items]).to eq(true)
+      expect(model.schema_definition.schema[:unique_items]).to be(true)
     end
 
     it 'sets const' do

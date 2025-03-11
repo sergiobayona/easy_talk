@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EasyTalk
   module ErrorHelper
     def self.raise_constraint_error(property_name:, constraint_name:, expected:, got:)

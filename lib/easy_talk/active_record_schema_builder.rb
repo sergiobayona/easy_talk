@@ -74,7 +74,7 @@ module EasyTalk
       schema_def.title(title)
 
       # Set description if provided
-      if description = schema_enhancements['description']
+      if (description = schema_enhancements['description'])
         schema_def.description(description)
       end
 
@@ -119,7 +119,7 @@ module EasyTalk
       }
 
       # Add format constraint for date/time columns
-      if format = FORMAT_MAP[column.type]
+      if (format = FORMAT_MAP[column.type])
         constraints[:format] = format
       end
 

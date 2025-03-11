@@ -1,5 +1,6 @@
+# frozen_string_literal: true
+
 require_relative 'base_builder'
-require 'set'
 
 module EasyTalk
   module Builders
