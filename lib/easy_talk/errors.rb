@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module EasyTalk
   class Error < StandardError; end
   class ConstraintError < Error; end

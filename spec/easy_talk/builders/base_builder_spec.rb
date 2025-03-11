@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'easy_talk/builders/base_builder'
 require 'active_support/core_ext/hash/keys'
@@ -122,7 +124,7 @@ RSpec.describe EasyTalk::Builders::BaseBuilder do
 
   describe '.collection_type?' do
     it 'returns false' do
-      expect(described_class.collection_type?).to eq(false)
+      expect(described_class.collection_type?).to be(false)
     end
   end
 end
