@@ -132,8 +132,10 @@ module EasyTalk
                                          # This indicates block-style definition => nested schema
                                          nested_schema_builder(prop_options)
                                        else
+                                         # Remove optional constraints from the property
+                                         constraints = prop_options[:constraints].except(:optional)
                                          # Normal property: e.g. { type: String, constraints: {...} }
-                                         Property.new(prop_name, prop_options[:type], prop_options[:constraints])
+                                         Property.new(prop_name, prop_options[:type], constraints)
                                        end
       end
 

@@ -3,7 +3,6 @@
 require 'spec_helper'
 require 'active_record'
 require 'sqlite3'
-require 'easy_talk/active_record_model'
 
 RSpec.describe 'EasyTalk::ActiveRecordModel' do
   before(:all) do
@@ -17,6 +16,7 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
     ActiveRecord::Schema.define do
       create_table :companies, force: true do |t|
         t.string :name, null: false
+        t.string :address, null: true
         t.integer :employee_count
         t.datetime :founded_at
         t.timestamps
@@ -25,7 +25,7 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
 
     # 3) Define a minimal Company model that includes your ActiveRecordModel mixin
     class Company < ActiveRecord::Base
-      include EasyTalk::ActiveRecordModel
+      include EasyTalk::Model
 
       # If you like, you can immediately call enhance_schema here, or do so in the tests
       enhance_schema({
@@ -67,6 +67,26 @@ RSpec.describe 'EasyTalk::ActiveRecordModel' do
 
       schema = Company.json_schema
       expect(schema['properties']['employee_count']['description']).to eq('Number of employees')
+    end
+  end
+
+  describe 'required properties' do
+    it 'includes required properties' do
+      schema = Company.json_schema
+
+      # all fields are required unless optional is true
+      expect(schema['required']).to include('name')
+      expect(schema['required']).to include('address')
+      expect(schema['required']).to include('employee_count')
+      expect(schema['required']).to include('founded_at')
+    end
+
+    context 'when enhancing the schema' do
+      it 'includes required properties' do
+        Company.enhance_schema(properties: { address: { optional: true } })
+        schema = Company.json_schema
+        expect(schema['required']).not_to include('address')
+      end
     end
   end
 
