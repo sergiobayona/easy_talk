@@ -5,9 +5,9 @@ name: Development Build
 
 on:
   push:
-    branches: [ "development" ]
+    branches: [ "main", "development" ]
   pull_request:
-    branches: [ "development" ]
+    branches: [ "main", "development" ]
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['3.2.2']
+        ruby-version: ['3.2.2', '3.3.0']
 
     steps:
     - uses: actions/checkout@v3
