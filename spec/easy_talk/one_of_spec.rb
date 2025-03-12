@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe EasyTalk::Types::OneOf do
+RSpec.describe EasyTalk::Types::Composer::OneOf do
   let(:phone_number) do
     Class.new do
       include EasyTalk::Model
