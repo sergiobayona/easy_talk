@@ -9,9 +9,7 @@ require_relative 'builders/string_builder'
 require_relative 'builders/date_builder'
 require_relative 'builders/datetime_builder'
 require_relative 'builders/time_builder'
-require_relative 'builders/any_of_builder'
-require_relative 'builders/all_of_builder'
-require_relative 'builders/one_of_builder'
+require_relative 'builders/composition_builder'
 require_relative 'builders/typed_array_builder'
 require_relative 'builders/union_builder'
 
@@ -43,9 +41,9 @@ module EasyTalk
       'Date' => Builders::DateBuilder,
       'DateTime' => Builders::DatetimeBuilder,
       'Time' => Builders::TimeBuilder,
-      'anyOf' => Builders::AnyOfBuilder,
-      'allOf' => Builders::AllOfBuilder,
-      'oneOf' => Builders::OneOfBuilder,
+      'anyOf' => Builders::CompositionBuilder::AnyOfBuilder,
+      'allOf' => Builders::CompositionBuilder::AllOfBuilder,
+      'oneOf' => Builders::CompositionBuilder::OneOfBuilder,
       'T::Types::TypedArray' => Builders::TypedArrayBuilder,
       'T::Types::Union' => Builders::UnionBuilder
     }.freeze

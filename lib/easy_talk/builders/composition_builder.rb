@@ -60,6 +60,18 @@ module EasyTalk
       def items
         @type.items
       end
+
+      # Builder class for AllOf composition.
+      class AllOfBuilder < CompositionBuilder
+      end
+
+      # Builder class for AnyOf composition.
+      class AnyOfBuilder < CompositionBuilder
+      end
+
+      # Builder class for OneOf composition.
+      class OneOfBuilder < CompositionBuilder
+      end
     end
   end
 end
