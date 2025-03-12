@@ -24,4 +24,8 @@ module EasyTalk
       ErrorHelper.raise_unknown_option_error(property_name: property_name, option: options, valid_options: valid_keys)
     end
   end
+
+  def self.configure_nilable_behavior(nilable_is_optional = false)
+    configuration.nilable_is_optional = nilable_is_optional
+  end
 end

@@ -98,6 +98,9 @@ module EasyTalk
         # Map the database type to Ruby type
         ruby_type = COLUMN_TYPE_MAP.fetch(column.type, String)
 
+        # If the column is nullable, wrap the type in a Union with NilClass
+        ruby_type = T::Types::Union.new([ruby_type, NilClass]) if column.null
+
         # Build constraints hash for this column
         constraints = build_column_constraints(column, column_enhancements)
 
