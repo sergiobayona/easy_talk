@@ -34,7 +34,7 @@ module EasyTalk
     def apply_validations
       # Skip if the property is optional/nullable and nilable_is_optional is true
       apply_presence_validation unless optional?
-
+      # binding.pry
       if nilable_type?
         # For nilable types, get the inner type and apply validations to it
         inner_type = extract_inner_type(@type)
@@ -52,7 +52,7 @@ module EasyTalk
 
     # Determine if a property is optional based on constraints and configuration
     def optional?
-      @constraints[:optional] ||
+      @constraints[:optional] == true ||
         (@type.respond_to?(:nilable?) && @type.nilable? && EasyTalk.configuration.nilable_is_optional)
     end
 
@@ -63,7 +63,9 @@ module EasyTalk
 
     # Extract the inner type from a complex type like T.nilable(String)
     def extract_inner_type(type)
-      if type.respond_to?(:types)
+      if type.respond_to?(:unwrap_nilable)
+        type.unwrap_nilable.raw_type
+      elsif type.respond_to?(:types)
         # For union types like T.nilable(String), extract the non-nil type
         type.types.find { |t| t.respond_to?(:raw_type) && t.raw_type != NilClass }
       else
@@ -75,18 +77,17 @@ module EasyTalk
     def apply_type_validations(type)
       type_class = get_type_class(type)
 
-      case type_class
-      when String
+      if type_class == String
         apply_string_validations
-      when Integer
+      elsif type_class == Integer
         apply_integer_validations
-      when Float, BigDecimal
+      elsif [Float, BigDecimal].include?(type_class)
         apply_number_validations
-      when Array
+      elsif type_class == Array
         apply_array_validations(type)
-      when TrueClass, FalseClass
+      elsif [TrueClass, FalseClass].include?(type_class)
         apply_boolean_validations
-      when Hash
+      elsif type_class == Hash
         apply_object_validations
       end
     end

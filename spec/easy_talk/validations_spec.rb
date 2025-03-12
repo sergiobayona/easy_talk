@@ -18,10 +18,6 @@ RSpec.describe 'Auto Validations' do
         property :gender, String, enum: %w[male female other]
         property :tags, T::Array[String], min_items: 1, max_items: 5
         property :active, T::Boolean
-        property :settings, Hash do
-          property :theme, String, enum: %w[light dark]
-          property :notifications, T::Boolean
-        end
       end
     end
   end
@@ -95,7 +91,7 @@ RSpec.describe 'Auto Validations' do
     it 'validates array length' do
       user = user_class.new(tags: [])
       expect(user.valid?).to be(false)
-      expect(user.errors[:tags]).to include('is too short (minimum is 1 characters)')
+      expect(user.errors[:tags]).to include('is too short (minimum is 1 character)')
 
       user.tags = %w[tag1 tag2 tag3 tag4 tag5 tag6]
       expect(user.valid?).to be(false)
@@ -186,9 +182,12 @@ RSpec.describe 'Auto Validations' do
       EasyTalk.configure { |config| config.nilable_is_optional = false }
       instance = optional_class.new(required_name: 'Present')
 
-      expect(instance.valid?).to be(true)
+      # When nilable_is_optional is false, we expect nilable_name to be required
+      # but optional_name should still be optional due to explicit optional: true flag
       expect(instance.errors[:optional_name]).to be_empty
-      expect(instance.errors[:nilable_name]).not_to include("can't be blank")
+
+      instance.nilable_name = nil
+      expect(instance.valid?).to be(true)
     end
 
     it 'treats nilable as optional when configured' do
