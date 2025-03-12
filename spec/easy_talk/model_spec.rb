@@ -253,9 +253,9 @@ RSpec.describe EasyTalk::Model do
 
     it 'correctly maps column types to schema types' do
       expect(TestProduct.schema[:properties][:name].type).to eq(String)
-      expect(TestProduct.schema[:properties][:description].type).to eq(String)
-      expect(TestProduct.schema[:properties][:price].type).to eq(Float)
-      expect(TestProduct.schema[:properties][:active].type).to eq(T::Boolean)
+      expect(TestProduct.schema[:properties][:description].type.name).to eq('T.nilable(String)')
+      expect(TestProduct.schema[:properties][:price].type.name).to eq('T.nilable(Float)')
+      expect(TestProduct.schema[:properties][:active].type.name).to eq('T.nilable(T::Boolean)')
     end
 
     it 'automatically extends ActiveRecord models with ActiveRecordClassMethods' do

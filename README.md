@@ -860,6 +860,187 @@ property :status, String, enum: ["active", "inactive", "pending"]
 6. Use explicit types instead of relying on inference
 7. Test your schemas with sample data
 
+# Nullable vs Optional Properties in EasyTalk
+
+One of the most important distinctions when defining schemas is understanding the difference between **nullable** properties and **optional** properties. This guide explains these concepts and how to use them effectively in EasyTalk.
+
+## Key Concepts
+
+| Concept | Description | JSON Schema Effect | EasyTalk Syntax |
+|---------|-------------|-------------------|-----------------|
+| **Nullable** | Property can have a `null` value | Adds `"null"` to the type array | `T.nilable(Type)` |
+| **Optional** | Property doesn't have to exist | Omits property from `"required"` array | `optional: true` constraint |
+
+## Nullable Properties
+
+A **nullable** property can contain a `null` value, but the property itself must still be present in the object:
+
+```ruby
+property :age, T.nilable(Integer)
+```
+
+This produces the following JSON Schema:
+
+```json
+{
+  "properties": {
+    "age": { "type": ["integer", "null"] }
+  },
+  "required": ["age"]
+}
+```
+
+In this case, the following data would be valid:
+- `{ "age": 25 }`
+- `{ "age": null }`
+
+But this would be invalid:
+- `{ }` (missing the age property entirely)
+
+## Optional Properties
+
+An **optional** property doesn't have to be present in the object at all:
+
+```ruby
+property :nickname, String, optional: true
+```
+
+This produces:
+
+```json
+{
+  "properties": {
+    "nickname": { "type": "string" }
+  }
+  // Note: "nickname" is not in the "required" array
+}
+```
+
+In this case, the following data would be valid:
+- `{ "nickname": "Joe" }`
+- `{ }` (omitting nickname entirely)
+
+But this would be invalid:
+- `{ "nickname": null }` (null is not allowed because the property isn't nullable)
+
+## Nullable AND Optional Properties
+
+For properties that should be both nullable and optional (can be omitted or null), you need to combine both approaches:
+
+```ruby
+property :bio, T.nilable(String), optional: true
+```
+
+This produces:
+
+```json
+{
+  "properties": {
+    "bio": { "type": ["string", "null"] }
+  }
+  // Note: "bio" is not in the "required" array
+}
+```
+
+For convenience, EasyTalk also provides a helper method:
+
+```ruby
+nullable_optional_property :bio, String
+```
+
+Which is equivalent to the above.
+
+## Configuration Options
+
+By default, nullable properties are still required. You can change this global behavior:
+
+```ruby
+EasyTalk.configure do |config|
+  config.nilable_is_optional = true # Makes all T.nilable properties also optional
+end
+```
+
+With this configuration, any property defined with `T.nilable(Type)` will be treated as both nullable and optional.
+
+## Practical Examples
+
+### User Profile Schema
+
+```ruby
+class UserProfile
+  include EasyTalk::Model
+  
+  define_schema do
+    # Required properties (must exist, cannot be null)
+    property :id, String
+    property :name, String
+    
+    # Required but nullable (must exist, can be null)
+    property :age, T.nilable(Integer)
+    
+    # Optional but not nullable (can be omitted, cannot be null if present)
+    property :email, String, optional: true
+    
+    # Optional and nullable (can be omitted, can be null if present)
+    nullable_optional_property :bio, String
+    
+    # Nested object with mixed property types
+    property :address, Hash do
+      property :street, String # Required
+      property :city, String # Required
+      property :state, String, optional: true # Optional
+      nullable_optional_property :zip, String # Optional and nullable
+    end
+  end
+end
+```
+
+This creates clear expectations for data validation:
+- `id` and `name` must be present and cannot be null
+- `age` must be present but can be null
+- `email` doesn't have to be present, but if it is, it cannot be null
+- `bio` doesn't have to be present, and if it is, it can be null
+
+## Common Gotchas
+
+### Misconception: Nullable Implies Optional
+
+A common mistake is assuming that `T.nilable(Type)` makes a property optional. By default, it only allows the property to have a null value - the property itself is still required to exist in the object.
+
+### Misconception: Optional Properties Accept Null
+
+An optional property (defined with `optional: true`) can be omitted entirely, but if it is present, it must conform to its type constraint. If you want to allow null values, you must also make it nullable with `T.nilable(Type)`.
+
+## Migration from Earlier Versions
+
+If you're upgrading from EasyTalk version 1.0.1 or earlier, be aware that the handling of nullable vs optional properties has been improved for clarity.
+
+To maintain backward compatibility with your existing code, you can use:
+
+```ruby
+EasyTalk.configure do |config|
+  config.nilable_is_optional = true # Makes T.nilable properties behave as they did before
+end
+```
+
+We recommend updating your schema definitions to explicitly declare which properties are optional using the `optional: true` constraint, as this makes your intent clearer.
+
+## Best Practices
+
+1. **Be explicit about intent**: Always clarify whether properties should be nullable, optional, or both
+2. **Use the helper method**: For properties that are both nullable and optional, use `nullable_optional_property`
+3. **Document expectations**: Use comments to clarify validation requirements for complex schemas
+4. **Consider validation implications**: Remember that ActiveModel validations operate independently of the schema definition
+
+## JSON Schema Comparison
+
+| EasyTalk Definition | Required | Nullable | JSON Schema Equivalent |
+|--------------------|----------|----------|------------------------|
+| `property :p, String` | Yes | No | `{ "properties": { "p": { "type": "string" } }, "required": ["p"] }` |
+| `property :p, T.nilable(String)` | Yes | Yes | `{ "properties": { "p": { "type": ["string", "null"] } }, "required": ["p"] }` |
+| `property :p, String, optional: true` | No | No | `{ "properties": { "p": { "type": "string" } } }` |
+| `nullable_optional_property :p, String` | No | Yes | `{ "properties": { "p": { "type": ["string", "null"] } } }` |
+
 ## Development and Contributing
 
 ### Setting Up the Development Environment

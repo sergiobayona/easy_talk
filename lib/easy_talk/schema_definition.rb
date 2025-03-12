@@ -64,5 +64,21 @@ module EasyTalk
     def optional?
       @schema[:optional]
     end
+
+    # Helper method for nullable and optional properties
+    def nullable_optional_property(name, type, constraints = {}, &blk)
+      # Ensure type is nilable
+      nilable_type = if type.respond_to?(:nilable?) && type.nilable?
+                       type
+                     else
+                       T.nilable(type)
+                     end
+
+      # Ensure constraints include optional: true
+      constraints = constraints.merge(optional: true)
+
+      # Call standard property method
+      property(name, nilable_type, constraints, &blk)
+    end
   end
 end
