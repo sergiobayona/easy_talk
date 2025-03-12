@@ -6,9 +6,7 @@ require_relative 'builders/number_builder'
 require_relative 'builders/boolean_builder'
 require_relative 'builders/null_builder'
 require_relative 'builders/string_builder'
-require_relative 'builders/date_builder'
-require_relative 'builders/datetime_builder'
-require_relative 'builders/time_builder'
+require_relative 'builders/temporal_builder'
 require_relative 'builders/composition_builder'
 require_relative 'builders/typed_array_builder'
 require_relative 'builders/union_builder'
@@ -38,9 +36,9 @@ module EasyTalk
       'BigDecimal' => Builders::NumberBuilder,
       'T::Boolean' => Builders::BooleanBuilder,
       'NilClass' => Builders::NullBuilder,
-      'Date' => Builders::DateBuilder,
-      'DateTime' => Builders::DatetimeBuilder,
-      'Time' => Builders::TimeBuilder,
+      'Date' => Builders::TemporalBuilder::DateBuilder,
+      'DateTime' => Builders::TemporalBuilder::DatetimeBuilder,
+      'Time' => Builders::TemporalBuilder::TimeBuilder,
       'anyOf' => Builders::CompositionBuilder::AnyOfBuilder,
       'allOf' => Builders::CompositionBuilder::AllOfBuilder,
       'oneOf' => Builders::CompositionBuilder::OneOfBuilder,
