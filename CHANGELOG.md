@@ -1,3 +1,14 @@
+## [1.0.4] - 2024-03-12
+### Changed
+- Combined composition builders into a single file (#47)
+  - Improved code organization and maintainability
+  - Refactored internal builder implementation
+
+### Fixed
+- Added support for nilable properties when database column is null (#45)
+  - Better handling of nullable database columns
+  - More accurate schema generation for ActiveRecord models
+
 ## [1.0.3] - 2025-03-11
 ### Added
 - Unified schema generation for both plain Ruby classes and ActiveRecord models (#40)
