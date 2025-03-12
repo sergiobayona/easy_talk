@@ -2,6 +2,7 @@
 
 require_relative 'keywords'
 require_relative 'types/composer'
+require_relative 'validation_builder'
 
 module EasyTalk
   #
@@ -16,11 +17,13 @@ module EasyTalk
     extend T::AllOf
 
     attr_reader :name, :schema
+    attr_accessor :klass # Add accessor for the model class
 
     def initialize(name, schema = {})
       @schema = schema
       @schema[:additional_properties] = false unless schema.key?(:additional_properties)
       @name = name
+      @klass = nil # Initialize klass to nil
     end
 
     EasyTalk::KEYWORDS.each do |keyword|
@@ -45,7 +48,12 @@ module EasyTalk
         raise ArgumentError, 'Block-style sub-schemas are no longer supported. Use class references as types instead.'
       end
 
-      @schema[:properties][name] = { type:, constraints: }
+      # Apply validations if this is part of a model class and auto_validations is enabled
+      if @klass &&
+         @klass.include?(ActiveModel::Validations) &&
+         EasyTalk.configuration.auto_validations
+        ValidationBuilder.build_validations(@klass, name, type, constraints)
+      end
     end
 
     def validate_property_name(name)
