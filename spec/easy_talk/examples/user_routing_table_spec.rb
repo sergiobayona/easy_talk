@@ -3,6 +3,97 @@
 require 'spec_helper'
 
 RSpec.describe 'User routing table' do
+  before do
+    # Define classes for use in testing
+    class RouteParameter
+      include EasyTalk::Model
+
+      define_schema do
+        property :id, String, description: 'The user id'
+      end
+    end
+
+    class EmailParameter
+      include EasyTalk::Model
+
+      define_schema do
+        property :email, String, description: 'the user email address'
+      end
+    end
+
+    class IdParameter
+      include EasyTalk::Model
+
+      define_schema do
+        property :id, String, description: 'the user id'
+      end
+    end
+
+    class UserIdRoute
+      include EasyTalk::Model
+
+      define_schema do
+        description 'Get a user by id'
+        property :phrases, T::Array[String],
+                 title: 'trigger phrase examples',
+                 description: 'Examples of phrases that trigger this route',
+                 enum: [
+                   'find user with id {id}',
+                   'search for user by id {id}',
+                   'user id {id}'
+                 ]
+        property :parameter, RouteParameter
+        property :path, String, description: 'The route path to get the user by id'
+      end
+    end
+
+    class UserEmailRoute
+      include EasyTalk::Model
+
+      define_schema do
+        description 'Get a user by email'
+        property :phrases, T::Array[String],
+                 title: 'trigger phrase examples',
+                 description: 'Examples of phrases that trigger this route',
+                 enum: [
+                   'find user with email {email}',
+                   'search for user by email {email}',
+                   'user email {email}'
+                 ]
+        property :parameter, EmailParameter
+        property :path, String, const: 'user/:email', description: 'The route path to get the user by email'
+      end
+    end
+
+    class UserIdAuthenticateRoute
+      include EasyTalk::Model
+
+      define_schema do
+        description 'Authenticate a user'
+        property :phrases, T::Array[String],
+                 title: 'trigger phrase examples',
+                 description: 'Examples of phrases that trigger this route',
+                 enum: [
+                   'authenticate user with id {id}',
+                   'authenticate user id {id}',
+                   'authenticate user {id}'
+                 ]
+        property :parameters, IdParameter
+        property :path, String, const: 'user/:id/authenticate', description: 'The route path to authenticate a user'
+      end
+    end
+  end
+
+  after do
+    # Clean up the classes after tests
+    Object.send(:remove_const, :RouteParameter) if Object.const_defined?(:RouteParameter)
+    Object.send(:remove_const, :EmailParameter) if Object.const_defined?(:EmailParameter)
+    Object.send(:remove_const, :IdParameter) if Object.const_defined?(:IdParameter)
+    Object.send(:remove_const, :UserIdRoute) if Object.const_defined?(:UserIdRoute)
+    Object.send(:remove_const, :UserEmailRoute) if Object.const_defined?(:UserEmailRoute)
+    Object.send(:remove_const, :UserIdAuthenticateRoute) if Object.const_defined?(:UserIdAuthenticateRoute)
+  end
+
   let(:user_routing) do
     Class.new do
       include EasyTalk::Model
@@ -12,51 +103,9 @@ RSpec.describe 'User routing table' do
       end
 
       define_schema do
-        property 'user_id', Hash do
-          description 'Get a user by id'
-          property :phrases, T::Array[String],
-                   title: 'trigger phrase examples',
-                   description: 'Examples of phrases that trigger this route',
-                   enum: [
-                     'find user with id {id}',
-                     'search for user by id {id}',
-                     'user id {id}'
-                   ]
-          property :parameter, Hash do
-            property :id, String, description: 'The user id'
-          end
-          property :path, String, description: 'The route path to get the user by id'
-        end
-        property 'user_email', Hash do
-          description 'Get a user by email'
-          property :phrases, T::Array[String],
-                   title: 'trigger phrase examples',
-                   description: 'Examples of phrases that trigger this route',
-                   enum: [
-                     'find user with email {email}',
-                     'search for user by email {email}',
-                     'user email {email}'
-                   ]
-          property :parameter, Hash do
-            property :email, String, description: 'the user email address'
-          end
-          property :path, String, const: 'user/:email', description: 'The route path to get the user by email'
-        end
-        property 'user_id_authenticate', Hash do
-          description 'Authenticate a user'
-          property :phrases, T::Array[String],
-                   title: 'trigger phrase examples',
-                   description: 'Examples of phrases that trigger this route',
-                   enum: [
-                     'authenticate user with id {id}',
-                     'authenticate user id {id}',
-                     'authenticate user {id}'
-                   ]
-          property :parameters, Hash do
-            property :id, String, description: 'the user id'
-          end
-          property :path, String, const: 'user/:id/authenticate', description: 'The route path to authenticate a user'
-        end
+        property :user_id, UserIdRoute
+        property :user_email, UserEmailRoute
+        property :user_id_authenticate, UserIdAuthenticateRoute
       end
     end
   end

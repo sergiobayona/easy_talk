@@ -42,17 +42,10 @@ module EasyTalk
       @schema[:properties] ||= {}
 
       if block_given?
-        property_schema = SchemaDefinition.new(name)
-        property_schema.instance_eval(&blk)
-
-        @schema[:properties][name] = {
-          type:,
-          constraints:,
-          properties: property_schema
-        }
-      else
-        @schema[:properties][name] = { type:, constraints: }
+        raise ArgumentError, 'Block-style sub-schemas are no longer supported. Use class references as types instead.'
       end
+
+      @schema[:properties][name] = { type:, constraints: }
     end
 
     def validate_property_name(name)
@@ -79,7 +72,7 @@ module EasyTalk
       constraints = constraints.merge(optional: true)
 
       # Call standard property method
-      property(name, nilable_type, constraints, &blk)
+      property(name, nilable_type, constraints)
     end
   end
 end

@@ -3,6 +3,23 @@
 require 'spec_helper'
 
 RSpec.describe 'attribute accessors' do
+  before do
+    # Define Email class for use in testing
+    class Email
+      include EasyTalk::Model
+
+      define_schema do
+        property :address, String
+        property :verified, T::Boolean
+      end
+    end
+  end
+
+  after do
+    # Clean up the Email class after tests
+    Object.send(:remove_const, :Email) if Object.const_defined?(:Email)
+  end
+
   let(:user) do
     Class.new do
       include EasyTalk::Model
@@ -14,10 +31,7 @@ RSpec.describe 'attribute accessors' do
       define_schema do
         property :name, String
         property :age, Integer
-        property :email, Hash do
-          property :address, String
-          property :verified, T::Boolean
-        end
+        property :email, Email
       end
     end
   end
@@ -41,8 +55,9 @@ RSpec.describe 'attribute accessors' do
 
   it 'creates a getter and setter for email' do
     jim = user.new
-    jim.email = { address: 'jim@test.com', verified: false }
-    expect(jim.email).to eq({ address: 'jim@test.com', verified: false })
+    email = Email.new(address: 'jim@test.com', verified: false)
+    jim.email = email
+    expect(jim.email).to eq(email)
   end
 
   it "raises exception when assigning a value to a property that doesn't exist" do
@@ -56,9 +71,10 @@ RSpec.describe 'attribute accessors' do
   end
 
   it 'allows hash style assignment' do
-    jim = user.new(name: 'Jim', age: 30, email: { address: 'jim@test.com', verified: false })
+    email = Email.new(address: 'jim@test.com', verified: false)
+    jim = user.new(name: 'Jim', age: 30, email: email)
     expect(jim.name).to eq('Jim')
     expect(jim.age).to eq(30)
-    expect(jim.email).to eq({ address: 'jim@test.com', verified: false })
+    expect(jim.email).to eq(email)
   end
 end
