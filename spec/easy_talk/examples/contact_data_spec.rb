@@ -12,7 +12,7 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
       end
 
       define_schema do
-        property :phone_number, String, pattern: '^\\+?[1-9]\\d{1,14}$'
+        property :phone_number, String, pattern: '\A(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\z'
       end
     end
   end
@@ -54,7 +54,7 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
               "properties": {
                 "phone_number": {
                   "type": 'string',
-                  "pattern": '^\\+?[1-9]\\d{1,14}$'
+                  "pattern": '\A(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\z'
                 }
               },
               "required": [

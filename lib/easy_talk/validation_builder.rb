@@ -63,7 +63,7 @@ module EasyTalk
 
     # Extract the inner type from a complex type like T.nilable(String)
     def extract_inner_type(type)
-      if type.respond_to?(:unwrap_nilable)
+      if type.respond_to?(:unwrap_nilable) && type.unwrap_nilable.respond_to?(:raw_type)
         type.unwrap_nilable.raw_type
       elsif type.respond_to?(:types)
         # For union types like T.nilable(String), extract the non-nil type

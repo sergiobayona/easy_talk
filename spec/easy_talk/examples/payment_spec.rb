@@ -16,7 +16,7 @@ RSpec.describe 'Payment object example' do
         property :CardType, String, enum: %w[Visa MasterCard AmericanExpress]
         property :CardExpMonth, Integer, minimum: 1, maximum: 12
         property :CardExpYear, Integer, minimum: Date.today.year, maximum: Date.today.year + 10
-        property :CardCVV, String, pattern: '^[0-9]{3,4}$'
+        property :CardCVV, String, pattern: '\A(?:\d{3}|\d{4})\z'
         additional_properties false
       end
     end
@@ -108,7 +108,7 @@ RSpec.describe 'Payment object example' do
                 },
                 "CardCVV": {
                   "type": 'string',
-                  "pattern": '^[0-9]{3,4}$'
+                  "pattern": '\A(?:\d{3}|\d{4})\z'
                 }
               },
               "additionalProperties": false,

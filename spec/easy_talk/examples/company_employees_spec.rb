@@ -25,7 +25,7 @@ RSpec.describe 'json for user model' do
         property :street, String
         property :city, String
         property :state, String
-        property :zip, String, pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
+        property :zip, String, pattern: '\A[0-9]{5}(?:-[0-9]{4})?\z'
       end
     end
   end
@@ -98,7 +98,7 @@ RSpec.describe 'json for user model' do
                         },
                         "zip": {
                           "type": 'string',
-                          "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
+                          "pattern": '\A[0-9]{5}(?:-[0-9]{4})?\z'
                         }
                       },
                       "required": %w[
