@@ -15,7 +15,7 @@ RSpec.describe 'Array wrapping' do
         property :street, String
         property :city, String
         property :state, String
-        property :zip, String, pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
+        property :zip, String, pattern: '\A[0-9]{5}(?:-[0-9]{4})?\z'
       end
     end
   end
@@ -54,7 +54,7 @@ RSpec.describe 'Array wrapping' do
                                                     'type' => 'string'
                                                   }, 'zip' => {
                                                     'type' => 'string',
-                                                    'pattern' => '^[0-9]{5}(?:-[0-9]{4})?$'
+                                                    'pattern' => '\A[0-9]{5}(?:-[0-9]{4})?\z'
                                                   }
                                                 },
                                                 'additionalProperties' => false,
