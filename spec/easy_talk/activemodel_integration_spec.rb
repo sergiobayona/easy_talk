@@ -28,9 +28,6 @@ RSpec.describe 'validing json' do
     Class.new do
       include EasyTalk::Model
 
-      validates :age, comparison: { greater_than: 21 }
-      validates :height, presence: true, numericality: { greater_than: 0 }
-
       validate do |person|
         MyValidator.new(person).validate
       end
@@ -51,14 +48,18 @@ RSpec.describe 'validing json' do
 
       define_schema do
         property :name, String
-        property :age, Integer
-        property :height, Float
+        property :age, Integer, minimum: 21
+        property :height, Float, minimum: 0
         property :email, Email
       end
     end
   end
 
   describe 'validating properties without ActiveModel validations' do
+    before do
+      EasyTalk.configuration.auto_validations = false
+    end
+
     it 'does not validate the nil name' do
       email = Email.new(address: 'jim@test.com', verified: false)
       jim = user.new(name: nil, age: 30, height: 5.9, email: email)
@@ -90,7 +91,7 @@ RSpec.describe 'validing json' do
     jim = user.new(name: 'Jim', age: 18, height: 5.9, email: email)
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
-    expect(jim.errors[:age]).to eq(['must be greater than 21'])
+    expect(jim.errors[:age]).to eq(['must be greater than or equal to 21'])
   end
 
   it 'errors on invalid email' do
@@ -112,7 +113,7 @@ RSpec.describe 'validing json' do
     email = Email.new(address: 'jim@gmailcom', verified: false)
     jim = user.new(name: 'Jim', age: 30, height: -5.9, email: email)
     expect(jim.valid?).to be false
-    expect(jim.errors[:height]).to eq(['must be greater than 0'])
+    expect(jim.errors[:height]).to eq(['must be greater than or equal to 0'])
   end
 
   it 'responds to #invalid?' do
@@ -132,6 +133,6 @@ RSpec.describe 'validing json' do
     email = Email.new(address: 'jim@test.com', verified: false)
     jim = user.new(name: 'Jim', age: 18, height: 5.9, email: email)
     jim.valid?
-    expect(jim.errors.messages).to eq(age: ['must be greater than 21'])
+    expect(jim.errors.messages).to eq(age: ['must be greater than or equal to 21'])
   end
 end
