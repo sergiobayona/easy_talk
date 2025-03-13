@@ -38,16 +38,16 @@ RSpec.describe 'validating json' do
   end
 
   describe 'top level properties' do
-    pending 'validates the nil name' do
+    it 'validates the nil name' do
       jim = user.new(name: nil, age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
       expect(jim.valid?).to be false
       expect(jim.errors.size).to eq(1)
-      expect(jim.errors[:name]).to eq(['is not a valid string'])
+      expect(jim.errors[:name]).to eq(["can't be blank"])
     end
 
-    pending 'passes validation on empty name' do
+    it 'passes validation on empty name' do
       jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
-      expect(jim.valid?).to be false
+      expect(jim.valid?).to be true
     end
 
     pending 'validates age attribute is not present' do

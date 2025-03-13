@@ -138,6 +138,7 @@ module EasyTalk
         raise ArgumentError, 'The class must have a name' unless name.present?
 
         @schema_definition = SchemaDefinition.new(name)
+        @schema_definition.klass = self # Pass the model class to the schema definition
         @schema_definition.instance_eval(&block)
         attr_accessor(*properties)
 
