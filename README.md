@@ -26,8 +26,6 @@ Inspired by Python's Pydantic library, EasyTalk brings similar functionality to 
 
 ### Requirements
 - Ruby 3.2 or higher
-- ActiveModel 7.0 or higher
-- ActiveSupport 7.0 or higher
 
 ### Installation Steps
 Add EasyTalk to your application's Gemfile:
@@ -228,16 +226,6 @@ Properties are defined using the `property` method, which takes a name, a type, 
 ```ruby
 property :name, String, description: "The person's name", title: "Full Name"
 property :age, Integer, minimum: 0, maximum: 120, description: "The person's age"
-```
-
-### Nested Objects
-You can define nested objects using a block:
-
-```ruby
-property :email, Hash do
-  property :address, String, format: "email"
-  property :verified, T::Boolean
-end
 ```
 
 ### Arrays and Collections
@@ -983,14 +971,6 @@ class UserProfile
     
     # Optional and nullable (can be omitted, can be null if present)
     nullable_optional_property :bio, String
-    
-    # Nested object with mixed property types
-    property :address, Hash do
-      property :street, String # Required
-      property :city, String # Required
-      property :state, String, optional: true # Optional
-      nullable_optional_property :zip, String # Optional and nullable
-    end
   end
 end
 ```
