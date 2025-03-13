@@ -54,6 +54,8 @@ module EasyTalk
          EasyTalk.configuration.auto_validations
         ValidationBuilder.build_validations(@klass, name, type, constraints)
       end
+
+      @schema[:properties][name] = { type:, constraints: }
     end
 
     def validate_property_name(name)
