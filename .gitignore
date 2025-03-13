@@ -11,7 +11,7 @@
 easy_talk*.gem
 Gemfile.lock
 .ruby-version
-
+.cursor
 
 # rspec failure tracking
 .rspec_status
