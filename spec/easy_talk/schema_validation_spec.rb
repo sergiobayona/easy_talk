@@ -3,6 +3,23 @@
 require 'spec_helper'
 
 RSpec.describe 'validating json' do
+  before do
+    # Define Email class for use in testing
+    class Email
+      include EasyTalk::Model
+
+      define_schema do
+        property :address, String
+        property :verified, String
+      end
+    end
+  end
+
+  after do
+    # Clean up the Email class after tests
+    Object.send(:remove_const, :Email) if Object.const_defined?(:Email)
+  end
+
   let(:user) do
     Class.new do
       include EasyTalk::Model
@@ -15,10 +32,7 @@ RSpec.describe 'validating json' do
         property :name, String
         property :age, Integer
         property :height, Float
-        property :email, Hash do
-          property :address, String
-          property :verified, String
-        end
+        property :email, Email
       end
     end
   end

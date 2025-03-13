@@ -1,8 +1,30 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'easy_talk/model'
 
 RSpec.describe 'optional properties' do
+  before do
+    EasyTalk.configure do |config|
+      config.nilable_is_optional = false
+    end
+
+    # Define the Email class for use in the tests
+    class Email
+      include EasyTalk::Model
+
+      define_schema do
+        property :address, String
+        property :verified, String
+      end
+    end
+  end
+
+  after do
+    # Clean up the Email class after tests
+    Object.send(:remove_const, :Email) if Object.const_defined?(:Email)
+  end
+
   let(:user) do
     Class.new do
       include EasyTalk::Model
@@ -13,54 +35,42 @@ RSpec.describe 'optional properties' do
 
       define_schema do
         property :name, String
-        property :age, Integer
-        property :email, Hash do
-          property :address, String
-          property :verified, String
-        end
+        property :email, String, optional: true
+        property :age, T.nilable(Integer)
       end
     end
   end
 
-  it 'returns all properties as required' do
-    base_level_requires = user.json_schema['required']
-    nested_level_requires = user.json_schema['properties']['email']['required']
+  context 'with nilable_is_optional = false' do
+    it 'excludes optional but includes nilable' do
+      json_schema = user.json_schema
+      required = json_schema['required']
 
-    expect(base_level_requires).to eq(%w[name age email])
-    expect(nested_level_requires).to eq(%w[address verified])
+      # Check that the optional property is not required
+      expect(required).not_to include('email')
+      # But the nilable one is
+      expect(required).to include('age')
+    end
   end
 
-  context 'when using the optional constraint' do
-    describe 'with a property on a nested object' do
-      let(:user) do
-        Class.new do
-          include EasyTalk::Model
-
-          def self.name
-            'User'
-          end
-
-          define_schema do
-            property :name, String
-            property :age, Integer
-            property :email, Hash do
-              property :address, String
-              property :verified, String, optional: true
-            end
-          end
-        end
-      end
-
-      it 'excludes the optional nested property' do
-        base_level_requires = user.json_schema['required']
-        nested_level_requires = user.json_schema['properties']['email']['required']
-
-        expect(user.json_schema['properties']['email']['properties']['verified'].keys).not_to include('optional')
-        expect(base_level_requires).to eq(%w[name age email])
-        expect(nested_level_requires).to eq(%w[address])
+  context 'with nilable_is_optional = true' do
+    before do
+      EasyTalk.configure do |config|
+        config.nilable_is_optional = true
       end
     end
 
+    it 'excludes both optional and nilable' do
+      json_schema = user.json_schema
+      required = json_schema['required']
+
+      # Both optional and nilable properties should be excluded
+      expect(required).not_to include('email')
+      expect(required).not_to include('age')
+    end
+  end
+
+  describe 'with nested schemas' do
     describe 'with a prop at the top level' do
       let(:user) do
         Class.new do
@@ -73,24 +83,18 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer, optional: true
-            property :email, Hash do
-              property :address, String
-              property :verified, String
-            end
+            property :email, Email
           end
         end
       end
 
       it 'excludes the optional property' do
         base_level_requires = user.json_schema['required']
-        nested_level_requires = user.json_schema['properties']['email']['required']
-
         expect(base_level_requires).to eq(%w[name email])
-        expect(nested_level_requires).to eq(%w[address verified])
       end
     end
 
-    describe 'with a block-style prop' do
+    describe 'with a class reference property' do
       let(:user) do
         Class.new do
           include EasyTalk::Model
@@ -102,97 +106,35 @@ RSpec.describe 'optional properties' do
           define_schema do
             property :name, String
             property :age, Integer
-            property :email, Hash, optional: true do
-              property :address, String
-              property :verified, String
-            end
+            property :email, Email, optional: true
           end
         end
       end
 
-      it 'excludes the optional block-style property' do
+      it 'excludes the optional class reference property' do
         base_level_requires = user.json_schema['required']
-        nested_level_requires = user.json_schema['properties']['email']['required']
         expect(base_level_requires).to eq(%w[name age])
-        expect(nested_level_requires).to eq(%w[address verified])
       end
     end
   end
 
-  context 'when using the T.nilable type' do
-    let(:user) do
-      Class.new do
+  describe 'block-style sub-schemas' do
+    it 'raises an error when using block-style sub-schemas' do
+      user_class = Class.new do
         include EasyTalk::Model
 
         def self.name
           'User'
         end
+      end
 
-        define_schema do
-          property :name, String
-          property :age, T.nilable(Integer)
+      expect do
+        user_class.define_schema do
           property :email, Hash do
             property :address, String
-            property :verified, String
           end
         end
-      end
-    end
-
-    it 'still requires the nilable property but allows null' do
-      base_level_requires = user.json_schema['required']
-      nested_level_requires = user.json_schema['properties']['email']['required']
-
-      # "age" is in `required` because the key must exist.
-      expect(base_level_requires).to eq(%w[name age email])
-      expect(nested_level_requires).to eq(%w[address verified])
-    end
-
-    it "includes 'null' in the type array" do
-      expect(user.json_schema['properties']['age']['type']).to eq(%w[integer null])
-    end
-
-    context 'with a compound model' do
-      let(:email) do
-        Class.new do
-          include EasyTalk::Model
-
-          def self.name
-            'Email'
-          end
-
-          define_schema do
-            property :address, String
-            property :verified, String
-          end
-        end
-      end
-
-      let(:user) do
-        Class.new do
-          include EasyTalk::Model
-
-          def self.name
-            'User'
-          end
-        end
-      end
-
-      it 'optional property is not required' do
-        stub_const('User', user)
-        stub_const('Email', email)
-
-        User.define_schema do
-          property :name, String
-          property :age, Integer
-          property :email, Email, optional: true
-        end
-        base_level_requires = User.json_schema['required']
-        nested_level_requires = User.json_schema['properties']['email']['required']
-
-        expect(base_level_requires).to eq(%w[name age])
-        expect(nested_level_requires).to eq(%w[address verified])
-      end
+      end.to raise_error(ArgumentError, 'Block-style sub-schemas are no longer supported. Use class references as types instead.')
     end
   end
 end

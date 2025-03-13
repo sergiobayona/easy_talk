@@ -3,6 +3,23 @@
 require 'spec_helper'
 require 'active_record'
 RSpec.describe EasyTalk::Model do
+  before do
+    # Define Email class for use in testing
+    class Email
+      include EasyTalk::Model
+
+      define_schema do
+        property :address, String
+        property :verified, String
+      end
+    end
+  end
+
+  after do
+    # Clean up the Email class after tests
+    Object.send(:remove_const, :Email) if Object.const_defined?(:Email)
+  end
+
   let(:user) do
     Class.new do
       include EasyTalk::Model
@@ -15,10 +32,7 @@ RSpec.describe EasyTalk::Model do
         title 'User'
         property :name, String
         property :age, Integer
-        property :email, Hash do
-          property :address, String
-          property :verified, String
-        end
+        property :email, Email
       end
     end
   end
@@ -36,18 +50,8 @@ RSpec.describe EasyTalk::Model do
           constraints: {}
         },
         email: {
-          type: :object,
-          constraints: {},
-          properties: {
-            address: {
-              type: String,
-              constraints: {}
-            },
-            verified: {
-              type: String,
-              constraints: {}
-            }
-          }
+          type: Email,
+          constraints: {}
         }
       }
     }

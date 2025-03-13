@@ -8,7 +8,7 @@ module EasyTalk
     # ObjectBuilder is responsible for turning a SchemaDefinition of an "object" type
     # into a validated JSON Schema hash. It:
     #
-    # 1) Recursively processes the schema’s :properties,
+    # 1) Recursively processes the schema's :properties,
     # 2) Determines which properties are required (unless optional),
     # 3) Handles sub-schema composition (allOf, anyOf, oneOf, not),
     # 4) Produces the final object-level schema hash.
@@ -55,7 +55,7 @@ module EasyTalk
 
       ##
       # Main aggregator: merges the top-level schema keys (like :properties, :subschemas)
-      # into a single hash that we’ll feed to BaseBuilder.
+      # into a single hash that we'll feed to BaseBuilder.
       def build_options_hash
         # Start with a copy of the raw schema
         merged = @original_schema.dup
@@ -134,24 +134,12 @@ module EasyTalk
         @property_cache ||= {}
 
         # Memoize so we only build each property once
-        @property_cache[prop_name] ||= if prop_options[:properties]
-                                         # This indicates block-style definition => nested schema
-                                         nested_schema_builder(prop_options)
-                                       else
-                                         # Remove optional constraints from the property
-                                         constraints = prop_options[:constraints].except(:optional)
-                                         # Normal property: e.g. { type: String, constraints: {...} }
-                                         Property.new(prop_name, prop_options[:type], constraints)
-                                       end
-      end
-
-      ##
-      # Build a child schema by calling another ObjectBuilder on the nested SchemaDefinition.
-      #
-      def nested_schema_builder(prop_options)
-        child_schema_def = prop_options[:properties]
-        # If user used T.nilable(...) with a block, unwrap the nilable
-        ObjectBuilder.new(child_schema_def).build
+        @property_cache[prop_name] ||= begin
+          # Remove optional constraints from the property
+          constraints = prop_options[:constraints].except(:optional)
+          # Normal property: e.g. { type: String, constraints: {...} }
+          Property.new(prop_name, prop_options[:type], constraints)
+        end
       end
 
       ##
