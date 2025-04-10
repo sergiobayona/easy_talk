@@ -141,7 +141,6 @@ EasyTalk supports standard Ruby types directly:
 - `Float`: Floating-point numbers
 - `Date`: Date values
 - `DateTime`: Date and time values
-- `Hash`: Object/dictionary values
 
 #### Sorbet-Style Types
 For complex types, EasyTalk uses Sorbet-style type notation:

@@ -38,7 +38,7 @@ RSpec.describe 'Vehicle Registration System example' do
         property :city, String
         property :state, String
         property :zip, String
-        property :contact_number, String, pattern: '^[0-9]{10}$'
+        property :contact_number, String, pattern: '\A[0-9]{10}\z'
       end
     end
   end
@@ -53,7 +53,7 @@ RSpec.describe 'Vehicle Registration System example' do
 
       define_schema do
         title 'Registration Details'
-        property :registration_number, String, pattern: '^[A-Z0-9]{7}$'
+        property :registration_number, String, pattern: '\A[A-Z0-9]{7}\z'
         property :registration_date, String, format: 'date'
         property :expiration_date, String, format: 'date'
       end
@@ -125,7 +125,7 @@ RSpec.describe 'Vehicle Registration System example' do
             },
             "contact_number": {
               "type": 'string',
-              "pattern": '^[0-9]{10}$'
+              "pattern": '\A[0-9]{10}\z'
             }
           },
           "required": %w[
@@ -144,7 +144,7 @@ RSpec.describe 'Vehicle Registration System example' do
           "properties": {
             "registration_number": {
               "type": 'string',
-              "pattern": '^[A-Z0-9]{7}$'
+              "pattern": '\A[A-Z0-9]{7}\z'
             },
             "registration_date": {
               "type": 'string',
