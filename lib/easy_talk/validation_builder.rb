@@ -34,7 +34,6 @@ module EasyTalk
     def apply_validations
       # Skip if the property is optional/nullable and nilable_is_optional is true
       apply_presence_validation unless optional?
-      # binding.pry
       if nilable_type?
         # For nilable types, get the inner type and apply validations to it
         inner_type = extract_inner_type(@type)
