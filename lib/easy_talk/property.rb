@@ -88,7 +88,11 @@ module EasyTalk
       @name = name
       @type = type
       @constraints = constraints
-      raise ArgumentError, 'property type is missing' if type.nil? || (type.respond_to?(:empty?) && type.empty?)
+      if type.nil? || (type.respond_to?(:empty?) && type.is_a?(String) && type.strip.empty?)
+        raise ArgumentError,
+              'property type is missing'
+      end
+      raise ArgumentError, 'property type is not supported' if type.is_a?(Array) && type.empty?
     end
 
     # Builds the property schema based on its type and constraints.

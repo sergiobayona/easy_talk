@@ -90,7 +90,7 @@ RSpec.describe EasyTalk::Property do
     it 'raises an error when type is an empty array' do
       expect do
         described_class.new(:name, []).build
-      end.to raise_error(ArgumentError, 'property type is missing')
+      end.to raise_error(ArgumentError, 'property type is not supported')
     end
   end
 
