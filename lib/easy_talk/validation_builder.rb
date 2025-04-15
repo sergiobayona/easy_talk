@@ -23,6 +23,8 @@ module EasyTalk
     # @param property_name [Symbol, String] The name of the property
     # @param type [Class, Object] The type of the property
     # @param constraints [Hash] The JSON Schema constraints for the property
+    attr_reader :klass, :property_name, :type, :constraints
+
     def initialize(klass, property_name, type, constraints)
       @klass = klass
       @property_name = property_name.to_sym
@@ -86,7 +88,7 @@ module EasyTalk
         apply_array_validations(type)
       elsif [TrueClass, FalseClass].include?(type_class)
         apply_boolean_validations
-      elsif type_class == Hash
+      elsif type_class.is_a?(Object) && type_class.include?(EasyTalk::Model)
         apply_object_validations
       end
     end
@@ -246,11 +248,33 @@ module EasyTalk
 
     # Validate object/hash-specific constraints
     def apply_object_validations
-      # Currently just validates it's a hash
-      # Nested validation would require recursion
+      # Capture necessary variables outside the validation block's scope
+      prop_name = @property_name
+      expected_type = get_type_class(@type) # Get the raw model class
+
       @klass.validate do |record|
-        value = record.public_send(@property_name)
-        record.errors.add(@property_name, 'must be a hash') if value && !value.is_a?(Hash)
+        nested_object = record.public_send(prop_name)
+
+        # Only validate if the nested object is present
+        if nested_object
+          # Check if the object is of the expected type (e.g., an actual Email instance)
+          if nested_object.is_a?(expected_type)
+            # If it's the correct type, validate it
+            unless nested_object.valid?
+              # Merge errors from the nested object into the parent
+              nested_object.errors.each do |error|
+                # Prefix the attribute name (e.g., 'email.address')
+                nested_key = "#{prop_name}.#{error.attribute}"
+                record.errors.add(nested_key.to_sym, error.message)
+              end
+            end
+          else
+            # If present but not the correct type, add a type error
+            record.errors.add(prop_name, "must be a valid #{expected_type.name}")
+          end
+        end
+        # NOTE: Presence validation (if nested_object is nil) is handled
+        # by apply_presence_validation based on the property definition.
       end
     end
 

@@ -10,6 +10,7 @@ require 'active_model'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 require_relative 'active_record_schema_builder'
+require_relative 'validation_builder'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -50,7 +51,21 @@ module EasyTalk
     module InstanceMethods
       def initialize(attributes = {})
         @additional_properties = {}
-        super
+        super # Perform initial mass assignment
+
+        # After initial assignment, instantiate nested EasyTalk::Model objects
+        self.class.schema_definition.schema[:properties].each do |prop_name, prop_definition|
+          # Get the defined type and the currently assigned value
+          defined_type = prop_definition[:type]
+          current_value = public_send(prop_name)
+
+          # Check if the type is another EasyTalk::Model and the value is a Hash
+          next unless defined_type.is_a?(Class) && defined_type.include?(EasyTalk::Model) && current_value.is_a?(Hash)
+
+          # Instantiate the nested model and assign it back
+          nested_instance = defined_type.new(current_value)
+          public_send("#{prop_name}=", nested_instance)
+        end
       end
 
       def method_missing(method_name, *args)
@@ -77,9 +92,10 @@ module EasyTalk
 
       # Add to_hash method to convert defined properties to hash
       def to_hash
-        return {} unless self.class.properties
+        properties_to_include = self.class.schema_definition.properties.keys
+        return {} if properties_to_include.empty?
 
-        self.class.properties.each_with_object({}) do |prop, hash|
+        properties_to_include.each_with_object({}) do |prop, hash|
           hash[prop.to_s] = send(prop)
         end
       end
@@ -115,14 +131,6 @@ module EasyTalk
         "#/$defs/#{name}"
       end
 
-      def properties
-        @properties ||= begin
-          return unless schema[:properties].present?
-
-          schema[:properties].keys.map(&:to_sym)
-        end
-      end
-
       # Returns the JSON schema for the model.
       #
       # @return [Hash] The JSON schema for the model.
@@ -140,7 +148,18 @@ module EasyTalk
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.klass = self # Pass the model class to the schema definition
         @schema_definition.instance_eval(&block)
-        attr_accessor(*properties)
+
+        # binding.pry
+        # Define accessors immediately based on schema_definition
+        defined_properties = @schema_definition.schema[:properties].keys
+        attr_accessor(*defined_properties)
+
+        # Apply auto-validations immediately after definition
+        if EasyTalk.configuration.auto_validations
+          @schema_definition.schema[:properties].each do |prop_name, prop_def|
+            ValidationBuilder.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
+          end
+        end
 
         @schema_definition
       end

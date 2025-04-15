@@ -78,6 +78,7 @@ RSpec.describe 'validating json' do
 
   it 'validates nested properties' do
     jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'test@test.com' })
+
     jim.valid?
     expect(jim.errors['email.verified']).to eq(["can't be blank"])
   end
