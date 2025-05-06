@@ -50,7 +50,18 @@ module EasyTalk
       # @return [Array<Hash>] The array of schemas.
       def schemas
         items.map do |type|
-          type.respond_to?(:schema) ? type.schema : { type: type.to_s.downcase }
+          if type.respond_to?(:schema)
+            type.schema
+          else
+            # Map Float type to 'number' in JSON Schema
+            json_type = case type.to_s
+                       when 'Float', 'BigDecimal'
+                         'number'
+                       else
+                         type.to_s.downcase
+                       end
+            { type: json_type }
+          end
         end
       end
 
