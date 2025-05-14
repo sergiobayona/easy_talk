@@ -35,6 +35,7 @@ module EasyTalk
       'Float' => Builders::NumberBuilder,
       'BigDecimal' => Builders::NumberBuilder,
       'T::Boolean' => Builders::BooleanBuilder,
+      'TrueClass' => Builders::BooleanBuilder,
       'NilClass' => Builders::NullBuilder,
       'Date' => Builders::TemporalBuilder::DateBuilder,
       'DateTime' => Builders::TemporalBuilder::DatetimeBuilder,

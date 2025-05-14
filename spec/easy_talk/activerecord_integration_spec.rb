@@ -19,6 +19,8 @@ RSpec.describe 'EasyTalk::Model integration with ActiveRecord' do
         t.string :address, null: true
         t.integer :employee_count
         t.datetime :founded_at
+        t.boolean :active, default: true
+        t.boolean :profile_completed, default: false
         t.timestamps
       end
     end
@@ -52,7 +54,7 @@ RSpec.describe 'EasyTalk::Model integration with ActiveRecord' do
       expect(schema['description']).to eq('A minimal example of an ActiveRecord model using EasyTalk')
 
       # Check some of the auto-generated columns
-      expect(schema['properties'].keys).to include('name', 'employee_count', 'founded_at')
+      expect(schema['properties'].keys).to include('name', 'employee_count', 'founded_at', 'active', 'profile_completed')
 
       # name is non-null in the DB, so maybe you consider it "required" in your logic
       # that depends on how you interpreted NOT NULL => required

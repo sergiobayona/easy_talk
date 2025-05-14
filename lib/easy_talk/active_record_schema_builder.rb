@@ -136,7 +136,11 @@ module EasyTalk
       end
 
       # Add default value if present and not a proc
-      constraints[:default] = column.default if column.default && !column.default.is_a?(Proc)
+      if column.default && !column.default.is_a?(Proc) && column.type == :boolean
+        constraints[:default] = ActiveModel::Type::Boolean.new.cast(column.default)
+      elsif column.default && !column.default.is_a?(Proc)
+        constraints[:default] = column.default
+      end
 
       # Remove nil values
       constraints.compact
