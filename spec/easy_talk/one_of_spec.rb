@@ -168,4 +168,45 @@ RSpec.describe EasyTalk::Types::Composer::OneOf do
       expect(user.json_schema).to include_json(expected_schema)
     end
   end
+
+  context 'with primitive types in OneOf' do
+    let(:model_class) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name
+          'PrimitiveTypesModel'
+        end
+
+        define_schema do
+          property :string_or_number, T::OneOf[String, Float], optional: true
+          property :string_or_integer, T::OneOf[String, Integer], optional: true
+        end
+      end
+    end
+
+    it 'correctly maps Float to "number" JSON Schema type' do
+      json_schema = model_class.json_schema
+      # The properties hash is accessed with string keys in the final schema
+      string_or_number = json_schema["properties"]["string_or_number"]
+      expect(string_or_number).to include_json(
+        oneOf: [
+          { type: 'string' },
+          { type: 'number' }  # Float should map to 'number', not 'float'
+        ]
+      )
+    end
+
+    it 'correctly maps Integer to "integer" JSON Schema type' do
+      json_schema = model_class.json_schema
+      # The properties hash is accessed with string keys in the final schema
+      string_or_integer = json_schema["properties"]["string_or_integer"]
+      expect(string_or_integer).to include_json(
+        oneOf: [
+          { type: 'string' },
+          { type: 'integer' }
+        ]
+      )
+    end
+  end
 end
