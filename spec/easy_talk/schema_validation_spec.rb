@@ -38,33 +38,37 @@ RSpec.describe 'validating json' do
   end
 
   describe 'top level properties' do
-    pending 'validates the nil name' do
+    it 'validates the nil name' do
       jim = user.new(name: nil, age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
       expect(jim.valid?).to be false
       expect(jim.errors.size).to eq(1)
-      expect(jim.errors[:name]).to eq(['is not a valid string'])
+      expect(jim.errors[:name]).to eq(["can't be blank"])
     end
 
-    pending 'passes validation on empty name' do
+    # NOTE: Per JSON Schema spec, empty strings are valid. However, we are using ActiveModel validations
+    # and It do not allow empty strings.
+    it 'fails validation on empty name' do
       jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
       expect(jim.valid?).to be false
+      expect(jim.errors.size).to eq(1)
+      expect(jim.errors[:name]).to eq(["can't be blank"])
     end
 
-    pending 'validates age attribute is not present' do
+    it 'validates age attribute is not present' do
       jim = user.new(name: 'Jim', height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
       expect(jim.valid?).to be false
-      expect(jim.errors.size).to eq(1)
-      expect(jim.errors[:age]).to eq(['is not a valid integer'])
+      expect(jim.errors.size).to eq(2)
+      expect(jim.errors[:age]).to eq(["can't be blank", 'is not a number'])
     end
 
-    pending 'validates email attribute is not present' do
+    it 'validates email attribute is not present' do
       jim = user.new(name: 'Jim', age: 30, height: 5.9)
       expect(jim.valid?).to be false
       expect(jim.errors.size).to eq(1)
       expect(jim.errors[:email]).to eq(["can't be blank"])
     end
 
-    pending 'validates an empty email hash' do
+    it 'validates an empty email hash' do
       jim = user.new(name: 'Jim', age: 30, height: 5.9, email: {})
       expect(jim.valid?).to be false
       expect(jim.errors.size).to eq(1)
@@ -72,18 +76,16 @@ RSpec.describe 'validating json' do
     end
   end
 
-  describe 'properties on nested objects' do
-    pending 'validates nested properties' do
-      jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'test@test.com' })
-      jim.valid?
-      expect(jim.errors['email.verified']).to eq(["can't be blank"])
-    end
+  it 'validates nested properties' do
+    jim = user.new(name: 'Jim', age: 30, height: 5.9, email: { address: 'test@test.com' })
+    jim.valid?
+    expect(jim.errors['email.verified']).to eq(["can't be blank"])
   end
 
-  pending 'errors on invalid age' do
+  it 'errors on invalid age' do
     jim = user.new(name: 'Jim', age: 'thirty', height: 4.5, email: { address: 'test@jim.com', verified: 'true' })
     expect(jim.valid?).to be false
     expect(jim.errors.size).to eq(1)
-    expect(jim.errors[:age]).to eq(['is not a valid integer'])
+    expect(jim.errors[:age]).to eq(['is not a number'])
   end
 end
