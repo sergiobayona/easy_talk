@@ -48,13 +48,24 @@ module EasyTalk
       base.extend(ActiveRecordClassMethods)
     end
 
+    # Instance methods mixed into models that include EasyTalk::Model
     module InstanceMethods
       def initialize(attributes = {})
         @additional_properties = {}
         super # Perform initial mass assignment
 
         # After initial assignment, instantiate nested EasyTalk::Model objects
-        self.class.schema_definition.schema[:properties].each do |prop_name, prop_definition|
+        # Get the appropriate schema definition based on model type
+        schema_def = if self.class.respond_to?(:active_record_schema_definition)
+                       self.class.active_record_schema_definition
+                     else
+                       self.class.schema_definition
+                     end
+
+        # Only proceed if we have a valid schema definition
+        return unless schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
+
+        (schema_def.schema[:properties] || {}).each do |prop_name, prop_definition|
           # Get the defined type and the currently assigned value
           defined_type = prop_definition[:type]
           current_value = public_send(prop_name)
@@ -92,7 +103,7 @@ module EasyTalk
 
       # Add to_hash method to convert defined properties to hash
       def to_hash
-        properties_to_include = self.class.schema_definition.properties.keys
+        properties_to_include = (self.class.schema_definition.schema[:properties] || {}).keys
         return {} if properties_to_include.empty?
 
         properties_to_include.each_with_object({}) do |prop, hash|
@@ -103,6 +114,23 @@ module EasyTalk
       # Override as_json to include both defined and additional properties
       def as_json(_options = {})
         to_hash.merge(@additional_properties)
+      end
+
+      # Allow comparison with hashes
+      def ==(other)
+        case other
+        when Hash
+          # Convert both to comparable format for comparison
+          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.each_with_object({}) do |prop, hash|
+            hash[prop] = send(prop)
+          end
+
+          # Handle both symbol and string keys in the other hash
+          other_normalized = other.transform_keys(&:to_sym)
+          self_hash == other_normalized
+        else
+          super
+        end
       end
     end
 
@@ -149,15 +177,21 @@ module EasyTalk
         @schema_definition.klass = self # Pass the model class to the schema definition
         @schema_definition.instance_eval(&block)
 
-        # binding.pry
         # Define accessors immediately based on schema_definition
-        defined_properties = @schema_definition.schema[:properties].keys
+        defined_properties = (@schema_definition.schema[:properties] || {}).keys
         attr_accessor(*defined_properties)
+
+        # Track which properties have had validations applied
+        @validated_properties ||= Set.new
 
         # Apply auto-validations immediately after definition
         if EasyTalk.configuration.auto_validations
-          @schema_definition.schema[:properties].each do |prop_name, prop_def|
-            ValidationBuilder.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
+          (@schema_definition.schema[:properties] || {}).each do |prop_name, prop_def|
+            # Only apply validations if they haven't been applied yet
+            unless @validated_properties.include?(prop_name)
+              ValidationBuilder.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
+              @validated_properties.add(prop_name)
+            end
           end
         end
 
@@ -173,6 +207,13 @@ module EasyTalk
 
       def additional_properties_allowed?
         @schema_definition&.schema&.fetch(:additional_properties, false)
+      end
+
+      # Returns the property names defined in the schema
+      #
+      # @return [Array<Symbol>] Array of property names as symbols
+      def properties
+        (@schema_definition&.schema&.dig(:properties) || {}).keys
       end
 
       # Builds the schema using the provided schema definition.

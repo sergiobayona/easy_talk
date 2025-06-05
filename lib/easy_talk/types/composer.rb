@@ -54,6 +54,7 @@ end
 
 # Shorthand module for accessing the AllOf composer
 module T
+  # Provides composition logic for combining multiple schemas with AllOf semantics
   module AllOf
     # Creates a new instance of `EasyTalk::Types::Composer::AllOf` with the given arguments.
     #

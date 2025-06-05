@@ -36,10 +36,13 @@ module EasyTalk
     def apply_validations
       # Determine if the type is boolean
       type_class = get_type_class(@type)
-      is_boolean = [[TrueClass, FalseClass], TrueClass, FalseClass].include?(type_class)
+      is_boolean = type_class == [TrueClass, FalseClass] ||
+                   type_class == TrueClass ||
+                   type_class == FalseClass ||
+                   @type.to_s.include?('T::Boolean')
 
-      # Skip presence validation for booleans
-      apply_presence_validation unless optional? || is_boolean
+      # Skip presence validation for booleans and nilable types
+      apply_presence_validation unless optional? || is_boolean || nilable_type?
       if nilable_type?
         # For nilable types, get the inner type and apply validations to it
         inner_type = extract_inner_type(@type)
@@ -90,7 +93,9 @@ module EasyTalk
         apply_number_validations
       elsif type_class == Array
         apply_array_validations(type)
-      elsif [TrueClass, FalseClass].include?(type_class)
+      elsif type_class == [TrueClass,
+                           FalseClass] || [TrueClass,
+                                           FalseClass].include?(type_class) || type.to_s.include?('T::Boolean')
         apply_boolean_validations
       elsif type_class.is_a?(Object) && type_class.include?(EasyTalk::Model)
         apply_object_validations
@@ -201,10 +206,12 @@ module EasyTalk
       # Add multiple_of validation
       return unless @constraints[:multiple_of]
 
+      prop_name = @property_name
+      multiple_of_value = @constraints[:multiple_of]
       @klass.validate do |record|
-        value = record.public_send(@property_name)
-        if value && (value % @constraints[:multiple_of] != 0)
-          record.errors.add(@property_name, "must be a multiple of #{@constraints[:multiple_of]}")
+        value = record.public_send(prop_name)
+        if value && (value % multiple_of_value != 0)
+          record.errors.add(prop_name, "must be a multiple of #{multiple_of_value}")
         end
       end
     end
@@ -222,9 +229,10 @@ module EasyTalk
 
       # Validate uniqueness within the array
       if @constraints[:unique_items]
+        prop_name = @property_name
         @klass.validate do |record|
-          value = record.public_send(@property_name)
-          record.errors.add(@property_name, 'must contain unique items') if value && value.uniq.length != value.length
+          value = record.public_send(prop_name)
+          record.errors.add(prop_name, 'must contain unique items') if value && value.uniq.length != value.length
         end
       end
 
@@ -232,13 +240,12 @@ module EasyTalk
       return unless type.respond_to?(:type_parameter)
 
       inner_type = type.type_parameter
+      prop_name = @property_name
       @klass.validate do |record|
-        value = record.public_send(@property_name)
+        value = record.public_send(prop_name)
         if value.is_a?(Array)
           value.each_with_index do |item, index|
-            unless item.is_a?(inner_type)
-              record.errors.add(@property_name, "item at index #{index} must be a #{inner_type}")
-            end
+            record.errors.add(prop_name, "item at index #{index} must be a #{inner_type}") unless item.is_a?(inner_type)
           end
         end
       end
@@ -247,12 +254,24 @@ module EasyTalk
     # Validate boolean-specific constraints
     def apply_boolean_validations
       # For boolean values, validate inclusion in [true, false]
-      @klass.validates @property_name, inclusion: { in: [true, false] }, allow_nil: optional?
+      # If not optional, don't allow nil (equivalent to presence validation for booleans)
+      if optional?
+        @klass.validates @property_name, inclusion: { in: [true, false] }, allow_nil: true
+      else
+        @klass.validates @property_name, inclusion: { in: [true, false] }
+        # Add custom validation for nil values that provides the "can't be blank" message
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          record.errors.add(prop_name, "can't be blank") if value.nil?
+        end
+      end
 
       # Add type validation to ensure the value is actually a boolean
+      prop_name = @property_name
       @klass.validate do |record|
-        value = record.public_send(@property_name)
-        record.errors.add(@property_name, 'must be a boolean') if value && ![true, false].include?(value)
+        value = record.public_send(prop_name)
+        record.errors.add(prop_name, 'must be a boolean') if value && ![true, false].include?(value)
       end
     end
 
@@ -269,13 +288,26 @@ module EasyTalk
         if nested_object
           # Check if the object is of the expected type (e.g., an actual Email instance)
           if nested_object.is_a?(expected_type)
-            # If it's the correct type, validate it
-            unless nested_object.valid?
-              # Merge errors from the nested object into the parent
-              nested_object.errors.each do |error|
-                # Prefix the attribute name (e.g., 'email.address')
-                nested_key = "#{prop_name}.#{error.attribute}"
-                record.errors.add(nested_key.to_sym, error.message)
+            # Check if this object appears to be empty (created from an empty hash)
+            # by checking if all defined properties are nil/blank
+            properties = expected_type.schema_definition.schema[:properties] || {}
+            all_properties_blank = properties.keys.all? do |property|
+              value = nested_object.public_send(property)
+              value.nil? || (value.respond_to?(:empty?) && value.empty?)
+            end
+
+            if all_properties_blank
+              # Treat as blank and add a presence error to the parent field
+              record.errors.add(prop_name, "can't be blank")
+            else
+              # If it's the correct type and not empty, validate it
+              unless nested_object.valid?
+                # Merge errors from the nested object into the parent
+                nested_object.errors.each do |error|
+                  # Prefix the attribute name (e.g., 'email.address')
+                  nested_key = "#{prop_name}.#{error.attribute}"
+                  record.errors.add(nested_key.to_sym, error.message)
+                end
               end
             end
           else
@@ -299,9 +331,10 @@ module EasyTalk
     # Apply const validation for equality with a specific value
     def apply_const_validation
       const_value = @constraints[:const]
+      prop_name = @property_name
       @klass.validate do |record|
-        value = record.public_send(@property_name)
-        record.errors.add(@property_name, "must be equal to #{const_value}") if !value.nil? && value != const_value
+        value = record.public_send(prop_name)
+        record.errors.add(prop_name, "must be equal to #{const_value}") if !value.nil? && value != const_value
       end
     end
   end
