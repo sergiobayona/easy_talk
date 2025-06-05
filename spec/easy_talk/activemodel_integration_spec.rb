@@ -83,7 +83,6 @@ RSpec.describe 'validing json' do
     email = Email.new(address: 'jim@test.com', verified: false)
     jim = user.new(name: 'Jim', age: 30, height: 5.9, email: email)
     is_valid = jim.valid?
-    binding.pry
     # Print validation errors if the object is invalid to help debugging
     puts "\nValidation Errors: #{jim.errors.full_messages.join(', ')}\n" unless is_valid
     expect(is_valid).to be true

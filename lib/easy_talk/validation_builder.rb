@@ -34,8 +34,12 @@ module EasyTalk
 
     # Apply validations based on property type and constraints
     def apply_validations
-      # Skip if the property is optional/nullable and nilable_is_optional is true
-      apply_presence_validation unless optional?
+      # Determine if the type is boolean
+      type_class = get_type_class(@type)
+      is_boolean = [[TrueClass, FalseClass], TrueClass, FalseClass].include?(type_class)
+
+      # Skip presence validation for booleans
+      apply_presence_validation unless optional? || is_boolean
       if nilable_type?
         # For nilable types, get the inner type and apply validations to it
         inner_type = extract_inner_type(@type)
@@ -108,7 +112,7 @@ module EasyTalk
           String
         end
       elsif type.to_s.include?('T::Boolean')
-        TrueClass # Use TrueClass as a proxy for T::Boolean
+        [TrueClass, FalseClass] # Return both boolean classes
       else
         String # Default fallback
       end
@@ -244,6 +248,12 @@ module EasyTalk
     def apply_boolean_validations
       # For boolean values, validate inclusion in [true, false]
       @klass.validates @property_name, inclusion: { in: [true, false] }, allow_nil: optional?
+
+      # Add type validation to ensure the value is actually a boolean
+      @klass.validate do |record|
+        value = record.public_send(@property_name)
+        record.errors.add(@property_name, 'must be a boolean') if value && ![true, false].include?(value)
+      end
     end
 
     # Validate object/hash-specific constraints
