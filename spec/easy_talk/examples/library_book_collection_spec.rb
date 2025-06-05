@@ -37,50 +37,50 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
 
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "title": 'Book',
-      "properties": {
-        "title": {
-          "type": 'string',
-          "description": 'The title of the book.'
+      type: 'object',
+      title: 'Book',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'The title of the book.'
         },
-        "author": {
-          "type": 'string',
-          "description": "The name of the book's author."
+        author: {
+          type: 'string',
+          description: "The name of the book's author."
         },
-        "ISBN": {
-          "type": 'string',
-          "description": 'The International Standard Book Number.',
-          "pattern": '^(\\d{3}-?\\d{10})$'
+        ISBN: {
+          type: 'string',
+          description: 'The International Standard Book Number.',
+          pattern: '^(\\d{3}-?\\d{10})$'
         },
-        "publicationYear": {
-          "type": 'integer',
-          "description": 'The year the book was published.'
+        publicationYear: {
+          type: 'integer',
+          description: 'The year the book was published.'
         }
       },
-      "required": %w[
+      required: %w[
         title
         author
         ISBN
         publicationYear
       ],
-      "$defs": {
-        "Magazine": {
-          "type": 'object',
-          "properties": {
-            "ISSN": {
-              "type": 'string',
-              "description": 'The International Standard Serial Number for periodicals.',
-              "pattern": '^\\d{4}-\\d{4}$'
+      '$defs': {
+        Magazine: {
+          type: 'object',
+          properties: {
+            ISSN: {
+              type: 'string',
+              description: 'The International Standard Serial Number for periodicals.',
+              pattern: '^\\d{4}-\\d{4}$'
             }
           },
-          "required": [
+          required: [
             'ISSN'
           ]
         }
       },
-      "not": {
-        "$ref": '#/$defs/Magazine'
+      not: {
+        '$ref': '#/$defs/Magazine'
       }
     }
   end

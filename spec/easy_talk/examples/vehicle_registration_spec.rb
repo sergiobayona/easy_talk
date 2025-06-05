@@ -72,63 +72,63 @@ RSpec.describe 'Vehicle Registration System example' do
 
   let(:expected_schema) do
     {
-      "type": 'object',
-      "$defs": {
-        "VehicleIdentification": {
-          "type": 'object',
-          "title": 'Vehicle Identification',
-          "properties": {
-            "make": {
-              "type": 'string'
+      type: 'object',
+      '$defs': {
+        VehicleIdentification: {
+          type: 'object',
+          title: 'Vehicle Identification',
+          properties: {
+            make: {
+              type: 'string'
             },
-            "model": {
-              "type": 'string'
+            model: {
+              type: 'string'
             },
-            "year": {
-              "type": 'integer',
-              "minimum": 1900,
-              "maximum": 2100
+            year: {
+              type: 'integer',
+              minimum: 1900,
+              maximum: 2100
             },
-            "vin": {
-              "type": 'string'
+            vin: {
+              type: 'string'
             }
           },
-          "additionalProperties": true,
-          "required": %w[
+          additionalProperties: true,
+          required: %w[
             make
             model
             year
             vin
           ]
         },
-        "OwnerInfo": {
-          "type": 'object',
-          "title": 'Owner Information',
-          "properties": {
-            "first_name": {
-              "type": 'string'
+        OwnerInfo: {
+          type: 'object',
+          title: 'Owner Information',
+          properties: {
+            first_name: {
+              type: 'string'
             },
-            "last_name": {
-              "type": 'string'
+            last_name: {
+              type: 'string'
             },
-            "address": {
-              "type": 'string'
+            address: {
+              type: 'string'
             },
-            "city": {
-              "type": 'string'
+            city: {
+              type: 'string'
             },
-            "state": {
-              "type": 'string'
+            state: {
+              type: 'string'
             },
-            "zip": {
-              "type": 'string'
+            zip: {
+              type: 'string'
             },
-            "contact_number": {
-              "type": 'string',
-              "pattern": '\A[0-9]{10}\z'
+            contact_number: {
+              type: 'string',
+              pattern: '\A[0-9]{10}\z'
             }
           },
-          "required": %w[
+          required: %w[
             first_name
             last_name
             address
@@ -138,39 +138,39 @@ RSpec.describe 'Vehicle Registration System example' do
             contact_number
           ]
         },
-        "RegistrationDetails": {
-          "type": 'object',
-          "title": 'Registration Details',
-          "properties": {
-            "registration_number": {
-              "type": 'string',
-              "pattern": '\A[A-Z0-9]{7}\z'
+        RegistrationDetails: {
+          type: 'object',
+          title: 'Registration Details',
+          properties: {
+            registration_number: {
+              type: 'string',
+              pattern: '\A[A-Z0-9]{7}\z'
             },
-            "registration_date": {
-              "type": 'string',
-              "format": 'date'
+            registration_date: {
+              type: 'string',
+              format: 'date'
             },
-            "expiration_date": {
-              "type": 'string',
-              "format": 'date'
+            expiration_date: {
+              type: 'string',
+              format: 'date'
             }
           },
-          "required": %w[
+          required: %w[
             registration_number
             registration_date
             expiration_date
           ]
         }
       },
-      "allOf": [
+      allOf: [
         {
-          "$ref": '#/$defs/VehicleIdentification'
+          '$ref': '#/$defs/VehicleIdentification'
         },
         {
-          "$ref": '#/$defs/OwnerInfo'
+          '$ref': '#/$defs/OwnerInfo'
         },
         {
-          "$ref": '#/$defs/RegistrationDetails'
+          '$ref': '#/$defs/RegistrationDetails'
         }
       ]
     }

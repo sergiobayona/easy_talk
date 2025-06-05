@@ -112,132 +112,132 @@ RSpec.describe 'User routing table' do
 
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "properties": {
-        "user_id": {
-          "type": 'object',
-          "description": 'Get a user by id',
-          "properties": {
-            "phrases": {
-              "type": 'array',
-              "items": {
-                "type": 'string'
+      type: 'object',
+      properties: {
+        user_id: {
+          type: 'object',
+          description: 'Get a user by id',
+          properties: {
+            phrases: {
+              type: 'array',
+              items: {
+                type: 'string'
               },
-              "title": 'trigger phrase examples',
-              "description": 'Examples of phrases that trigger this route',
-              "enum": [
+              title: 'trigger phrase examples',
+              description: 'Examples of phrases that trigger this route',
+              enum: [
                 'find user with id {id}',
                 'search for user by id {id}',
                 'user id {id}'
               ]
             },
-            "parameter": {
-              "type": 'object',
-              "properties": {
-                "id": {
-                  "type": 'string',
-                  "description": 'The user id'
+            parameter: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'The user id'
                 }
               },
-              "required": [
+              required: [
                 'id'
               ]
             },
-            "path": {
-              "type": 'string',
-              "description": 'The route path to get the user by id'
+            path: {
+              type: 'string',
+              description: 'The route path to get the user by id'
             }
           },
-          "required": %w[
+          required: %w[
             phrases
             parameter
             path
           ]
         },
-        "user_email": {
-          "type": 'object',
-          "description": 'Get a user by email',
-          "properties": {
-            "phrases": {
-              "type": 'array',
-              "items": {
-                "type": 'string'
+        user_email: {
+          type: 'object',
+          description: 'Get a user by email',
+          properties: {
+            phrases: {
+              type: 'array',
+              items: {
+                type: 'string'
               },
-              "title": 'trigger phrase examples',
-              "description": 'Examples of phrases that trigger this route',
-              "enum": [
+              title: 'trigger phrase examples',
+              description: 'Examples of phrases that trigger this route',
+              enum: [
                 'find user with email {email}',
                 'search for user by email {email}',
                 'user email {email}'
               ]
             },
-            "parameter": {
-              "type": 'object',
-              "properties": {
-                "email": {
-                  "type": 'string',
-                  "description": 'the user email address'
+            parameter: {
+              type: 'object',
+              properties: {
+                email: {
+                  type: 'string',
+                  description: 'the user email address'
                 }
               },
-              "required": [
+              required: [
                 'email'
               ]
             },
-            "path": {
-              "type": 'string',
-              "description": 'The route path to get the user by email',
-              "const": 'user/:email'
+            path: {
+              type: 'string',
+              description: 'The route path to get the user by email',
+              const: 'user/:email'
             }
           },
-          "required": %w[
+          required: %w[
             phrases
             parameter
             path
           ]
         },
-        "user_id_authenticate": {
-          "type": 'object',
-          "description": 'Authenticate a user',
-          "properties": {
-            "phrases": {
-              "type": 'array',
-              "items": {
-                "type": 'string'
+        user_id_authenticate: {
+          type: 'object',
+          description: 'Authenticate a user',
+          properties: {
+            phrases: {
+              type: 'array',
+              items: {
+                type: 'string'
               },
-              "title": 'trigger phrase examples',
-              "description": 'Examples of phrases that trigger this route',
-              "enum": [
+              title: 'trigger phrase examples',
+              description: 'Examples of phrases that trigger this route',
+              enum: [
                 'authenticate user with id {id}',
                 'authenticate user id {id}',
                 'authenticate user {id}'
               ]
             },
-            "parameters": {
-              "type": 'object',
-              "properties": {
-                "id": {
-                  "type": 'string',
-                  "description": 'the user id'
+            parameters: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'the user id'
                 }
               },
-              "required": [
+              required: [
                 'id'
               ]
             },
-            "path": {
-              "type": 'string',
-              "description": 'The route path to authenticate a user',
-              "const": 'user/:id/authenticate'
+            path: {
+              type: 'string',
+              description: 'The route path to authenticate a user',
+              const: 'user/:id/authenticate'
             }
           },
-          "required": %w[
+          required: %w[
             phrases
             parameters
             path
           ]
         }
       },
-      "required": %w[
+      required: %w[
         user_id
         user_email
         user_id_authenticate

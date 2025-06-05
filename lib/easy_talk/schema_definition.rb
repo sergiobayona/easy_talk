@@ -37,7 +37,7 @@ module EasyTalk
       @schema[:subschemas] += subschemas
     end
 
-    def property(name, type, constraints = {}, &_blk)
+    def property(name, type, constraints = {}, &)
       validate_property_name(name)
       @schema[:properties] ||= {}
 
