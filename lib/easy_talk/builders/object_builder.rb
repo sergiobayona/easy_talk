@@ -119,9 +119,7 @@ module EasyTalk
         return true if prop_options.dig(:constraints, :optional)
 
         # Check for nil_optional config to determine if nilable should also mean optional
-        if prop_options[:type].respond_to?(:nilable?) && prop_options[:type].nilable?
-          return EasyTalk.configuration.nilable_is_optional
-        end
+        return EasyTalk.configuration.nilable_is_optional if prop_options[:type].respond_to?(:nilable?) && prop_options[:type].nilable?
 
         false
       end

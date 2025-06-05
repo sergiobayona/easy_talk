@@ -210,9 +210,7 @@ module EasyTalk
       multiple_of_value = @constraints[:multiple_of]
       @klass.validate do |record|
         value = record.public_send(prop_name)
-        if value && (value % multiple_of_value != 0)
-          record.errors.add(prop_name, "must be a multiple of #{multiple_of_value}")
-        end
+        record.errors.add(prop_name, "must be a multiple of #{multiple_of_value}") if value && (value % multiple_of_value != 0)
       end
     end
 

@@ -1,9 +1,11 @@
-require:
+plugins:
   - rubocop-rspec
+  - rubocop-rake
 
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
+  SuggestExtensions: false
   Exclude:
     - 'db/**/*'
     - 'config/**/*'
@@ -19,6 +21,12 @@ Style/OptionalBooleanParameter:
 
 Layout/CaseIndentation:
   Enabled: false
+
+Layout/LineLength:
+  Max: 180
+  Exclude:
+    - lib/easy_talk/configuration.rb
+    - spec/**/*
 
 Style/StringLiterals:
   Enabled: false
@@ -39,7 +47,28 @@ Metrics/PerceivedComplexity:
   Max: 20
 
 Metrics/ModuleLength:
-  Max: 200
+  Max: 150
+
+Metrics/BlockNesting:
+  Max: 10
+
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+
+Layout/EndAlignment:
+  Enabled: false
+
+Layout/ExtraSpacing:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - spec/**/*
+
+Lint/EmptyBlock:
+  Exclude:
+    - spec/**/*
 
 RSpec/DescribeClass:
   Enabled: false
@@ -68,49 +97,20 @@ RSpec/MultipleDescribes:
 RSpec/ContextWording:
   Enabled: false
 
-RSpec/SpecFilePathFormat:
-  Enabled: false
-
-RSpec/SpecFilePathSuffix:
-  Enabled: true
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
 
 RSpec/ExampleLength:
-  Max: 30
-  Exclude:
-    - 'spec/easy_talk/examples/**/*'
+  Max: 40
 
-Metrics/BlockLength:
-  Exclude:
-    - 'spec/**/*'
+RSpec/MultipleExpectations:
+  Max: 10
 
-Lint/ConstantDefinitionInBlock:
-  Exclude:
-    - 'spec/**/*'
-
-Lint/EmptyBlock:
+RSpec/SpecFilePathFormat:
   Enabled: false
 
 Lint/DuplicateBranch:
   Enabled: false
 
-Layout/LineLength:
-  Exclude:
-    - 'spec/**/*'
-  
-RSpec/DescribeClass:
-  Enabled: false
-
-RSpec/MultipleExpectations:
-  Max: 10
-
 Gemspec/DevelopmentDependencies:
-  Enabled: false
-
-Metrics/BlockNesting:
-  Max: 10
-
-Layout/EndAlignment:
-  Enabled: false
-
-Layout/ExtraSpacing:
   Enabled: false

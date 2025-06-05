@@ -17,7 +17,6 @@ Gem::Specification.new do |spec|
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://github.com/sergiobayona/easy_talk'
   spec.metadata['changelog_uri'] = 'https://github.com/sergiobayona/easy_talk/blob/main/CHANGELOG.md'
 
   # Specify which files should be added to the gem when it is released.
@@ -31,9 +30,9 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'activemodel', '>= 7.0'
-  spec.add_dependency 'activesupport', '>= 7.0'
-  spec.add_dependency 'sorbet-runtime', '>= 0.5'
+  spec.add_dependency 'activemodel', '~> 7.0'
+  spec.add_dependency 'activesupport', '~> 7.0'
+  spec.add_dependency 'sorbet-runtime', '~> 0.5'
 
   spec.metadata['rubygems_mfa_required'] = 'true'
 end
