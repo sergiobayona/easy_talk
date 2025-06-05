@@ -108,3 +108,9 @@ Gemspec/DevelopmentDependencies:
 
 Metrics/BlockNesting:
   Max: 10
+
+Layout/EndAlignment:
+  Enabled: false
+
+Layout/ExtraSpacing:
+  Enabled: false
