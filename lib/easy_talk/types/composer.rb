@@ -54,13 +54,14 @@ end
 
 # Shorthand module for accessing the AllOf composer
 module T
+  # Provides composition logic for combining multiple schemas with AllOf semantics
   module AllOf
     # Creates a new instance of `EasyTalk::Types::Composer::AllOf` with the given arguments.
     #
     # @param args [Array] the list of arguments to be passed to the constructor
     # @return [EasyTalk::Types::Composer::AllOf] a new instance
-    def self.[](*args)
-      EasyTalk::Types::Composer::AllOf.new(*args)
+    def self.[](*)
+      EasyTalk::Types::Composer::AllOf.new(*)
     end
   end
 
@@ -70,8 +71,8 @@ module T
     #
     # @param args [Array] the list of arguments to be passed to the constructor
     # @return [EasyTalk::Types::Composer::AnyOf] a new instance
-    def self.[](*args)
-      EasyTalk::Types::Composer::AnyOf.new(*args)
+    def self.[](*)
+      EasyTalk::Types::Composer::AnyOf.new(*)
     end
   end
 
@@ -81,8 +82,8 @@ module T
     #
     # @param args [Array] the list of arguments to be passed to the constructor
     # @return [EasyTalk::Types::Composer::OneOf] a new instance
-    def self.[](*args)
-      EasyTalk::Types::Composer::OneOf.new(*args)
+    def self.[](*)
+      EasyTalk::Types::Composer::OneOf.new(*)
     end
   end
 end

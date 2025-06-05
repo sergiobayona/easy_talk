@@ -25,7 +25,7 @@ RSpec.describe 'json for user model' do
         property :street, String
         property :city, String
         property :state, String
-        property :zip, String, pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
+        property :zip, String, pattern: '\A[0-9]{5}(?:-[0-9]{4})?\z'
       end
     end
   end
@@ -42,66 +42,66 @@ RSpec.describe 'json for user model' do
 
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "title": 'Company',
-      "properties": {
-        "name": {
-          "type": 'string'
+      type: 'object',
+      title: 'Company',
+      properties: {
+        name: {
+          type: 'string'
         },
-        "employees": {
-          "type": 'array',
-          "title": 'Company Employees',
-          "description": 'A list of company employees',
-          "items": {
-            "type": 'object',
-            "title": 'Employee',
-            "description": 'Company employee',
-            "properties": {
-              "name": {
-                "type": 'string',
-                "title": 'Full Name'
+        employees: {
+          type: 'array',
+          title: 'Company Employees',
+          description: 'A list of company employees',
+          items: {
+            type: 'object',
+            title: 'Employee',
+            description: 'Company employee',
+            properties: {
+              name: {
+                type: 'string',
+                title: 'Full Name'
               },
-              "gender": {
-                "type": 'string',
-                "enum": %w[
+              gender: {
+                type: 'string',
+                enum: %w[
                   male
                   female
                   other
                 ]
               },
-              "department": {
-                "type": %w[string null]
+              department: {
+                type: %w[string null]
               },
-              "hire_date": {
-                "type": 'string',
-                "format": 'date'
+              hire_date: {
+                type: 'string',
+                format: 'date'
               },
-              "active": {
-                "type": 'boolean',
-                "default": true
+              active: {
+                type: 'boolean',
+                default: true
               },
-              "addresses": {
-                "anyOf": [
+              addresses: {
+                anyOf: [
                   {
-                    "type": 'array',
-                    "items": {
-                      "type": 'object',
-                      "properties": {
-                        "street": {
-                          "type": 'string'
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        street: {
+                          type: 'string'
                         },
-                        "city": {
-                          "type": 'string'
+                        city: {
+                          type: 'string'
                         },
-                        "state": {
-                          "type": 'string'
+                        state: {
+                          type: 'string'
                         },
-                        "zip": {
-                          "type": 'string',
-                          "pattern": '^[0-9]{5}(?:-[0-9]{4})?$'
+                        zip: {
+                          type: 'string',
+                          pattern: '\A[0-9]{5}(?:-[0-9]{4})?\z'
                         }
                       },
-                      "required": %w[
+                      required: %w[
                         street
                         city
                         state
@@ -110,12 +110,12 @@ RSpec.describe 'json for user model' do
                     }
                   },
                   {
-                    "type": 'null'
+                    type: 'null'
                   }
                 ]
               }
             },
-            "required": %w[
+            required: %w[
               name
               gender
               department
@@ -125,7 +125,7 @@ RSpec.describe 'json for user model' do
           }
         }
       },
-      "required": %w[
+      required: %w[
         name
         employees
       ]

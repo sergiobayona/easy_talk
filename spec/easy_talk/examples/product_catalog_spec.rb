@@ -33,12 +33,12 @@ RSpec.describe 'Product catalog example' do
 
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "title": 'Clothing Product',
-      "properties": {
-        "size": {
-          "type": 'string',
-          "enum": %w[
+      type: 'object',
+      title: 'Clothing Product',
+      properties: {
+        size: {
+          type: 'string',
+          enum: %w[
             XS
             S
             M
@@ -47,45 +47,45 @@ RSpec.describe 'Product catalog example' do
             XXL
           ]
         },
-        "color": {
-          "type": 'string'
+        color: {
+          type: 'string'
         },
-        "material": {
-          "type": 'string'
+        material: {
+          type: 'string'
         }
       },
-      "required": %w[
+      required: %w[
         size
         color
         material
       ],
-      "$defs": {
-        "BaseProduct": {
-          "type": 'object',
-          "properties": {
-            "productId": {
-              "type": 'string',
-              "format": 'uuid'
+      '$defs': {
+        BaseProduct: {
+          type: 'object',
+          properties: {
+            productId: {
+              type: 'string',
+              format: 'uuid'
             },
-            "name": {
-              "type": 'string'
+            name: {
+              type: 'string'
             },
-            "description": {
-              "type": 'string'
+            description: {
+              type: 'string'
             },
-            "price": {
-              "type": 'number'
+            price: {
+              type: 'number'
             },
-            "currency": {
-              "type": 'string',
-              "enum": %w[
+            currency: {
+              type: 'string',
+              enum: %w[
                 USD
                 EUR
                 GBP
               ]
             }
           },
-          "required": %w[
+          required: %w[
             productId
             name
             description
@@ -94,9 +94,9 @@ RSpec.describe 'Product catalog example' do
           ]
         }
       },
-      "allOf": [
+      allOf: [
         {
-          "$ref": '#/$defs/BaseProduct'
+          '$ref': '#/$defs/BaseProduct'
         }
       ]
     }

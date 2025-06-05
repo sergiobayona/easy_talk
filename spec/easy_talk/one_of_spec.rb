@@ -44,33 +44,33 @@ RSpec.describe EasyTalk::Types::Composer::OneOf do
   context 'with OneOf as a root node' do
     let(:expected_json_schema) do
       {
-        "type": 'object',
-        "$defs": {
-          "PhoneNumber": {
-            "type": 'object',
-            "properties": {
-              "phone_number": {
-                "type": 'string',
-                "format": 'phone'
+        type: 'object',
+        '$defs': {
+          PhoneNumber: {
+            type: 'object',
+            properties: {
+              phone_number: {
+                type: 'string',
+                format: 'phone'
               }
             }
           },
-          "EmailAddress": {
-            "type": 'object',
-            "properties": {
-              "email": {
-                "type": 'string',
-                "format": 'email'
+          EmailAddress: {
+            type: 'object',
+            properties: {
+              email: {
+                type: 'string',
+                format: 'email'
               }
             }
           }
         },
-        "oneOf": [
+        oneOf: [
           {
-            "$ref": '#/$defs/PhoneNumber'
+            '$ref': '#/$defs/PhoneNumber'
           },
           {
-            "$ref": '#/$defs/EmailAddress'
+            '$ref': '#/$defs/EmailAddress'
           }
         ]
       }
@@ -91,33 +91,33 @@ RSpec.describe EasyTalk::Types::Composer::OneOf do
   context 'with OneOf within a model property' do
     let(:expected_json_schema) do
       {
-        "type": 'object',
-        "title": 'User',
-        "properties": {
-          "contactDetail": {
-            "oneOf": [
+        type: 'object',
+        title: 'User',
+        properties: {
+          contactDetail: {
+            oneOf: [
               {
-                "type": 'object',
-                "properties": {
-                  "phone_number": {
-                    "type": 'string',
-                    "format": 'phone'
+                type: 'object',
+                properties: {
+                  phone_number: {
+                    type: 'string',
+                    format: 'phone'
                   }
                 }
               },
               {
-                "type": 'object',
-                "properties": {
-                  "email": {
-                    "type": 'string',
-                    "format": 'email'
+                type: 'object',
+                properties: {
+                  email: {
+                    type: 'string',
+                    format: 'email'
                   }
                 }
               }
             ]
           }
         },
-        "required": ['contactDetail']
+        required: ['contactDetail']
       }
     end
 
@@ -137,23 +137,23 @@ RSpec.describe EasyTalk::Types::Composer::OneOf do
   context 'with the `field` keyword' do
     let(:expected_schema) do
       {
-        "type": 'object',
-        "title": 'User',
-        "properties": {
-          "contactDetail": {
-            "oneOf": [
+        type: 'object',
+        title: 'User',
+        properties: {
+          contactDetail: {
+            oneOf: [
               {
-                "type": 'string',
-                "format": 'email'
+                type: 'string',
+                format: 'email'
               },
               {
-                "type": 'string',
-                "format": 'phone'
+                type: 'string',
+                format: 'phone'
               }
             ]
           }
         },
-        "required": ['contactDetail']
+        required: ['contactDetail']
       }
     end
 

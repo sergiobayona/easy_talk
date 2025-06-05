@@ -16,7 +16,7 @@ RSpec.describe 'Payment object example' do
         property :CardType, String, enum: %w[Visa MasterCard AmericanExpress]
         property :CardExpMonth, Integer, minimum: 1, maximum: 12
         property :CardExpYear, Integer, minimum: Date.today.year, maximum: Date.today.year + 10
-        property :CardCVV, String, pattern: '^[0-9]{3,4}$'
+        property :CardCVV, String, pattern: '\A(?:\d{3}|\d{4})\z'
         additional_properties false
       end
     end
@@ -68,51 +68,51 @@ RSpec.describe 'Payment object example' do
 
   let(:expected_json_schema) do
     {
-      "title": 'Payment',
-      "description": 'Payment info',
-      "type": 'object',
-      "properties": {
-        "PaymentMethod": {
-          "type": 'string',
-          "enum": %w[
+      title: 'Payment',
+      description: 'Payment info',
+      type: 'object',
+      properties: {
+        PaymentMethod: {
+          type: 'string',
+          enum: %w[
             CreditCard
             Paypal
             BankTransfer
           ]
         },
-        "Details": {
-          "anyOf": [
+        Details: {
+          anyOf: [
             {
-              "type": 'object',
-              "properties": {
-                "CardNumber": {
-                  "type": 'string'
+              type: 'object',
+              properties: {
+                CardNumber: {
+                  type: 'string'
                 },
-                "CardType": {
-                  "type": 'string',
-                  "enum": %w[
+                CardType: {
+                  type: 'string',
+                  enum: %w[
                     Visa
                     MasterCard
                     AmericanExpress
                   ]
                 },
-                "CardExpMonth": {
-                  "type": 'integer',
-                  "minimum": 1,
-                  "maximum": 12
+                CardExpMonth: {
+                  type: 'integer',
+                  minimum: 1,
+                  maximum: 12
                 },
-                "CardExpYear": {
-                  "type": 'integer',
-                  "minimum": 2025,
-                  "maximum": 2035
+                CardExpYear: {
+                  type: 'integer',
+                  minimum: 2025,
+                  maximum: 2035
                 },
-                "CardCVV": {
-                  "type": 'string',
-                  "pattern": '^[0-9]{3,4}$'
+                CardCVV: {
+                  type: 'string',
+                  pattern: '\A(?:\d{3}|\d{4})\z'
                 }
               },
-              "additionalProperties": false,
-              "required": %w[
+              additionalProperties: false,
+              required: %w[
                 CardNumber
                 CardType
                 CardExpMonth
@@ -121,44 +121,44 @@ RSpec.describe 'Payment object example' do
               ]
             },
             {
-              "type": 'object',
-              "properties": {
-                "PaypalEmail": {
-                  "type": 'string',
-                  "format": 'email'
+              type: 'object',
+              properties: {
+                PaypalEmail: {
+                  type: 'string',
+                  format: 'email'
                 },
-                "PaypalPasswordEncrypted": {
-                  "type": 'string'
+                PaypalPasswordEncrypted: {
+                  type: 'string'
                 }
               },
-              "additionalProperties": false,
-              "required": %w[
+              additionalProperties: false,
+              required: %w[
                 PaypalEmail
                 PaypalPasswordEncrypted
               ]
             },
             {
-              "type": 'object',
-              "properties": {
-                "BankName": {
-                  "type": 'string'
+              type: 'object',
+              properties: {
+                BankName: {
+                  type: 'string'
                 },
-                "AccountNumber": {
-                  "type": 'string'
+                AccountNumber: {
+                  type: 'string'
                 },
-                "RoutingNumber": {
-                  "type": 'string'
+                RoutingNumber: {
+                  type: 'string'
                 },
-                "AccountType": {
-                  "type": 'string',
-                  "enum": %w[
+                AccountType: {
+                  type: 'string',
+                  enum: %w[
                     Checking
                     Savings
                   ]
                 }
               },
-              "additionalProperties": false,
-              "required": %w[
+              additionalProperties: false,
+              required: %w[
                 BankName
                 AccountNumber
                 RoutingNumber
@@ -168,7 +168,7 @@ RSpec.describe 'Payment object example' do
           ]
         }
       },
-      "required": %w[
+      required: %w[
         PaymentMethod
         Details
       ]

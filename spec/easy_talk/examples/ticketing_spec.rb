@@ -19,88 +19,88 @@ RSpec.describe 'Ticketing system' do
   end
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "title": 'Action Items',
-      "description": 'A list of action items',
-      "properties": {
-        "items": {
-          "type": 'array',
-          "items": {
-            "type": 'object',
-            "title": 'Ticket',
-            "properties": {
-              "id": {
-                "type": 'integer',
-                "description": 'Unique identifier for the ticket'
+      type: 'object',
+      title: 'Action Items',
+      description: 'A list of action items',
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            title: 'Ticket',
+            properties: {
+              id: {
+                type: 'integer',
+                description: 'Unique identifier for the ticket'
               },
-              "name": {
-                "type": 'string',
-                "description": 'Title of the ticket'
+              name: {
+                type: 'string',
+                description: 'Title of the ticket'
               },
-              "description": {
-                "type": 'string',
-                "description": 'Detailed description of the task'
+              description: {
+                type: 'string',
+                description: 'Detailed description of the task'
               },
-              "priority": {
-                "type": 'string',
-                "description": 'Priority level',
-                "enum": %w[
+              priority: {
+                type: 'string',
+                description: 'Priority level',
+                enum: %w[
                   High
                   Medium
                   Low
                 ]
               },
-              "assignees": {
-                "type": 'array',
-                "items": {
-                  "type": 'string'
+              assignees: {
+                type: 'array',
+                items: {
+                  type: 'string'
                 },
-                "description": 'List of users assigned to the task'
+                description: 'List of users assigned to the task'
               },
-              "subtasks": {
-                "anyOf": [
+              subtasks: {
+                anyOf: [
                   {
-                    "type": 'array',
-                    "items": {
-                      "type": 'object',
-                      "properties": {
-                        "id": {
-                          "type": 'integer',
-                          "description": 'Unique identifier for the subtask'
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: {
+                          type: 'integer',
+                          description: 'Unique identifier for the subtask'
                         },
-                        "name": {
-                          "type": 'string',
-                          "description": 'Title of the subtask'
+                        name: {
+                          type: 'string',
+                          description: 'Title of the subtask'
                         }
                       },
-                      "required": %w[
+                      required: %w[
                         id
                         name
                       ]
                     },
-                    "description": 'List of subtasks associated with the main task'
+                    description: 'List of subtasks associated with the main task'
                   },
                   {
-                    "type": 'null'
+                    type: 'null'
                   }
                 ]
               },
-              "dependencies": {
-                "anyOf": [
+              dependencies: {
+                anyOf: [
                   {
-                    "type": 'array',
-                    "items": {
-                      "type": 'integer'
+                    type: 'array',
+                    items: {
+                      type: 'integer'
                     },
-                    "description": 'List of ticket IDs that this ticket depends on'
+                    description: 'List of ticket IDs that this ticket depends on'
                   },
                   {
-                    "type": 'null'
+                    type: 'null'
                   }
                 ]
               }
             },
-            "required": %w[
+            required: %w[
               id
               name
               description
@@ -110,7 +110,7 @@ RSpec.describe 'Ticketing system' do
           }
         }
       },
-      "required": [
+      required: [
         'items'
       ]
     }

@@ -1,5 +1,8 @@
 # EasyTalk
 
+[![Gem Version](https://badge.fury.io/rb/easy_talk.svg)](https://badge.fury.io/rb/easy_talk)
+[![Ruby](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml/badge.svg)](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml)
+
 ## Introduction
 
 ### What is EasyTalk?
@@ -7,10 +10,12 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. 
 
 ### Key Features
 * **Intuitive Schema Definition**: Use Ruby classes and methods to define JSON Schema documents easily.
+* **Automatic ActiveModel Validations**: Schema constraints automatically generate corresponding ActiveModel validations (configurable).
 * **Works for plain Ruby classes and ActiveRecord models**: Integrate with existing code or build from scratch.
 * **LLM Function Support**: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
 * **Schema Composition**: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
-* **Validation**: Write validations using ActiveModel's validations.
+* **Enhanced Model Integration**: Automatic instantiation of nested EasyTalk models from hash attributes.
+* **Flexible Configuration**: Global and per-model configuration options for fine-tuned control.
 
 ### Use Cases
 - API request/response validation
@@ -26,6 +31,39 @@ Inspired by Python's Pydantic library, EasyTalk brings similar functionality to 
 
 ### Requirements
 - Ruby 3.2 or higher
+
+### Version 2.0.0 Breaking Changes
+
+⚠️ **IMPORTANT**: Version 2.0.0 includes breaking changes. Please review before upgrading:
+
+- **Removed**: Block-style nested object definitions (using `Hash do ... end`)
+- **Migration**: Use class references instead of inline Hash definitions
+
+```ruby
+# ❌ No longer supported (v1.x style)
+define_schema do
+  property :address, Hash do
+    property :street, String
+    property :city, String
+  end
+end
+
+# ✅ New approach (v2.x style)
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :street, String
+    property :city, String
+  end
+end
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :address, Address  # Reference the class directly
+  end
+end
+```
 
 ### Installation Steps
 Add EasyTalk to your application's Gemfile:
@@ -107,10 +145,11 @@ Creating and validating an instance of your model:
 
 ```ruby
 user = User.new(name: "John Doe", email: "john@example.com", age: 25)
-user.valid? # => true
+user.valid? # => true (automatically validates based on schema constraints)
 
 user.age = 17
-user.valid? # => false
+user.valid? # => false (violates minimum: 18 constraint)
+user.errors[:age] # => ["must be greater than or equal to 18"]
 ```
 
 ## Core Concepts
@@ -141,7 +180,6 @@ EasyTalk supports standard Ruby types directly:
 - `Float`: Floating-point numbers
 - `Date`: Date values
 - `DateTime`: Date and time values
-- `Hash`: Object/dictionary values
 
 #### Sorbet-Style Types
 For complex types, EasyTalk uses Sorbet-style type notation:
@@ -182,25 +220,57 @@ end
 
 In this example, `name` is required but `middle_name` is optional.
 
-### Schema Validation
-EasyTalk models include ActiveModel validations. You can validate your models using the standard ActiveModel validation methods:
+### Automatic Validation Generation
+EasyTalk automatically generates ActiveModel validations from your schema constraints. This feature is enabled by default but can be configured:
 
 ```ruby
 class User
   include EasyTalk::Model
   
-  validates :name, presence: true
-  validates :age, numericality: { greater_than_or_equal_to: 18 }
+  define_schema do
+    property :name, String, min_length: 2, max_length: 50
+    property :email, String, format: "email"
+    property :age, Integer, minimum: 18, maximum: 120
+    property :status, String, enum: ["active", "inactive", "pending"]
+  end
+  # Validations are automatically generated:
+  # validates :name, presence: true, length: { minimum: 2, maximum: 50 }
+  # validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  # validates :age, presence: true, numericality: { greater_than_or_equal_to: 18, less_than_or_equal_to: 120 }
+  # validates :status, presence: true, inclusion: { in: ["active", "inactive", "pending"] }
+end
+
+user = User.new(name: "Jo", email: "invalid-email", age: 17)
+user.valid? # => false
+user.errors.full_messages 
+# => ["Name is too short (minimum is 2 characters)", 
+#     "Email is invalid", 
+#     "Age must be greater than or equal to 18"]
+```
+
+### Manual Validation Overrides
+You can still add manual validations alongside automatic ones:
+
+```ruby
+class User
+  include EasyTalk::Model
+  
+  # Custom validation in addition to automatic ones
+  validates :email, uniqueness: true
+  validate :complex_business_rule
   
   define_schema do
     property :name, String
+    property :email, String, format: "email"
     property :age, Integer, minimum: 18
   end
+  
+  private
+  
+  def complex_business_rule
+    # Custom validation logic
+  end
 end
-
-user = User.new(name: "John", age: 17)
-user.valid? # => false
-user.errors.full_messages # => ["Age must be greater than or equal to 18"]
 ```
 
 ## Defining Schemas
@@ -242,22 +312,38 @@ You can also define arrays of complex types:
 property :addresses, T::Array[Address], description: "List of addresses"
 ```
 
-### Constraints and Validations
-Constraints can be added to properties and are used for schema generation:
+### Constraints and Automatic Validations
+Constraints are added to properties and are used for both schema generation and automatic validation generation:
 
 ```ruby
-property :name, String, min_length: 2, max_length: 50
-property :email, String, format: "email"
-property :category, String, enum: ["A", "B", "C"], default: "A"
+define_schema do
+  property :name, String, min_length: 2, max_length: 50
+  property :email, String, format: "email"
+  property :category, String, enum: ["A", "B", "C"]
+  property :score, Float, minimum: 0.0, maximum: 100.0
+  property :tags, T::Array[String], min_items: 1, max_items: 10
+end
+# Automatically generates equivalent ActiveModel validations:
+# validates :name, presence: true, length: { minimum: 2, maximum: 50 }
+# validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+# validates :category, presence: true, inclusion: { in: ["A", "B", "C"] }
+# validates :score, presence: true, numericality: { greater_than_or_equal_to: 0.0, less_than_or_equal_to: 100.0 }
+# validates :tags, presence: true, length: { minimum: 1, maximum: 10 }
 ```
 
-For validation, you can use ActiveModel validations:
+### Supported Constraint-to-Validation Mappings
 
-```ruby
-validates :name, presence: true, length: { minimum: 2, maximum: 50 }
-validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
-validates :category, inclusion: { in: ["A", "B", "C"] }
-```
+| Constraint | Validation Generated |
+|------------|---------------------|
+| `min_length`, `max_length` | `length: { minimum: X, maximum: Y }` |
+| `minimum`, `maximum` | `numericality: { greater_than_or_equal_to: X, less_than_or_equal_to: Y }` |
+| `format: "email"` | `format: { with: URI::MailTo::EMAIL_REGEXP }` |
+| `format: "url"` or `format: "uri"` | `format: { with: URI::regexp }` |
+| `pattern: /regex/` | `format: { with: /regex/ }` |
+| `enum: [...]` | `inclusion: { in: [...] }` |
+| `min_items`, `max_items` (arrays) | `length: { minimum: X, maximum: Y }` |
+| `optional: true` | Skips presence validation |
+| `T.nilable(Type)` | Allows nil values, skips presence validation |
 
 ### Additional Properties
 By default, EasyTalk models do not allow additional properties beyond those defined in the schema. You can change this behavior using the `additional_properties` keyword:
@@ -361,20 +447,21 @@ end
 
 ## ActiveModel Integration
 
-### Validations
-EasyTalk models include ActiveModel validations:
+### Enhanced Validation System
+EasyTalk models include comprehensive ActiveModel validation support with automatic generation:
 
 ```ruby
 class User
   include EasyTalk::Model
   
-  validates :age, comparison: { greater_than: 21 }
-  validates :height, presence: true, numericality: { greater_than: 0 }
+  # Manual validations work alongside automatic ones
+  validates :age, comparison: { greater_than: 21 }  # Additional business rule
+  validates :height, numericality: { greater_than: 0 }  # Overrides auto-validation
   
   define_schema do
-    property :name, String
-    property :age, Integer
-    property :height, Float
+    property :name, String, min_length: 2  # Auto-generates presence + length validations
+    property :age, Integer, minimum: 18   # Auto-generates presence + numericality validations
+    property :height, Float               # Auto-generates presence validation (overridden above)
   end
 end
 ```
@@ -383,10 +470,11 @@ end
 You can access validation errors using the standard ActiveModel methods:
 
 ```ruby
-user = User.new(name: "Jim", age: 18, height: -5.9)
+user = User.new(name: "J", age: 18, height: -5.9)
 user.valid? # => false
-user.errors[:age] # => ["must be greater than 21"]
-user.errors[:height] # => ["must be greater than 0"]
+user.errors[:name] # => ["is too short (minimum is 2 characters)"]
+user.errors[:age] # => ["must be greater than 21"] # Custom validation
+user.errors[:height] # => ["must be greater than 0"] # Overridden validation
 ```
 
 ### Model Attributes
@@ -399,10 +487,35 @@ user.age = 30
 puts user.name # => "John"
 ```
 
-You can also initialize a model with a hash of attributes:
+You can also initialize a model with a hash of attributes, including nested EasyTalk models:
 
 ```ruby
 user = User.new(name: "John", age: 30, height: 5.9)
+
+# NEW in v2.0.0: Automatic nested model instantiation
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :street, String
+    property :city, String
+  end
+end
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address
+  end
+end
+
+# Hash attributes automatically instantiate nested models
+user = User.new(
+  name: "John",
+  address: { street: "123 Main St", city: "Boston" }
+)
+user.address.class # => Address (automatically instantiated)
+user.address.street # => "123 Main St"
 ```
 
 ## ActiveRecord Integration
@@ -585,12 +698,42 @@ You can configure EasyTalk globally:
 
 ```ruby
 EasyTalk.configure do |config|
+  # ActiveRecord integration options
   config.excluded_columns = [:created_at, :updated_at, :deleted_at]
   config.exclude_foreign_keys = true
   config.exclude_primary_key = true
   config.exclude_timestamps = true
   config.exclude_associations = false
+  
+  # Schema behavior options
   config.default_additional_properties = false
+  config.nilable_is_optional = false  # Makes T.nilable properties also optional
+  
+  # NEW in v2.0.0: Automatic validation generation
+  config.auto_validations = true      # Automatically generate ActiveModel validations
+end
+```
+
+### Automatic Validation Configuration
+The new `auto_validations` option (enabled by default) automatically generates ActiveModel validations from your schema constraints:
+
+```ruby
+# Disable automatic validations globally
+EasyTalk.configure do |config|
+  config.auto_validations = false
+end
+
+# Now you must manually define validations
+class User
+  include EasyTalk::Model
+  
+  validates :name, presence: true, length: { minimum: 2 }
+  validates :age, presence: true, numericality: { greater_than_or_equal_to: 18 }
+  
+  define_schema do
+    property :name, String, min_length: 2
+    property :age, Integer, minimum: 18
+  end
 end
 ```
 
@@ -639,25 +782,51 @@ end
 
 ## Examples
 
-### User Registration
+### User Registration (with Auto-Validations)
 
 ```ruby
 class User
   include EasyTalk::Model
 
-  validates :name, :email, :password, presence: true
-  validates :password, length: { minimum: 8 }
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  # Additional custom validations beyond automatic ones
+  validates :email, uniqueness: true
+  validates :password, confirmation: true
 
   define_schema do
     title "User Registration"
     description "User registration information"
-    property :name, String, description: "User's full name"
+    property :name, String, min_length: 2, max_length: 100, description: "User's full name"
     property :email, String, format: "email", description: "User's email address"
-    property :password, String, min_length: 8, description: "User's password"
-    property :notify, T::Boolean, default: true, description: "Whether to send notifications"
+    property :password, String, min_length: 8, max_length: 128, description: "User's password"
+    property :notify, T::Boolean, optional: true, description: "Whether to send notifications"
   end
+  # Auto-generated validations:
+  # validates :name, presence: true, length: { minimum: 2, maximum: 100 }
+  # validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  # validates :password, presence: true, length: { minimum: 8, maximum: 128 }
+  # validates :notify, inclusion: { in: [true, false] } - only if present (optional: true)
 end
+
+# Usage with automatic validation
+user = User.new(
+  name: "John Doe",
+  email: "john@example.com",
+  password: "secretpassword123",
+  notify: true
+)
+user.valid? # => true (assuming email is unique)
+
+# Invalid data triggers auto-generated validations
+invalid_user = User.new(
+  name: "J",                    # Too short
+  email: "invalid-email",      # Invalid format
+  password: "123"               # Too short
+)
+invalid_user.valid? # => false
+invalid_user.errors.full_messages
+# => ["Name is too short (minimum is 2 characters)",
+#     "Email is invalid",
+#     "Password is too short (minimum is 8 characters)"]
 ```
 
 ### Payment Processing
@@ -840,13 +1009,16 @@ property :status, String, enum: ["active", "inactive", "pending"]
 
 ### Best Practices
 
-1. Define clear property names and descriptions
-2. Use appropriate types for each property
-3. Add validations for important business rules
-4. Keep schemas focused and modular
-5. Reuse models when appropriate
-6. Use explicit types instead of relying on inference
-7. Test your schemas with sample data
+1. **Define clear property names and descriptions** for better documentation
+2. **Use appropriate types** for each property with proper constraints
+3. **Leverage automatic validations** by defining schema constraints instead of manual validations
+4. **Keep schemas focused and modular** - extract nested objects to separate classes
+5. **Reuse models when appropriate** instead of duplicating schema definitions
+6. **Use explicit types** instead of relying on inference
+7. **Test your schemas with sample data** to ensure validations work as expected
+8. **Configure auto-validations globally** to maintain consistency across your application
+9. **Use nullable_optional_property** for fields that can be omitted or null
+10. **Document breaking changes** when updating schema definitions
 
 # Nullable vs Optional Properties in EasyTalk
 
@@ -1021,6 +1193,102 @@ We recommend updating your schema definitions to explicitly declare which proper
 | `property :p, String, optional: true` | No | No | `{ "properties": { "p": { "type": "string" } } }` |
 | `nullable_optional_property :p, String` | No | Yes | `{ "properties": { "p": { "type": ["string", "null"] } } }` |
 
+## Migration Guide from v1.x to v2.0
+
+### Breaking Changes Summary
+
+1. **Removed Block-Style Sub-Schemas**: Hash-based nested definitions are no longer supported
+2. **Enhanced Validation System**: Automatic validation generation is now enabled by default
+3. **Improved Model Initialization**: Better support for nested model instantiation
+
+### Migration Steps
+
+#### 1. Replace Hash-based Nested Schemas
+
+```ruby
+# OLD (v1.x) - No longer works
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :address, Hash do
+      property :street, String
+      property :city, String
+    end
+  end
+end
+
+# NEW (v2.x) - Extract to separate classes
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :street, String
+    property :city, String
+  end
+end
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :address, Address
+  end
+end
+```
+
+#### 2. Review Automatic Validations
+
+With `auto_validations: true` (default), you may need to remove redundant manual validations:
+
+```ruby
+# OLD (v1.x) - Manual validations required
+class User
+  include EasyTalk::Model
+  
+  validates :name, presence: true, length: { minimum: 2 }
+  validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  
+  define_schema do
+    property :name, String
+    property :email, String
+  end
+end
+
+# NEW (v2.x) - Automatic validations from constraints
+class User
+  include EasyTalk::Model
+  
+  # Only add validations not covered by schema constraints
+  validates :email, uniqueness: true
+  
+  define_schema do
+    property :name, String, min_length: 2     # Auto-generates presence + length
+    property :email, String, format: "email"  # Auto-generates presence + format
+  end
+end
+```
+
+#### 3. Configuration Updates
+
+Review your configuration for new options:
+
+```ruby
+EasyTalk.configure do |config|
+  # New option in v2.0
+  config.auto_validations = true  # Enable/disable automatic validation generation
+  
+  # Existing options (unchanged)
+  config.nilable_is_optional = false
+  config.exclude_foreign_keys = true
+  # ... other existing config
+end
+```
+
+### Compatibility Notes
+
+- **Ruby Version**: Still requires Ruby 3.2+
+- **Dependencies**: Core dependencies remain the same
+- **JSON Schema Output**: No changes to generated schemas
+- **ActiveRecord Integration**: Fully backward compatible
+
 ## Development and Contributing
 
 ### Setting Up the Development Environment
@@ -1037,6 +1305,13 @@ Run the test suite with:
 
 ```bash
 bundle exec rake spec
+```
+
+### Code Quality
+Run the linter:
+
+```bash
+bundle exec rubocop
 ```
 
 ### Contributing Guidelines

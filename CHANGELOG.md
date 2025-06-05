@@ -1,3 +1,43 @@
+## [2.0.0] - 2025-06-05
+
+  ### Added
+  - Automatic ActiveModel Validations: Added ValidationBuilder class that automatically generates
+  ActiveModel validations from JSON Schema constraints
+  - Auto-validation Configuration: Added auto_validations configuration option (defaults to true) to
+  control automatic validation generation
+  - Enhanced Model Initialization: Improved model initialization to support nested EasyTalk::Model
+  instantiation from hash attributes
+  - Hash Comparison Support: Added equality comparison between EasyTalk models and hash objects
+
+  ### Changed
+  - BREAKING: Removed support for inline hash nested objects (block-style sub-schemas) - use class
+  references as types instead
+  - Improved Documentation: Enhanced inline documentation throughout the codebase with detailed
+  examples and API documentation
+  - Configuration Enhancement: Expanded configuration system with better organization and clearer
+  option descriptions
+  - Development Dependencies: Moved development dependencies from gemspec to Gemfile for better
+  dependency management
+  - CI/CD Improvements: Enhanced GitHub Actions workflow to support Ruby 3.3.0 and run on both main
+  and development branches
+  - Code Quality: Updated RuboCop configuration with more lenient rules for better developer
+  experience
+
+  ### Fixed
+  - Property Validation: Improved property name validation with better error messages and edge case
+  handling
+  - Type Builder Resolution: Enhanced type-to-builder mapping logic for more reliable schema
+  generation
+  - Nilable Type Handling: Fixed nilable type processing to correctly handle union types with null
+  - Empty Array Validation: Added validation to prevent empty arrays as property types
+
+  ### Internal
+
+  - Gem Security: Added MFA requirement for gem publishing
+  - Code Organization: Improved module and class organization with better separation of concerns
+  - Test Coverage: Enhanced test suite organization and coverage
+  - Error Handling: Improved error messages and validation throughout the system
+
 ## [1.0.4] - 2024-03-12
 ### Changed
 - Combined composition builders into a single file (#47)

@@ -2,6 +2,7 @@
 
 require_relative 'keywords'
 require_relative 'types/composer'
+require_relative 'validation_builder'
 
 module EasyTalk
   #
@@ -16,11 +17,13 @@ module EasyTalk
     extend T::AllOf
 
     attr_reader :name, :schema
+    attr_accessor :klass # Add accessor for the model class
 
     def initialize(name, schema = {})
       @schema = schema
       @schema[:additional_properties] = false unless schema.key?(:additional_properties)
       @name = name
+      @klass = nil # Initialize klass to nil
     end
 
     EasyTalk::KEYWORDS.each do |keyword|
@@ -34,15 +37,13 @@ module EasyTalk
       @schema[:subschemas] += subschemas
     end
 
-    sig do
-      params(name: T.any(Symbol, String), type: T.untyped, constraints: T.untyped, blk: T.nilable(T.proc.void)).void
-    end
-    def property(name, type, constraints = {}, &blk)
+    def property(name, type, constraints = {}, &)
       validate_property_name(name)
       @schema[:properties] ||= {}
 
       if block_given?
-        raise ArgumentError, 'Block-style sub-schemas are no longer supported. Use class references as types instead.'
+        raise ArgumentError,
+              'Block-style sub-schemas are no longer supported. Use class references as types instead.'
       end
 
       @schema[:properties][name] = { type:, constraints: }
@@ -51,8 +52,9 @@ module EasyTalk
     def validate_property_name(name)
       return if name.to_s.match?(/^[A-Za-z_][A-Za-z0-9_]*$/)
 
-      raise InvalidPropertyNameError,
-            "Invalid property name '#{name}'. Must start with letter/underscore and contain only letters, numbers, underscores"
+      message = "Invalid property name '#{name}'. Must start with letter/underscore " \
+                'and contain only letters, numbers, underscores'
+      raise InvalidPropertyNameError, message
     end
 
     def optional?
@@ -60,7 +62,7 @@ module EasyTalk
     end
 
     # Helper method for nullable and optional properties
-    def nullable_optional_property(name, type, constraints = {}, &blk)
+    def nullable_optional_property(name, type, constraints = {})
       # Ensure type is nilable
       nilable_type = if type.respond_to?(:nilable?) && type.nilable?
                        type

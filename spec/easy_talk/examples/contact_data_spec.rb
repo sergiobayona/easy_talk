@@ -12,7 +12,7 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
       end
 
       define_schema do
-        property :phone_number, String, pattern: '^\\+?[1-9]\\d{1,14}$'
+        property :phone_number, String, pattern: '\A(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\z'
       end
     end
   end
@@ -43,40 +43,40 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
 
   let(:expected_json_schema) do
     {
-      "type": 'object',
-      "title": 'Contact Info',
-      "properties": {
-        "contact": {
-          "type": 'object',
-          "oneOf": [
+      type: 'object',
+      title: 'Contact Info',
+      properties: {
+        contact: {
+          type: 'object',
+          oneOf: [
             {
-              "type": 'object',
-              "properties": {
-                "phone_number": {
-                  "type": 'string',
-                  "pattern": '^\\+?[1-9]\\d{1,14}$'
+              type: 'object',
+              properties: {
+                phone_number: {
+                  type: 'string',
+                  pattern: '\A(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\z'
                 }
               },
-              "required": [
+              required: [
                 'phone_number'
               ]
             },
             {
-              "type": 'object',
-              "properties": {
-                "email": {
-                  "type": 'string',
-                  "format": 'email'
+              type: 'object',
+              properties: {
+                email: {
+                  type: 'string',
+                  format: 'email'
                 }
               },
-              "required": [
+              required: [
                 'email'
               ]
             }
           ]
         }
       },
-      "required": [
+      required: [
         'contact'
       ]
     }
