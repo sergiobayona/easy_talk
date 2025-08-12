@@ -54,7 +54,7 @@ RSpec.describe 'Contact info. Example using compositional keyword: oneOf' do
               properties: {
                 phone_number: {
                   type: 'string',
-                  pattern: '\A(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\z'
+                  pattern: '^(?:\+?1[\-. ]?)?\(?([0-9]{3})\)?[\-. ]?([0-9]{3})[\-. ]?([0-9]{4})$'
                 }
               },
               required: [

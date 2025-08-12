@@ -45,11 +45,11 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
         expect(prop).to eq({ type: 'array', const: %w[one], items: { type: 'string' } })
       end
 
-      pending 'with an invalid constraint value' do
-        pending 'raises an error' do # unclear why this does not throw an error
+      context 'with an invalid constraint value' do
+        it 'raises an error' do
           expect do
             described_class.new(:name, T::Array[String], enum: [1, 2, 3]).build
-          end.to raise_error(TypeError)
+          end.to raise_error(EasyTalk::ConstraintError)
         end
       end
     end

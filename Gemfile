@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'activerecord', '>= 7.0'
+gem 'activerecord', '>= 7.0', '< 9.0'
 gem 'pry-byebug', '>= 3.10'
 gem 'rake', '>= 13.1'
 gem 'rspec', '>= 3.0'

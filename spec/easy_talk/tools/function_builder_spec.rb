@@ -6,6 +6,7 @@ RSpec.describe EasyTalk::Tools::FunctionBuilder do
   let(:model) do
     Class.new do
       include EasyTalk::Model
+
       def self.name
         'MyModel'
       end

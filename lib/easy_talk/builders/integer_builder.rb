@@ -7,6 +7,7 @@ module EasyTalk
     # Builder class for integer properties.
     class IntegerBuilder < BaseBuilder
       extend T::Sig
+
       VALID_OPTIONS = {
         minimum: { type: Integer, key: :minimum },
         maximum: { type: Integer, key: :maximum },

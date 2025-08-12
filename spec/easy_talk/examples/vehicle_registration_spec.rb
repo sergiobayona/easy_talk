@@ -125,7 +125,7 @@ RSpec.describe 'Vehicle Registration System example' do
             },
             contact_number: {
               type: 'string',
-              pattern: '\A[0-9]{10}\z'
+              pattern: '^[0-9]{10}$'
             }
           },
           required: %w[
@@ -144,7 +144,7 @@ RSpec.describe 'Vehicle Registration System example' do
           properties: {
             registration_number: {
               type: 'string',
-              pattern: '\A[A-Z0-9]{7}\z'
+              pattern: '^[A-Z0-9]{7}$'
             },
             registration_date: {
               type: 'string',

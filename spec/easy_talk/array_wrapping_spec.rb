@@ -54,7 +54,7 @@ RSpec.describe 'Array wrapping' do
                                                     'type' => 'string'
                                                   }, 'zip' => {
                                                     'type' => 'string',
-                                                    'pattern' => '\A[0-9]{5}(?:-[0-9]{4})?\z'
+                                                    'pattern' => '^[0-9]{5}(?:-[0-9]{4})?$'
                                                   }
                                                 },
                                                 'additionalProperties' => false,

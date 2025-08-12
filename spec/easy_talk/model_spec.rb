@@ -339,6 +339,7 @@ RSpec.describe EasyTalk::Model do
     it 'has build_schema as a public class method' do
       test_class = Class.new do
         include EasyTalk::Model
+
         def self.name = 'TestClass'
       end
 
