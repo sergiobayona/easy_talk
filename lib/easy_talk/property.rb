@@ -189,7 +189,7 @@ module EasyTalk
     #   {"type"=>["string", "null"]}
     def build_nilable_schema
       # Extract the non-nil type from the Union
-      actual_type = type.types.find { |t| t.raw_type != NilClass }
+      actual_type = T::Utils::Nilable.get_underlying_type(type)
 
       return { type: 'null' } unless actual_type
 

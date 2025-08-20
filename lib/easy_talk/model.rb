@@ -69,6 +69,11 @@ module EasyTalk
           # Get the defined type and the currently assigned value
           defined_type = prop_definition[:type]
           current_value = public_send(prop_name)
+          nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
+
+          next if nilable_type && current_value.nil?
+
+          defined_type = T::Utils::Nilable.get_underlying_type(defined_type) if nilable_type
 
           # Check if the type is another EasyTalk::Model and the value is a Hash
           next unless defined_type.is_a?(Class) && defined_type.include?(EasyTalk::Model) && current_value.is_a?(Hash)
