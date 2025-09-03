@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ['Sergio Bayona']
   spec.email = ['bayona.sergio@gmail.com']
 
-  spec.summary = 'Generate json-schema from Ruby classes.'
-  spec.description = 'Generate json-schema from plain Ruby classes.'
+  spec.summary = 'Generate json-schema from Ruby classes with ActiveModel integration.'
+  spec.description = 'Generate json-schema from plain Ruby classes with ActiveModel integration for validations and serialization.'
   spec.homepage = 'https://github.com/sergiobayona/easy_talk'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.2'

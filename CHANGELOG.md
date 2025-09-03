@@ -1,3 +1,29 @@
+## [3.0.0] - 2025-01-03
+
+### BREAKING CHANGES
+- **Removed ActiveRecord Support**: Completely removed ActiveRecord integration including:
+  - Deleted `ActiveRecordSchemaBuilder` class and database schema introspection
+  - Removed `enhance_schema` method for ActiveRecord models
+  - Removed ActiveRecord-specific configuration options (`excluded_columns`, `exclude_foreign_keys`, 
+    `exclude_primary_key`, `exclude_timestamps`, `exclude_associations`)
+  - Deleted all ActiveRecord integration tests
+
+### Changed  
+- **Simplified Architecture**: EasyTalk now focuses exclusively on Plain Ruby classes with ActiveModel integration
+- **Unified Integration Path**: All models now follow the same integration pattern using `ActiveModel::API` and `ActiveModel::Validations`
+- **Streamlined Configuration**: Removed ActiveRecord-specific configuration options, keeping only core options
+- **Updated Documentation**: Removed ActiveRecord examples and configuration references from README
+
+### Fixed
+- **Code Quality**: Fixed ValidationBuilder class length violation by consolidating format validation methods
+- **Documentation**: Updated all examples to use `define_schema` pattern instead of removed `enhance_schema`
+
+### Migration Guide
+If you were using EasyTalk with ActiveRecord models:
+- Replace `enhance_schema` calls with `define_schema` blocks
+- Manually define properties instead of relying on database schema introspection  
+- Remove ActiveRecord-specific configuration options from your EasyTalk.configure blocks
+
 ## [2.0.0] - 2025-06-05
 
   ### Added
