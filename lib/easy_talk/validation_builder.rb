@@ -65,8 +65,8 @@ module EasyTalk
     end
 
     # Check if the type is nilable (e.g., T.nilable(String))
-    def nilable_type?
-      @type.respond_to?(:nilable?) && @type.nilable?
+    def nilable_type?(type = @type)
+      type.respond_to?(:nilable?) && type.nilable?
     end
 
     # Extract the inner type from a complex type like T.nilable(String)
@@ -118,6 +118,8 @@ module EasyTalk
         end
       elsif type.to_s.include?('T::Boolean')
         [TrueClass, FalseClass] # Return both boolean classes
+      elsif nilable_type?(type)
+        extract_inner_type(type)
       else
         String # Default fallback
       end
