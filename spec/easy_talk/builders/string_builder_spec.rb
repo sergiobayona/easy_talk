@@ -28,7 +28,7 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
       end
 
       it 'includes pattern constraint' do
-        builder = described_class.new(:zip, pattern: '^\d{5}(-\d{4})?$')
+        builder = described_class.new(:zip, pattern: '\\A\d{5}(-\d{4})?\\z')
         expect(builder.build).to eq({ type: 'string', pattern: '^\d{5}(-\d{4})?$' })
       end
 
@@ -61,14 +61,14 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
         builder = described_class.new(:password,
                                       min_length: 8,
                                       max_length: 32,
-                                      pattern: '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',
+                                      pattern: '\A(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}\z',
                                       description: 'Must contain letters and numbers')
 
         expect(builder.build).to eq({
                                       type: 'string',
                                       minLength: 8,
                                       maxLength: 32,
-                                      pattern: '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',
+                                      pattern: '^(?=(?:[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\n\uD800-\uDFFF])*[A-Za-z])(?=(?:[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\n\uD800-\uDFFF])*\d)[A-Za-z\d]{8,}$',
                                       description: 'Must contain letters and numbers'
                                     })
       end

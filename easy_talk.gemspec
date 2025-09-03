@@ -30,8 +30,9 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'activemodel', '~> 7.0'
-  spec.add_dependency 'activesupport', '~> 7.0'
+  spec.add_dependency 'activemodel', ['>= 7.0', '< 9.0']
+  spec.add_dependency 'activesupport', ['>= 7.0', '< 9.0']
+  spec.add_dependency 'js_regex', '~> 3.0'
   spec.add_dependency 'sorbet-runtime', '~> 0.5'
 
   spec.metadata['rubygems_mfa_required'] = 'true'

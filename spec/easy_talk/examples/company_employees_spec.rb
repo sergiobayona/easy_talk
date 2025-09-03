@@ -98,7 +98,7 @@ RSpec.describe 'json for user model' do
                         },
                         zip: {
                           type: 'string',
-                          pattern: '\A[0-9]{5}(?:-[0-9]{4})?\z'
+                          pattern: '^[0-9]{5}(?:-[0-9]{4})?$'
                         }
                       },
                       required: %w[

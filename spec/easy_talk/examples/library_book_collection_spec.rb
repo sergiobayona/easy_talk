@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe 'Library Book Collection. Example using compositional keyword: not' do
+RSpec.describe 'Library Book Collection' do
   let(:book) do
     Class.new do
       include EasyTalk::Model
@@ -15,7 +15,7 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
         title 'Book'
         property :title, String, description: 'The title of the book.'
         property :author, String, description: "The name of the book's author."
-        property :ISBN, String, pattern: '^(\\d{3}-?\\d{10})$', description: 'The International Standard Book Number.'
+        property :ISBN, String, pattern: '\A(\d{3}-?\d{10})\z', description: 'The International Standard Book Number.'
         property :publicationYear, Integer, description: 'The year the book was published.'
       end
     end
@@ -30,12 +30,12 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
       end
 
       define_schema do
-        property :ISSN, String, pattern: '^\\d{4}-\\d{4}$', description: 'The International Standard Serial Number for periodicals.'
+        property :ISSN, String, pattern: '\A\d{4}-\d{4}\z', description: 'The International Standard Serial Number for periodicals.'
       end
     end
   end
 
-  let(:expected_json_schema) do
+  let(:expected_book_schema) do
     {
       type: 'object',
       title: 'Book',
@@ -51,7 +51,7 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
         ISBN: {
           type: 'string',
           description: 'The International Standard Book Number.',
-          pattern: '^(\\d{3}-?\\d{10})$'
+          pattern: '^(\d{3}-?\d{10})$'
         },
         publicationYear: {
           type: 'integer',
@@ -63,29 +63,31 @@ RSpec.describe 'Library Book Collection. Example using compositional keyword: no
         author
         ISBN
         publicationYear
-      ],
-      '$defs': {
-        Magazine: {
-          type: 'object',
-          properties: {
-            ISSN: {
-              type: 'string',
-              description: 'The International Standard Serial Number for periodicals.',
-              pattern: '^\\d{4}-\\d{4}$'
-            }
-          },
-          required: [
-            'ISSN'
-          ]
-        }
-      },
-      not: {
-        '$ref': '#/$defs/Magazine'
-      }
+      ]
     }
   end
 
-  pending 'returns a json schema for the book class' do
-    expect(Book.json_schema).to include_json(expected_json_schema)
+  let(:expected_magazine_schema) do
+    {
+      type: 'object',
+      properties: {
+        ISSN: {
+          type: 'string',
+          description: 'The International Standard Serial Number for periodicals.',
+          pattern: '^\d{4}-\d{4}$'
+        }
+      },
+      required: [
+        'ISSN'
+      ]
+    }
+  end
+
+  it 'returns a json schema for the book class' do
+    expect(book.json_schema).to include_json(expected_book_schema)
+  end
+
+  it 'returns a json schema for the magazine class' do
+    expect(magazine.json_schema).to include_json(expected_magazine_schema)
   end
 end

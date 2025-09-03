@@ -108,7 +108,7 @@ RSpec.describe 'Payment object example' do
                 },
                 CardCVV: {
                   type: 'string',
-                  pattern: '\A(?:\d{3}|\d{4})\z'
+                  pattern: '^(?:\d{3}|\d{4})$'
                 }
               },
               additionalProperties: false,
