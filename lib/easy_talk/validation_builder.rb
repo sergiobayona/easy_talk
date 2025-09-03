@@ -139,48 +139,30 @@ module EasyTalk
       @klass.validates @property_name, format: { with: Regexp.new(@constraints[:pattern]) } if @constraints[:pattern]
 
       # Handle length constraints
-      length_options = {}
-      length_options[:minimum] = @constraints[:min_length] if @constraints[:min_length]
-      length_options[:maximum] = @constraints[:max_length] if @constraints[:max_length]
-      @klass.validates @property_name, length: length_options if length_options.any?
+      begin
+        length_options = {}
+        length_options[:minimum] = @constraints[:min_length] if @constraints[:min_length].is_a?(Numeric) && @constraints[:min_length] >= 0
+        length_options[:maximum] = @constraints[:max_length] if @constraints[:max_length].is_a?(Numeric) && @constraints[:max_length] >= 0
+        @klass.validates @property_name, length: length_options if length_options.any?
+      rescue ArgumentError
+        # Silently ignore invalid length constraints
+      end
     end
 
     # Apply format-specific validations (email, url, etc.)
     def apply_format_validation(format)
-      case format.to_s
-      when 'email'
-        @klass.validates @property_name, format: {
-          with: URI::MailTo::EMAIL_REGEXP,
-          message: 'must be a valid email address'
-        }
-      when 'uri', 'url'
-        @klass.validates @property_name, format: {
-          with: URI::DEFAULT_PARSER.make_regexp,
-          message: 'must be a valid URL'
-        }
-      when 'uuid'
-        uuid_regex = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
-        @klass.validates @property_name, format: {
-          with: uuid_regex,
-          message: 'must be a valid UUID'
-        }
-      when 'date'
-        @klass.validates @property_name, format: {
-          with: /\A\d{4}-\d{2}-\d{2}\z/,
-          message: 'must be a valid date in YYYY-MM-DD format'
-        }
-      when 'date-time'
-        # ISO 8601 date-time format
-        @klass.validates @property_name, format: {
-          with: /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\z/,
-          message: 'must be a valid ISO 8601 date-time'
-        }
-      when 'time'
-        @klass.validates @property_name, format: {
-          with: /\A\d{2}:\d{2}:\d{2}(?:\.\d+)?\z/,
-          message: 'must be a valid time in HH:MM:SS format'
-        }
-      end
+      format_configs = {
+        'email' => { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
+        'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
+        'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
+        'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i, message: 'must be a valid UUID' },
+        'date' => { with: /\A\d{4}-\d{2}-\d{2}\z/, message: 'must be a valid date in YYYY-MM-DD format' },
+        'date-time' => { with: /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\z/, message: 'must be a valid ISO 8601 date-time' },
+        'time' => { with: /\A\d{2}:\d{2}:\d{2}(?:\.\d+)?\z/, message: 'must be a valid time in HH:MM:SS format' }
+      }
+
+      config = format_configs[format.to_s]
+      @klass.validates @property_name, format: config if config
     end
 
     # Validate integer-specific constraints
@@ -195,15 +177,19 @@ module EasyTalk
 
     # Apply numeric validations for integers and floats
     def apply_numeric_validations(only_integer: false)
-      options = { only_integer: only_integer }
+      begin
+        options = { only_integer: only_integer }
 
-      # Add range constraints
-      options[:greater_than_or_equal_to] = @constraints[:minimum] if @constraints[:minimum]
-      options[:less_than_or_equal_to] = @constraints[:maximum] if @constraints[:maximum]
-      options[:greater_than] = @constraints[:exclusive_minimum] if @constraints[:exclusive_minimum]
-      options[:less_than] = @constraints[:exclusive_maximum] if @constraints[:exclusive_maximum]
+        # Add range constraints - only if they are numeric
+        options[:greater_than_or_equal_to] = @constraints[:minimum] if @constraints[:minimum].is_a?(Numeric)
+        options[:less_than_or_equal_to] = @constraints[:maximum] if @constraints[:maximum].is_a?(Numeric)
+        options[:greater_than] = @constraints[:exclusive_minimum] if @constraints[:exclusive_minimum].is_a?(Numeric)
+        options[:less_than] = @constraints[:exclusive_maximum] if @constraints[:exclusive_maximum].is_a?(Numeric)
 
-      @klass.validates @property_name, numericality: options
+        @klass.validates @property_name, numericality: options
+      rescue ArgumentError
+        # Silently ignore invalid numeric constraints
+      end
 
       # Add multiple_of validation
       return unless @constraints[:multiple_of]

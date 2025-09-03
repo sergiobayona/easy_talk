@@ -11,7 +11,7 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. 
 ### Key Features
 * **Intuitive Schema Definition**: Use Ruby classes and methods to define JSON Schema documents easily.
 * **Automatic ActiveModel Validations**: Schema constraints automatically generate corresponding ActiveModel validations (configurable).
-* **Works for plain Ruby classes and ActiveRecord models**: Integrate with existing code or build from scratch.
+* **Works for plain Ruby classes and ActiveModel classes**: Integrate with existing code or build from scratch.
 * **LLM Function Support**: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
 * **Schema Composition**: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
 * **Enhanced Model Integration**: Automatic instantiation of nested EasyTalk models from hash attributes.
@@ -518,119 +518,6 @@ user.address.class # => Address (automatically instantiated)
 user.address.street # => "123 Main St"
 ```
 
-## ActiveRecord Integration
-
-### Automatic Schema Generation
-For ActiveRecord models, EasyTalk automatically generates a schema based on the database columns:
-
-```ruby
-class Product < ActiveRecord::Base
-  include EasyTalk::Model
-end
-```
-
-This will create a schema with properties for each column in the `products` table.
-
-### Enhancing Generated Schemas
-You can enhance the auto-generated schema with the `enhance_schema` method:
-
-```ruby
-class Product < ActiveRecord::Base
-  include EasyTalk::Model
-  
-  enhance_schema({
-    title: "Retail Product",
-    description: "A product available for purchase",
-    properties: {
-      name: {
-        description: "Product display name",
-        title: "Product Name"
-      },
-      price: {
-        description: "Retail price in USD"
-      }
-    }
-  })
-end
-```
-
-### Column Exclusion Options
-EasyTalk provides several ways to exclude columns from your JSON schema:
-
-#### 1. Global Configuration
-
-```ruby
-EasyTalk.configure do |config|
-  # Exclude specific columns by name from all models
-  config.excluded_columns = [:created_at, :updated_at, :deleted_at]
-  
-  # Exclude all foreign key columns (columns ending with '_id')
-  config.exclude_foreign_keys = true   # Default: false
-  
-  # Exclude all primary key columns ('id')
-  config.exclude_primary_key = true    # Default: true
-  
-  # Exclude timestamp columns ('created_at', 'updated_at')
-  config.exclude_timestamps = true     # Default: true
-  
-  # Exclude all association properties
-  config.exclude_associations = true   # Default: false
-end
-```
-
-#### 2. Model-Specific Column Ignoring
-
-```ruby
-class Product < ActiveRecord::Base
-  include EasyTalk::Model
-  
-  enhance_schema({
-    ignore: [:internal_ref_id, :legacy_code]  # Model-specific exclusions
-  })
-end
-```
-
-### Virtual Properties
-You can add properties that don't exist as database columns:
-
-```ruby
-class Product < ActiveRecord::Base
-  include EasyTalk::Model
-  
-  enhance_schema({
-    properties: {
-      full_details: {
-        virtual: true,
-        type: :string,
-        description: "Complete product information"
-      }
-    }
-  })
-end
-```
-
-### Associations and Foreign Keys
-By default, EasyTalk includes your model's associations in the schema:
-
-```ruby
-class Product < ActiveRecord::Base
-  include EasyTalk::Model
-  belongs_to :category
-  has_many :reviews
-end
-```
-
-This will include `category` (as an object) and `reviews` (as an array) in the schema.
-
-You can control this behavior with configuration:
-
-```ruby
-EasyTalk.configure do |config|
-  config.exclude_associations = true    # Don't include associations  
-  config.exclude_foreign_keys = true    # Don't include foreign key columns
-end
-```
-
 ## Advanced Features
 
 ### LLM Function Generation
@@ -698,19 +585,10 @@ You can configure EasyTalk globally:
 
 ```ruby
 EasyTalk.configure do |config|
-  # ActiveRecord integration options
-  config.excluded_columns = [:created_at, :updated_at, :deleted_at]
-  config.exclude_foreign_keys = true
-  config.exclude_primary_key = true
-  config.exclude_timestamps = true
-  config.exclude_associations = false
-  
   # Schema behavior options
-  config.default_additional_properties = false
-  config.nilable_is_optional = false  # Makes T.nilable properties also optional
-  
-  # NEW in v2.0.0: Automatic validation generation
-  config.auto_validations = true      # Automatically generate ActiveModel validations
+  config.default_additional_properties = false  # Control additional properties on all models
+  config.nilable_is_optional = false           # Makes T.nilable properties also optional
+  config.auto_validations = true               # Automatically generate ActiveModel validations
 end
 ```
 
@@ -738,45 +616,18 @@ end
 ```
 
 ### Per-Model Configuration
-Some settings can be configured per model:
+You can configure additional properties for individual models:
 
 ```ruby
-class Product < ActiveRecord::Base
+class User
   include EasyTalk::Model
   
-  enhance_schema({
-    additionalProperties: true,
-    ignore: [:internal_ref_id, :legacy_code]
-  })
-end
-```
-
-### Exclusion Rules
-Columns are excluded based on the following rules (in order of precedence):
-
-1. Explicitly listed in `excluded_columns` global setting
-2. Listed in the model's `schema_enhancements[:ignore]` array
-3. Is a primary key when `exclude_primary_key` is true (default)
-4. Is a timestamp column when `exclude_timestamps` is true (default)
-5. Matches a foreign key pattern when `exclude_foreign_keys` is true
-
-### Customizing Output
-You can customize the JSON Schema output by enhancing the schema:
-
-```ruby
-class User < ActiveRecord::Base
-  include EasyTalk::Model
-  
-  enhance_schema({
-    title: "User Account",
-    description: "User account information",
-    properties: {
-      name: {
-        title: "Full Name",
-        description: "User's full name"
-      }
-    }
-  })
+  define_schema do
+    title "User"
+    additional_properties true  # Allow arbitrary additional properties on this model
+    property :name, String
+    property :email, String, format: "email"
+  end
 end
 ```
 
@@ -1277,7 +1128,7 @@ EasyTalk.configure do |config|
   
   # Existing options (unchanged)
   config.nilable_is_optional = false
-  config.exclude_foreign_keys = true
+  config.default_additional_properties = false
   # ... other existing config
 end
 ```
@@ -1287,7 +1138,7 @@ end
 - **Ruby Version**: Still requires Ruby 3.2+
 - **Dependencies**: Core dependencies remain the same
 - **JSON Schema Output**: No changes to generated schemas
-- **ActiveRecord Integration**: Fully backward compatible
+- **ActiveModel Integration**: Fully backward compatible
 
 ## Development and Contributing
 

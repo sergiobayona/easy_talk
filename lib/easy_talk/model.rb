@@ -9,7 +9,6 @@ require 'active_support/json'
 require 'active_model'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
-require_relative 'active_record_schema_builder'
 require_relative 'validation_builder'
 
 module EasyTalk
@@ -36,16 +35,12 @@ module EasyTalk
   # @see SchemaDefinition
   module Model
     def self.included(base)
-      base.include ActiveModel::API # Include ActiveModel::API in the class including EasyTalk::Model
+      base.extend(ClassMethods)
+
+      base.include ActiveModel::API
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
-      base.extend(ClassMethods)
       base.include(InstanceMethods)
-
-      # Apply ActiveRecord-specific functionality if appropriate
-      return unless defined?(ActiveRecord) && base.ancestors.include?(ActiveRecord::Base)
-
-      base.extend(ActiveRecordClassMethods)
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
@@ -55,12 +50,7 @@ module EasyTalk
         super # Perform initial mass assignment
 
         # After initial assignment, instantiate nested EasyTalk::Model objects
-        # Get the appropriate schema definition based on model type
-        schema_def = if self.class.respond_to?(:active_record_schema_definition)
-                       self.class.active_record_schema_definition
-                     else
-                       self.class.schema_definition
-                     end
+        schema_def = self.class.schema_definition
 
         # Only proceed if we have a valid schema definition
         return unless schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
@@ -121,6 +111,11 @@ module EasyTalk
         to_hash.merge(@additional_properties)
       end
 
+      # to_h includes both defined and additional properties
+      def to_h
+        to_hash.merge(@additional_properties)
+      end
+
       # Allow comparison with hashes
       def ==(other)
         case other
@@ -146,13 +141,8 @@ module EasyTalk
       # @return [Schema] The schema for the model.
       def schema
         @schema ||= if defined?(@schema_definition) && @schema_definition
-                      # Schema defined explicitly via define_schema
                       build_schema(@schema_definition)
-                    elsif respond_to?(:active_record_schema_definition)
-                      # ActiveRecord model without explicit schema definition
-                      build_schema(active_record_schema_definition)
                     else
-                      # Default case - empty schema
                       {}
                     end
       end
@@ -228,35 +218,6 @@ module EasyTalk
       # @return [Schema] The validated schema.
       def build_schema(schema_definition)
         Builders::ObjectBuilder.new(schema_definition).build
-      end
-    end
-
-    # Module containing ActiveRecord-specific methods for schema generation
-    module ActiveRecordClassMethods
-      # Gets a SchemaDefinition that's built from the ActiveRecord database schema
-      #
-      # @return [SchemaDefinition] A schema definition built from the database
-      def active_record_schema_definition
-        @active_record_schema_definition ||= ActiveRecordSchemaBuilder.new(self).build_schema_definition
-      end
-
-      # Store enhancements to be applied to the schema
-      #
-      # @return [Hash] The schema enhancements
-      def schema_enhancements
-        @schema_enhancements ||= {}
-      end
-
-      # Enhance the generated schema with additional information
-      #
-      # @param enhancements [Hash] The schema enhancements
-      # @return [void]
-      def enhance_schema(enhancements)
-        @schema_enhancements = enhancements
-        # Clear cached values to force regeneration
-        @active_record_schema_definition = nil
-        @schema = nil
-        @json_schema = nil
       end
     end
   end

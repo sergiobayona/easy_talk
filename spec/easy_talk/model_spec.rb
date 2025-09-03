@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'active_record'
 RSpec.describe EasyTalk::Model do
   before do
     # Define Email class for use in testing
@@ -212,125 +211,6 @@ RSpec.describe EasyTalk::Model do
       it 'is valid' do
         expect(employee.valid?).to be(true)
       end
-    end
-  end
-
-  # New tests for the unified approach with ActiveRecord integration
-  context 'with ActiveRecord integration', :active_record do
-    before(:all) do
-      # Set up ActiveRecord test environment
-      ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
-
-      ActiveRecord::Schema.define do
-        create_table :test_products, force: true do |t|
-          t.string :name, null: false
-          t.text :description
-          t.decimal :price, precision: 10, scale: 2
-          t.boolean :active, default: true
-          t.timestamps
-        end
-      end
-
-      # Define the ActiveRecord test class
-      class TestProduct < ActiveRecord::Base
-        include EasyTalk::Model
-      end
-    end
-
-    after(:all) do
-      # Clean up
-      if defined?(ActiveRecord::Base) && ActiveRecord::Base.connected? &&
-         ActiveRecord::Base.connection.table_exists?(:test_products)
-        ActiveRecord::Base.connection.drop_table(:test_products)
-      end
-      Object.send(:remove_const, :TestProduct) if Object.const_defined?(:TestProduct)
-    end
-
-    it 'automatically generates schema from database columns' do
-      expect(TestProduct.schema).to be_a(Hash)
-      expect(TestProduct.schema[:type]).to eq('object')
-      expect(TestProduct.schema[:properties]).to have_key(:name)
-      expect(TestProduct.schema[:properties]).to have_key(:description)
-      expect(TestProduct.schema[:properties]).to have_key(:price)
-      expect(TestProduct.schema[:properties]).to have_key(:active)
-    end
-
-    it 'correctly maps column types to schema types' do
-      expect(TestProduct.schema[:properties][:name].type).to eq(String)
-      expect(TestProduct.schema[:properties][:description].type.name).to eq('T.nilable(String)')
-      expect(TestProduct.schema[:properties][:price].type.name).to eq('T.nilable(Float)')
-      expect(TestProduct.schema[:properties][:active].type.name).to eq('T.nilable(T::Boolean)')
-    end
-
-    it 'automatically extends ActiveRecord models with ActiveRecordClassMethods' do
-      expect(TestProduct).to respond_to(:enhance_schema)
-      expect(TestProduct).to respond_to(:schema_enhancements)
-      expect(TestProduct).to respond_to(:active_record_schema_definition)
-    end
-
-    it 'allows enhancing the auto-generated schema' do
-      TestProduct.enhance_schema({
-                                   title: 'Enhanced Product',
-                                   description: 'A product with enhanced schema'
-                                 })
-
-      # Force schema regeneration
-      TestProduct.instance_variable_set(:@schema, nil)
-
-      expect(TestProduct.schema[:title]).to eq('Enhanced Product')
-      expect(TestProduct.schema[:description]).to eq('A product with enhanced schema')
-    end
-
-    it 'allows enhancing specific properties in the schema' do
-      TestProduct.enhance_schema({
-                                   properties: {
-                                     name: {
-                                       description: 'Product name',
-                                       title: 'Name'
-                                     }
-                                   }
-                                 })
-
-      # Force schema regeneration
-      TestProduct.instance_variable_set(:@schema, nil)
-
-      expect(TestProduct.schema[:properties][:name].constraints[:description]).to eq('Product name')
-    end
-
-    it 'allows adding virtual properties via schema enhancements' do
-      TestProduct.enhance_schema({
-                                   properties: {
-                                     calculated_value: {
-                                       virtual: true,
-                                       type: :number,
-                                       description: 'A calculated value'
-                                     }
-                                   }
-                                 })
-
-      # Force schema regeneration
-      TestProduct.instance_variable_set(:@schema, nil)
-
-      expect(TestProduct.schema[:properties]).to have_key(:calculated_value)
-    end
-
-    it 'gives preference to explicit schema definition over database schema' do
-      class TestProductWithSchema < ActiveRecord::Base
-        self.table_name = 'test_products'
-        include EasyTalk::Model
-
-        define_schema do
-          title 'Explicit Schema Product'
-          property :name, String, description: 'Custom product name'
-          property :custom_field, String, description: 'Field not in database'
-        end
-      end
-
-      expect(TestProductWithSchema.schema[:title]).to eq('Explicit Schema Product')
-      expect(TestProductWithSchema.schema[:properties][:name].constraints[:description]).to eq('Custom product name')
-      expect(TestProductWithSchema.schema[:properties]).to have_key(:custom_field)
-
-      Object.send(:remove_const, :TestProductWithSchema)
     end
   end
 
