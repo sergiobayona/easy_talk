@@ -60,6 +60,9 @@ module EasyTalk
         # Start with a copy of the raw schema
         merged = @original_schema.dup
 
+        # Remove schema_version as it's handled separately in json_schema output
+        merged.delete(:schema_version)
+
         # Extract and build sub-schemas first (handles allOf/anyOf/oneOf references, etc.)
         process_subschemas(merged)
 

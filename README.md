@@ -16,6 +16,7 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. 
 * **Schema Composition**: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
 * **Enhanced Model Integration**: Automatic instantiation of nested EasyTalk models from hash attributes.
 * **Flexible Configuration**: Global and per-model configuration options for fine-tuned control.
+* **JSON Schema Version Support**: Configure the `$schema` keyword to declare which JSON Schema draft version your schemas conform to (Draft-04 through Draft 2020-12).
 
 ### Use Cases
 - API request/response validation
@@ -589,6 +590,8 @@ EasyTalk.configure do |config|
   config.default_additional_properties = false  # Control additional properties on all models
   config.nilable_is_optional = false           # Makes T.nilable properties also optional
   config.auto_validations = true               # Automatically generate ActiveModel validations
+  config.schema_version = :none                # JSON Schema version for $schema keyword
+                                               # Options: :none, :draft202012, :draft201909, :draft7, :draft6, :draft4
 end
 ```
 
@@ -1168,17 +1171,193 @@ bundle exec rubocop
 ### Contributing Guidelines
 Bug reports and pull requests are welcome on GitHub at https://github.com/sergiobayona/easy_talk.
 
+## JSON Schema Version (`$schema` Keyword)
+
+The `$schema` keyword declares which JSON Schema dialect (draft version) a schema conforms to. EasyTalk supports configuring this at both the global and per-model level.
+
+### Why Use `$schema`?
+
+The `$schema` keyword:
+- Declares the JSON Schema version your schema is written against
+- Helps validators understand which specification to use
+- Enables tooling to provide appropriate validation and autocomplete
+- Documents the schema dialect for consumers of your API
+
+### Supported Draft Versions
+
+EasyTalk supports the following JSON Schema draft versions:
+
+| Symbol | JSON Schema Version | URI |
+|--------|---------------------|-----|
+| `:draft202012` | Draft 2020-12 (latest) | `https://json-schema.org/draft/2020-12/schema` |
+| `:draft201909` | Draft 2019-09 | `https://json-schema.org/draft/2019-09/schema` |
+| `:draft7` | Draft-07 | `http://json-schema.org/draft-07/schema#` |
+| `:draft6` | Draft-06 | `http://json-schema.org/draft-06/schema#` |
+| `:draft4` | Draft-04 | `http://json-schema.org/draft-04/schema#` |
+| `:none` | No `$schema` output (default) | N/A |
+
+### Global Configuration
+
+Configure the schema version globally to apply to all models:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_version = :draft202012  # Use JSON Schema Draft 2020-12
+end
+```
+
+With this configuration, all models will include `$schema` in their output:
+
+```ruby
+class User
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+  end
+end
+
+User.json_schema
+# => {
+#      "$schema" => "https://json-schema.org/draft/2020-12/schema",
+#      "type" => "object",
+#      "properties" => { "name" => { "type" => "string" } },
+#      "required" => ["name"],
+#      "additionalProperties" => false
+#    }
+```
+
+### Per-Model Configuration
+
+Override the global setting for individual models using the `schema_version` keyword in the schema definition:
+
+```ruby
+class LegacyModel
+  include EasyTalk::Model
+
+  define_schema do
+    schema_version :draft7  # Use Draft-07 for this specific model
+    property :name, String
+  end
+end
+
+LegacyModel.json_schema
+# => {
+#      "$schema" => "http://json-schema.org/draft-07/schema#",
+#      "type" => "object",
+#      ...
+#    }
+```
+
+### Disabling `$schema` for Specific Models
+
+If you have a global schema version configured but want to exclude `$schema` from a specific model, use `:none`:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_version = :draft202012  # Global default
+end
+
+class InternalModel
+  include EasyTalk::Model
+
+  define_schema do
+    schema_version :none  # No $schema for this model
+    property :data, String
+  end
+end
+
+InternalModel.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => { "data" => { "type" => "string" } },
+#      ...
+#    }
+# Note: No "$schema" key present
+```
+
+### Custom Schema URIs
+
+You can also specify a custom URI if you're using a custom meta-schema or a different schema registry:
+
+```ruby
+class CustomModel
+  include EasyTalk::Model
+
+  define_schema do
+    schema_version 'https://my-company.com/schemas/v1/meta-schema.json'
+    property :id, String
+  end
+end
+```
+
+### Nested Models
+
+The `$schema` keyword only appears at the root level of the schema. When you have nested EasyTalk models, only the top-level model's `json_schema` output will include `$schema`:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_version = :draft202012
+end
+
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :city, String
+  end
+end
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address
+  end
+end
+
+User.json_schema
+# => {
+#      "$schema" => "https://json-schema.org/draft/2020-12/schema",  # Only at root
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "address" => {
+#          "type" => "object",  # No $schema here
+#          "properties" => { "city" => { "type" => "string" } },
+#          ...
+#        }
+#      },
+#      ...
+#    }
+```
+
+### Default Behavior
+
+By default, `schema_version` is set to `:none`, meaning no `$schema` keyword is included in the generated schemas. This maintains backward compatibility with previous versions of EasyTalk.
+
+### Best Practices
+
+1. **Choose a version appropriate for your validators**: If you're using a specific JSON Schema validator, check which drafts it supports.
+
+2. **Use Draft 2020-12 for new projects**: It's the latest stable version with the most features.
+
+3. **Be consistent**: Use global configuration for consistency across your application, and only override per-model when necessary.
+
+4. **Consider your consumers**: If your schemas are consumed by external systems, ensure they support the draft version you're using.
+
 ## JSON Schema Compatibility
 
 ### Supported Versions
-EasyTalk is currently loose about JSON Schema versions. It doesn't strictly enforce or adhere to any particular version of the specification. The goal is to add more robust support for the latest JSON Schema specs in the future.
+EasyTalk supports generating schemas compatible with JSON Schema Draft-04 through Draft 2020-12. Use the `schema_version` configuration option to declare which version your schemas conform to (see [JSON Schema Version](#json-schema-version-schema-keyword) above).
+
+While EasyTalk allows you to specify any draft version via the `$schema` keyword, the generated schema structure is generally compatible across versions. Some newer draft features may require manual adjustment.
 
 ### Specification Compliance
 To learn about current capabilities, see the [spec/easy_talk/examples](https://github.com/sergiobayona/easy_talk/tree/main/spec/easy_talk/examples) folder. The examples illustrate how EasyTalk generates JSON Schema in different scenarios.
 
 ### Known Limitations
 - Limited support for custom formats
-- No direct support for JSON Schema draft 2020-12 features
+- Some draft-specific keywords may not be supported
 - Complex composition scenarios may require manual adjustment
 
 ## License

@@ -155,11 +155,41 @@ module EasyTalk
       end
 
       # Returns the JSON schema for the model.
+      # This is the final output that includes the $schema keyword if configured.
       #
       # @return [Hash] The JSON schema for the model.
       def json_schema
-        @json_schema ||= schema.as_json
+        @json_schema ||= build_json_schema
       end
+
+      private
+
+      # Builds the final JSON schema with optional $schema keyword.
+      def build_json_schema
+        result = schema.as_json
+        schema_uri = resolve_schema_uri
+        return result unless schema_uri
+
+        # Prepend $schema to ensure it appears first in the output
+        { '$schema' => schema_uri }.merge(result)
+      end
+
+      # Resolves the schema URI from per-model setting or global config.
+      def resolve_schema_uri
+        model_version = @schema_definition&.schema&.dig(:schema_version)
+
+        if model_version
+          # Per-model override - :none means explicitly no $schema
+          return nil if model_version == :none
+
+          Configuration::SCHEMA_VERSIONS[model_version] || model_version.to_s
+        else
+          # Fall back to global configuration
+          EasyTalk.configuration.schema_uri
+        end
+      end
+
+      public
 
       # Define the schema for the model using the provided block.
       #

@@ -1,3 +1,14 @@
+## [Unreleased]
+
+### Added
+- **JSON Schema `$schema` Keyword Support**: Added ability to declare which JSON Schema draft version schemas conform to
+  - New `schema_version` configuration option supporting Draft-04, Draft-06, Draft-07, Draft 2019-09, and Draft 2020-12
+  - Global configuration via `EasyTalk.configure { |c| c.schema_version = :draft202012 }`
+  - Per-model override using `schema_version` keyword in `define_schema` block
+  - Support for custom schema URIs
+  - `$schema` only appears at root level (not in nested models)
+  - Default is `:none` for backward compatibility
+
 ## [3.0.0] - 2025-01-03
 
 ### BREAKING CHANGES
