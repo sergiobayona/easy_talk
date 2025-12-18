@@ -311,7 +311,7 @@ module EasyTalk
       @klass.validates @property_name, inclusion: {
         in: @constraints[:enum],
         message: "must be one of: #{@constraints[:enum].join(', ')}",
-        allow_nil: optional?
+        allow_nil: optional? || nilable_type?
       }
     end
 

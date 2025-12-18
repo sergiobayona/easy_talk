@@ -176,6 +176,7 @@ RSpec.describe 'Auto Validations' do
           property :nilable_name, T.nilable(String)
           property :required_enum, String, enum: %w[foo bar]
           property :optional_enum, String, enum: %w[foo bar], optional: true
+          property :nilable_enum, T.nilable(String), enum: %w[draft published]
         end
       end
     end
@@ -212,6 +213,30 @@ RSpec.describe 'Auto Validations' do
 
       expect(instance.valid?).to be(false)
       expect(instance.errors[:required_enum]).not_to be_empty
+    end
+
+    it 'allows nil for nilable enums even when nilable_is_optional is false' do
+      EasyTalk.configure { |config| config.nilable_is_optional = false }
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo', nilable_enum: nil)
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:nilable_enum]).to be_empty
+    end
+
+    it 'validates nilable enum values when present' do
+      EasyTalk.configure { |config| config.nilable_is_optional = false }
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo', nilable_enum: 'draft')
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:nilable_enum]).to be_empty
+    end
+
+    it 'rejects invalid values for nilable enums' do
+      EasyTalk.configure { |config| config.nilable_is_optional = false }
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo', nilable_enum: 'invalid')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:nilable_enum]).not_to be_empty
     end
   end
 end
