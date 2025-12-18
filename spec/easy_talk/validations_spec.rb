@@ -174,6 +174,8 @@ RSpec.describe 'Auto Validations' do
           property :required_name, String
           property :optional_name, String, optional: true
           property :nilable_name, T.nilable(String)
+          property :required_enum, String, enum: %w[foo bar]
+          property :optional_enum, String, enum: %w[foo bar], optional: true
         end
       end
     end
@@ -192,10 +194,24 @@ RSpec.describe 'Auto Validations' do
 
     it 'treats nilable as optional when configured' do
       EasyTalk.configure { |config| config.nilable_is_optional = true }
-      instance = optional_class.new(required_name: 'Present')
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo')
 
       expect(instance.valid?).to be(true)
       expect(instance.errors[:nilable_name]).to be_empty
+    end
+
+    it 'allows nil for optional enums' do
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo')
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:optional_enum]).to be_empty
+    end
+
+    it 'does not allow nil for non-optional enums' do
+      instance = optional_class.new(required_name: 'Present', required_enum: 'foo')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:required_enum]).not_to be_empty
     end
   end
 end
