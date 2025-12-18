@@ -17,6 +17,7 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. 
 * **Enhanced Model Integration**: Automatic instantiation of nested EasyTalk models from hash attributes.
 * **Flexible Configuration**: Global and per-model configuration options for fine-tuned control.
 * **JSON Schema Version Support**: Configure the `$schema` keyword to declare which JSON Schema draft version your schemas conform to (Draft-04 through Draft 2020-12).
+* **Schema Identification**: Configure the `$id` keyword to provide a unique identifier URI for your schemas.
 
 ### Use Cases
 - API request/response validation
@@ -592,6 +593,7 @@ EasyTalk.configure do |config|
   config.auto_validations = true               # Automatically generate ActiveModel validations
   config.schema_version = :none                # JSON Schema version for $schema keyword
                                                # Options: :none, :draft202012, :draft201909, :draft7, :draft6, :draft4
+  config.schema_id = nil                       # Base URI for $id keyword (nil = no $id)
 end
 ```
 
@@ -1344,6 +1346,193 @@ By default, `schema_version` is set to `:none`, meaning no `$schema` keyword is 
 3. **Be consistent**: Use global configuration for consistency across your application, and only override per-model when necessary.
 
 4. **Consider your consumers**: If your schemas are consumed by external systems, ensure they support the draft version you're using.
+
+## Schema Identifier (`$id` Keyword)
+
+The `$id` keyword provides a unique identifier for your JSON Schema document. EasyTalk supports configuring this at both the global and per-model level.
+
+### Why Use `$id`?
+
+The `$id` keyword:
+- Establishes a unique URI identifier for the schema
+- Enables referencing schemas from other documents via `$ref`
+- Provides a base URI for resolving relative references within the schema
+- Documents the canonical location of the schema
+
+### Global Configuration
+
+Configure the schema ID globally to apply to all models:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_id = 'https://example.com/schemas/base.json'
+end
+```
+
+With this configuration, all models will include `$id` in their output:
+
+```ruby
+class User
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+  end
+end
+
+User.json_schema
+# => {
+#      "$id" => "https://example.com/schemas/base.json",
+#      "type" => "object",
+#      "properties" => { "name" => { "type" => "string" } },
+#      "required" => ["name"],
+#      "additionalProperties" => false
+#    }
+```
+
+### Per-Model Configuration
+
+Override the global setting for individual models using the `schema_id` keyword in the schema definition:
+
+```ruby
+class User
+  include EasyTalk::Model
+
+  define_schema do
+    schema_id 'https://example.com/schemas/user.schema.json'
+    property :name, String
+    property :email, String
+  end
+end
+
+User.json_schema
+# => {
+#      "$id" => "https://example.com/schemas/user.schema.json",
+#      "type" => "object",
+#      ...
+#    }
+```
+
+### Disabling `$id` for Specific Models
+
+If you have a global schema ID configured but want to exclude `$id` from a specific model, use `:none`:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_id = 'https://example.com/schemas/default.json'
+end
+
+class InternalModel
+  include EasyTalk::Model
+
+  define_schema do
+    schema_id :none  # No $id for this model
+    property :data, String
+  end
+end
+
+InternalModel.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => { "data" => { "type" => "string" } },
+#      ...
+#    }
+# Note: No "$id" key present
+```
+
+### Combining `$schema` and `$id`
+
+When both `$schema` and `$id` are configured, they appear in the standard order (`$schema` first, then `$id`):
+
+```ruby
+class Product
+  include EasyTalk::Model
+
+  define_schema do
+    schema_version :draft202012
+    schema_id 'https://example.com/schemas/product.schema.json'
+    property :name, String
+    property :price, Float
+  end
+end
+
+Product.json_schema
+# => {
+#      "$schema" => "https://json-schema.org/draft/2020-12/schema",
+#      "$id" => "https://example.com/schemas/product.schema.json",
+#      "type" => "object",
+#      ...
+#    }
+```
+
+### Nested Models
+
+The `$id` keyword only appears at the root level of the schema. When you have nested EasyTalk models, only the top-level model's `json_schema` output will include `$id`:
+
+```ruby
+EasyTalk.configure do |config|
+  config.schema_id = 'https://example.com/schemas/user.json'
+end
+
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :city, String
+  end
+end
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address
+  end
+end
+
+User.json_schema
+# => {
+#      "$id" => "https://example.com/schemas/user.json",  # Only at root
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "address" => {
+#          "type" => "object",  # No $id here
+#          "properties" => { "city" => { "type" => "string" } },
+#          ...
+#        }
+#      },
+#      ...
+#    }
+```
+
+### URI Formats
+
+The `$id` accepts various URI formats:
+
+```ruby
+# Absolute URI (recommended for published schemas)
+schema_id 'https://example.com/schemas/user.schema.json'
+
+# Relative URI
+schema_id 'user.schema.json'
+
+# URN format
+schema_id 'urn:example:user-schema'
+```
+
+### Default Behavior
+
+By default, `schema_id` is set to `nil`, meaning no `$id` keyword is included in the generated schemas. This maintains backward compatibility with previous versions of EasyTalk.
+
+### Best Practices
+
+1. **Use absolute URIs for published schemas**: This ensures global uniqueness and enables external references.
+
+2. **Follow a consistent naming convention**: For example, `https://yourdomain.com/schemas/{model-name}.schema.json`.
+
+3. **Keep IDs stable**: Once published, avoid changing schema IDs as external systems may reference them.
+
+4. **Combine with `$schema`**: When publishing schemas, include both `$schema` (for validation) and `$id` (for identification).
 
 ## JSON Schema Compatibility
 

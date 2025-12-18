@@ -2,6 +2,7 @@
 
 module EasyTalk
   KEYWORDS = %i[
+    schema_id
     schema_version
     description
     type

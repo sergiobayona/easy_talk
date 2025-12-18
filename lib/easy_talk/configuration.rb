@@ -11,13 +11,14 @@ module EasyTalk
       draft4: 'http://json-schema.org/draft-04/schema#'
     }.freeze
 
-    attr_accessor :default_additional_properties, :nilable_is_optional, :auto_validations, :schema_version
+    attr_accessor :default_additional_properties, :nilable_is_optional, :auto_validations, :schema_version, :schema_id
 
     def initialize
       @default_additional_properties = false
       @nilable_is_optional = false
       @auto_validations = true
       @schema_version = :none
+      @schema_id = nil
     end
 
     # Returns the URI for the configured schema version, or nil if :none

@@ -164,14 +164,20 @@ module EasyTalk
 
       private
 
-      # Builds the final JSON schema with optional $schema keyword.
+      # Builds the final JSON schema with optional $schema and $id keywords.
       def build_json_schema
         result = schema.as_json
         schema_uri = resolve_schema_uri
-        return result unless schema_uri
+        id_uri = resolve_schema_id
 
-        # Prepend $schema to ensure it appears first in the output
-        { '$schema' => schema_uri }.merge(result)
+        # Build prefix hash with $schema and $id (in that order per JSON Schema convention)
+        prefix = {}
+        prefix['$schema'] = schema_uri if schema_uri
+        prefix['$id'] = id_uri if id_uri
+
+        return result if prefix.empty?
+
+        prefix.merge(result)
       end
 
       # Resolves the schema URI from per-model setting or global config.
@@ -186,6 +192,21 @@ module EasyTalk
         else
           # Fall back to global configuration
           EasyTalk.configuration.schema_uri
+        end
+      end
+
+      # Resolves the schema ID from per-model setting or global config.
+      def resolve_schema_id
+        model_id = @schema_definition&.schema&.dig(:schema_id)
+
+        if model_id
+          # Per-model override - :none means explicitly no $id
+          return nil if model_id == :none
+
+          model_id.to_s
+        else
+          # Fall back to global configuration
+          EasyTalk.configuration.schema_id
         end
       end
 

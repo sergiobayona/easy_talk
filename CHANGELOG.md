@@ -9,6 +9,14 @@
   - `$schema` only appears at root level (not in nested models)
   - Default is `:none` for backward compatibility
 
+- **JSON Schema `$id` Keyword Support**: Added ability to provide a unique identifier URI for schemas
+  - New `schema_id` configuration option for setting schema identifiers
+  - Global configuration via `EasyTalk.configure { |c| c.schema_id = 'https://example.com/schema.json' }`
+  - Per-model override using `schema_id` keyword in `define_schema` block
+  - Supports absolute URIs, relative URIs, and URN formats
+  - `$id` only appears at root level (not in nested models)
+  - Default is `nil` for backward compatibility
+
 ## [3.0.0] - 2025-01-03
 
 ### BREAKING CHANGES
