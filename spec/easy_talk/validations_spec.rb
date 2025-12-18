@@ -208,10 +208,10 @@ RSpec.describe 'Auto Validations' do
     end
 
     it 'does not allow nil for non-optional enums' do
-      instance = optional_class.new(required_name: 'Present')
+      instance = optional_class.new(required_name: 'Present', required_enum: nil)
 
       expect(instance.valid?).to be(false)
-      expect(instance.errors[:required_enum]).not_to be_empty
+      expect(instance.errors[:required_enum]).to include("can't be blank")
     end
 
     it 'allows nil for nilable enums even when nilable_is_optional is false' do
