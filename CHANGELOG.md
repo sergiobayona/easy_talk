@@ -1,4 +1,4 @@
-## [Unreleased]
+## [3.1.0] - 2025-12-18
 
 ### Added
 - **JSON Schema `$schema` Keyword Support**: Added ability to declare which JSON Schema draft version schemas conform to
