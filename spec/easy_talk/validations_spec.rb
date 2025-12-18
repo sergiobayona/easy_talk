@@ -187,10 +187,9 @@ RSpec.describe 'Auto Validations' do
 
       # When nilable_is_optional is false, we expect nilable_name to be required
       # but optional_name should still be optional due to explicit optional: true flag
-      expect(instance.errors[:optional_name]).to be_empty
-
       instance.nilable_name = nil
       expect(instance.valid?).to be(true)
+      expect(instance.errors[:optional_name]).to be_empty
     end
 
     it 'treats nilable as optional when configured' do
