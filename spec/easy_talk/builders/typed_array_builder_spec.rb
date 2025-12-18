@@ -102,7 +102,7 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
       expect do
         described_class.new(:name, String, invalid: 'key').build
       end.to raise_error(EasyTalk::UnknownOptionError,
-                         "Unknown option 'invalid' for property 'name'. Valid options are: title, description, optional, min_items, max_items, unique_items, enum, const.")
+                         "Unknown option 'invalid' for property 'name'. Valid options are: title, description, optional, min_items, max_items, unique_items, enum, const, ref.")
     end
   end
 

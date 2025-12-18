@@ -39,6 +39,9 @@ module EasyTalk
         # We'll collect required property names in this Set
         @required_properties = Set.new
 
+        # Collect models that are referenced via $ref for $defs generation
+        @ref_models = Set.new
+
         # Usually the name is a string (class name). Fallback to :klass if nil.
         name_for_builder = schema_definition.name ? schema_definition.name.to_sym : :klass
 
@@ -68,7 +71,11 @@ module EasyTalk
         process_subschemas(merged)
 
         # Build :properties into a final form (and find "required" props)
+        # This also collects models that use $ref into @ref_models
         merged[:properties] = build_properties(merged.delete(:properties))
+
+        # Add $defs for any models that are referenced via $ref
+        add_ref_model_defs(merged) if @ref_models.any?
 
         # Populate the final "required" array from @required_properties
         merged[:required] = @required_properties.to_a if @required_properties.any?
@@ -131,6 +138,7 @@ module EasyTalk
       ##
       # Builds a single property. Could be a nested schema if it has sub-properties,
       # or a standard scalar property (String, Integer, etc.).
+      # Also tracks EasyTalk models that should be added to $defs when using $ref.
       #
       def build_property(prop_name, prop_options)
         @property_cache ||= {}
@@ -139,9 +147,91 @@ module EasyTalk
         @property_cache[prop_name] ||= begin
           # Remove optional constraints from the property
           constraints = prop_options[:constraints].except(:optional)
+          prop_type = prop_options[:type]
+
+          # Track models that will use $ref for later $defs generation
+          collect_ref_models(prop_type, constraints)
+
           # Normal property: e.g. { type: String, constraints: {...} }
-          Property.new(prop_name, prop_options[:type], constraints)
+          Property.new(prop_name, prop_type, constraints)
         end
+      end
+
+      ##
+      # Collects EasyTalk models that will be referenced via $ref.
+      # These models need to be added to $defs in the final schema.
+      #
+      def collect_ref_models(prop_type, constraints)
+        # Check if this type should use $ref
+        if should_collect_ref?(prop_type, constraints)
+          @ref_models.add(prop_type)
+        # Handle typed arrays with EasyTalk model items
+        elsif typed_array_with_model?(prop_type)
+          inner_type = prop_type.type.raw_type
+          @ref_models.add(inner_type) if should_collect_ref?(inner_type, constraints)
+        # Handle nilable types
+        elsif nilable_with_model?(prop_type)
+          actual_type = T::Utils::Nilable.get_underlying_type(prop_type)
+          @ref_models.add(actual_type) if should_collect_ref?(actual_type, constraints)
+        end
+      end
+
+      ##
+      # Determines if a type should be collected for $ref based on config and constraints.
+      #
+      def should_collect_ref?(check_type, constraints)
+        return false unless easytalk_model?(check_type)
+
+        # Per-property constraint takes precedence
+        return constraints[:ref] if constraints.key?(:ref)
+
+        # Fall back to global configuration
+        EasyTalk.configuration.use_refs
+      end
+
+      ##
+      # Checks if a type is an EasyTalk model.
+      #
+      def easytalk_model?(check_type)
+        check_type.is_a?(Class) &&
+          check_type.respond_to?(:schema) &&
+          check_type.respond_to?(:ref_template) &&
+          defined?(EasyTalk::Model) &&
+          check_type.include?(EasyTalk::Model)
+      end
+
+      ##
+      # Checks if type is a typed array containing an EasyTalk model.
+      #
+      def typed_array_with_model?(prop_type)
+        return false unless prop_type.is_a?(T::Types::TypedArray)
+
+        inner_type = prop_type.type.raw_type
+        easytalk_model?(inner_type)
+      end
+
+      ##
+      # Checks if type is nilable and contains an EasyTalk model.
+      #
+      def nilable_with_model?(prop_type)
+        return false unless prop_type.respond_to?(:types)
+        return false unless prop_type.types.all? { |t| t.respond_to?(:raw_type) }
+        return false unless prop_type.types.any? { |t| t.raw_type == NilClass }
+
+        actual_type = T::Utils::Nilable.get_underlying_type(prop_type)
+        easytalk_model?(actual_type)
+      end
+
+      ##
+      # Adds $defs entries for all collected ref models.
+      #
+      def add_ref_model_defs(schema_hash)
+        definitions = @ref_models.each_with_object({}) do |model, acc|
+          acc[model.name] = model.schema
+        end
+
+        existing_defs = schema_hash[:defs] || {}
+        schema_hash[:defs] = existing_defs.merge(definitions)
       end
 
       ##

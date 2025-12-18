@@ -101,8 +101,11 @@ module EasyTalk
     # This method handles different types of properties:
     # - Nilable types (can be null)
     # - Types with dedicated builders
-    # - Types that implement their own schema method
+    # - Types that implement their own schema method (EasyTalk models)
     # - Default fallback to 'object' type
+    #
+    # When use_refs is enabled (globally or per-property), EasyTalk models
+    # are referenced via $ref instead of being inlined.
     #
     # @return [Hash] The complete JSON Schema property definition
     #
@@ -110,13 +113,19 @@ module EasyTalk
     #   property = Property.new(:name, 'String')
     #   property.build  # => {"type"=>"string"}
     #
-    # @example Complex nested schema
+    # @example Complex nested schema (inlined)
     #   address = Address.new  # A class with a .schema method
     #   property = Property.new(:shipping_address, address, description: "Shipping address")
     #   property.build  # => Address schema merged with the description constraint
+    #
+    # @example Nested schema with $ref
+    #   property = Property.new(:shipping_address, Address, ref: true)
+    #   property.build  # => {"$ref"=>"#/$defs/Address", ...constraints}
     def build
       if nilable_type?
         build_nilable_schema
+      elsif should_use_ref?
+        build_ref_schema
       elsif builder
         args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
         builder.new(*args).build
@@ -193,6 +202,14 @@ module EasyTalk
 
       return { type: 'null' } unless actual_type
 
+      # Check if the underlying type is an EasyTalk model that should use $ref
+      if easytalk_model?(actual_type) && should_use_ref_for_type?(actual_type)
+        # Use anyOf with $ref and null type
+        ref_constraints = constraints.except(:ref, :optional)
+        schema = { anyOf: [{ '$ref': actual_type.ref_template }, { type: 'null' }] }
+        return ref_constraints.empty? ? schema : schema.merge(ref_constraints)
+      end
+
       # Create a property with the actual type
       non_nil_schema = Property.new(name, actual_type, constraints).build
 
@@ -200,6 +217,55 @@ module EasyTalk
       non_nil_schema.merge(
         type: [non_nil_schema[:type], 'null'].compact
       )
+    end
+
+    # Determines if $ref should be used for the current type.
+    #
+    # @return [Boolean] true if $ref should be used, false otherwise
+    # @api private
+    def should_use_ref?
+      return false unless easytalk_model?(type)
+
+      should_use_ref_for_type?(type)
+    end
+
+    # Determines if $ref should be used for a given type based on constraints and config.
+    #
+    # @param check_type [Class] The type to check
+    # @return [Boolean] true if $ref should be used, false otherwise
+    # @api private
+    def should_use_ref_for_type?(check_type)
+      return false unless easytalk_model?(check_type)
+
+      # Per-property constraint takes precedence
+      return constraints[:ref] if constraints.key?(:ref)
+
+      # Fall back to global configuration
+      EasyTalk.configuration.use_refs
+    end
+
+    # Checks if a type is an EasyTalk model.
+    #
+    # @param check_type [Object] The type to check
+    # @return [Boolean] true if the type is an EasyTalk model
+    # @api private
+    def easytalk_model?(check_type)
+      check_type.is_a?(Class) &&
+        check_type.respond_to?(:schema) &&
+        check_type.respond_to?(:ref_template) &&
+        defined?(EasyTalk::Model) &&
+        check_type.include?(EasyTalk::Model)
+    end
+
+    # Builds a $ref schema for an EasyTalk model.
+    #
+    # @return [Hash] A schema with $ref pointing to the model's definition
+    # @api private
+    def build_ref_schema
+      # Remove ref and optional from constraints as they're not JSON Schema keywords
+      ref_constraints = constraints.except(:ref, :optional)
+      schema = { '$ref': type.ref_template }
+      ref_constraints.empty? ? schema : schema.merge(ref_constraints)
     end
   end
 end

@@ -17,6 +17,17 @@
   - `$id` only appears at root level (not in nested models)
   - Default is `nil` for backward compatibility
 
+- **JSON Schema `$ref` and `$defs` Support**: Added ability to reference reusable schema definitions for nested models
+  - New `use_refs` configuration option to globally enable `$ref` for nested EasyTalk models
+  - Global configuration via `EasyTalk.configure { |c| c.use_refs = true }`
+  - Per-property override using `ref: true` or `ref: false` constraint
+  - Nested models are automatically added to `$defs` when `$ref` is enabled
+  - Supports direct model properties, `T::Array[Model]`, and `T.nilable(Model)` types
+  - Nilable models with `$ref` use `anyOf` with `$ref` and `null` type
+  - Multiple references to the same model only create one `$defs` entry
+  - Additional constraints (title, description) can be combined with `$ref`
+  - Default is `false` for backward compatibility (nested schemas are inlined)
+
 ## [3.0.0] - 2025-01-03
 
 ### BREAKING CHANGES

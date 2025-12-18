@@ -14,7 +14,8 @@ module EasyTalk
         max_items: { type: Integer, key: :maxItems },
         unique_items: { type: T::Boolean, key: :uniqueItems },
         enum: { type: T::Array[T.untyped], key: :enum },
-        const: { type: T::Array[T.untyped], key: :const }
+        const: { type: T::Array[T.untyped], key: :const },
+        ref: { type: T::Boolean, key: :ref }
       }.freeze
 
       attr_reader :type
@@ -35,7 +36,9 @@ module EasyTalk
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def schema
         super.tap do |schema|
-          schema[:items] = Property.new(@name, inner_type, {}).build
+          # Pass ref constraint to items if present (for nested model references)
+          item_constraints = @options&.slice(:ref) || {}
+          schema[:items] = Property.new(@name, inner_type, item_constraints).build
         end
       end
 

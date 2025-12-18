@@ -18,6 +18,7 @@ EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. 
 * **Flexible Configuration**: Global and per-model configuration options for fine-tuned control.
 * **JSON Schema Version Support**: Configure the `$schema` keyword to declare which JSON Schema draft version your schemas conform to (Draft-04 through Draft 2020-12).
 * **Schema Identification**: Configure the `$id` keyword to provide a unique identifier URI for your schemas.
+* **Schema References**: Use `$ref` and `$defs` for reusable schema definitions, reducing duplication when models are used in multiple places.
 
 ### Use Cases
 - API request/response validation
@@ -594,6 +595,7 @@ EasyTalk.configure do |config|
   config.schema_version = :none                # JSON Schema version for $schema keyword
                                                # Options: :none, :draft202012, :draft201909, :draft7, :draft6, :draft4
   config.schema_id = nil                       # Base URI for $id keyword (nil = no $id)
+  config.use_refs = false                      # Use $ref for nested models instead of inlining
 end
 ```
 
@@ -1533,6 +1535,283 @@ By default, `schema_id` is set to `nil`, meaning no `$id` keyword is included in
 3. **Keep IDs stable**: Once published, avoid changing schema IDs as external systems may reference them.
 
 4. **Combine with `$schema`**: When publishing schemas, include both `$schema` (for validation) and `$id` (for identification).
+
+## Schema References (`$ref` and `$defs`)
+
+The `$ref` keyword allows you to reference reusable schema definitions, reducing duplication when the same model is used in multiple places. EasyTalk supports automatic `$ref` generation for nested models.
+
+### Why Use `$ref`?
+
+The `$ref` keyword:
+- Reduces schema duplication when the same model appears multiple times
+- Produces cleaner, more organized schemas
+- Improves schema readability and maintainability
+- Aligns with JSON Schema best practices for reusable definitions
+
+### Default Behavior (Inline Schemas)
+
+By default, EasyTalk inlines nested model schemas directly:
+
+```ruby
+class Address
+  include EasyTalk::Model
+  define_schema do
+    property :street, String
+    property :city, String
+  end
+end
+
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address
+  end
+end
+
+Person.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "address" => {
+#          "type" => "object",
+#          "properties" => {
+#            "street" => { "type" => "string" },
+#            "city" => { "type" => "string" }
+#          },
+#          ...
+#        }
+#      },
+#      ...
+#    }
+```
+
+### Enabling `$ref` References
+
+#### Global Configuration
+
+Enable `$ref` generation for all nested models:
+
+```ruby
+EasyTalk.configure do |config|
+  config.use_refs = true
+end
+```
+
+With this configuration, nested models are referenced via `$ref` and their definitions are placed in `$defs`:
+
+```ruby
+Person.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "address" => { "$ref" => "#/$defs/Address" }
+#      },
+#      "$defs" => {
+#        "Address" => {
+#          "type" => "object",
+#          "properties" => {
+#            "street" => { "type" => "string" },
+#            "city" => { "type" => "string" }
+#          },
+#          ...
+#        }
+#      },
+#      ...
+#    }
+```
+
+#### Per-Property Configuration
+
+You can also enable `$ref` for specific properties using the `ref: true` constraint:
+
+```ruby
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address, ref: true  # Use $ref for this property
+  end
+end
+```
+
+Or disable `$ref` for specific properties when it's enabled globally:
+
+```ruby
+EasyTalk.configure do |config|
+  config.use_refs = true
+end
+
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, Address, ref: false  # Inline this property despite global setting
+  end
+end
+```
+
+### Arrays of Models
+
+When using `$ref` with arrays of models, the `$ref` applies to the array items:
+
+```ruby
+EasyTalk.configure do |config|
+  config.use_refs = true
+end
+
+class Company
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :addresses, T::Array[Address]
+  end
+end
+
+Company.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "addresses" => {
+#          "type" => "array",
+#          "items" => { "$ref" => "#/$defs/Address" }
+#        }
+#      },
+#      "$defs" => {
+#        "Address" => { ... }
+#      },
+#      ...
+#    }
+```
+
+You can also use the per-property `ref` constraint with arrays:
+
+```ruby
+property :addresses, T::Array[Address], ref: true
+```
+
+### Nilable Models with `$ref`
+
+When using `$ref` with nilable model types, EasyTalk uses `anyOf` to combine the reference with the null type:
+
+```ruby
+EasyTalk.configure do |config|
+  config.use_refs = true
+end
+
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :address, T.nilable(Address)
+  end
+end
+
+Person.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "address" => {
+#          "anyOf" => [
+#            { "$ref" => "#/$defs/Address" },
+#            { "type" => "null" }
+#          ]
+#        }
+#      },
+#      "$defs" => {
+#        "Address" => { ... }
+#      },
+#      ...
+#    }
+```
+
+### Multiple References to the Same Model
+
+When the same model is used multiple times, it only appears once in `$defs`:
+
+```ruby
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :name, String
+    property :home_address, Address, ref: true
+    property :work_address, Address, ref: true
+    property :shipping_addresses, T::Array[Address], ref: true
+  end
+end
+
+Person.json_schema
+# => {
+#      "type" => "object",
+#      "properties" => {
+#        "name" => { "type" => "string" },
+#        "home_address" => { "$ref" => "#/$defs/Address" },
+#        "work_address" => { "$ref" => "#/$defs/Address" },
+#        "shipping_addresses" => {
+#          "type" => "array",
+#          "items" => { "$ref" => "#/$defs/Address" }
+#        }
+#      },
+#      "$defs" => {
+#        "Address" => { ... }  # Only defined once
+#      },
+#      ...
+#    }
+```
+
+### Combining `$ref` with Other Constraints
+
+You can add additional constraints alongside `$ref`:
+
+```ruby
+class Person
+  include EasyTalk::Model
+  define_schema do
+    property :address, Address, ref: true, description: "Primary address", title: "Main Address"
+  end
+end
+
+Person.json_schema["properties"]["address"]
+# => {
+#      "$ref" => "#/$defs/Address",
+#      "description" => "Primary address",
+#      "title" => "Main Address"
+#    }
+```
+
+### Interaction with `compose`
+
+When using `compose` with `T::AllOf`, `T::AnyOf`, or `T::OneOf`, the composed models are also placed in `$defs`:
+
+```ruby
+class Employee
+  include EasyTalk::Model
+  define_schema do
+    compose T::AllOf[Person, EmployeeDetails]
+    property :badge_number, String
+  end
+end
+```
+
+If you also have properties using `$ref`, both the composed models and property models will appear in `$defs`.
+
+### Best Practices
+
+1. **Use global configuration for consistency**: If you prefer `$ref` style, enable it globally rather than per-property.
+
+2. **Consider schema consumers**: Some JSON Schema validators and tools work better with inlined schemas, while others prefer `$ref`. Choose based on your use case.
+
+3. **Use `$ref` for frequently reused models**: If a model appears in many places, `$ref` reduces schema size and improves maintainability.
+
+4. **Keep inline for simple, single-use models**: For models used only once, inlining may be more readable.
+
+### Default Behavior
+
+By default, `use_refs` is set to `false`, meaning nested models are inlined. This maintains backward compatibility with previous versions of EasyTalk.
 
 ## JSON Schema Compatibility
 
