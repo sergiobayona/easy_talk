@@ -171,8 +171,8 @@ RSpec.describe 'Auto Validations' do
         end
 
         define_schema do
-          property :required_name, String
-          property :optional_name, String, optional: true
+          property :required_name, String, pattern: /\A\w+\z/
+          property :optional_name, String, pattern: /\A\w+\z/, optional: true
           property :nilable_name, T.nilable(String)
         end
       end

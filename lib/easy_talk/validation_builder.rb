@@ -136,7 +136,7 @@ module EasyTalk
       apply_format_validation(@constraints[:format]) if @constraints[:format]
 
       # Handle pattern (regex) constraints
-      @klass.validates @property_name, format: { with: Regexp.new(@constraints[:pattern]) } if @constraints[:pattern]
+      @klass.validates @property_name, format: { with: Regexp.new(@constraints[:pattern]) }, allow_nil: optional? if @constraints[:pattern]
 
       # Handle length constraints
       begin
