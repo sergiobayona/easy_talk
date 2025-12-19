@@ -368,11 +368,16 @@ company.employee_count = 100      # Additional property
 ```
 
 ### Property Naming
-You can configure the naming strategy for properties globally:
+You can configure the naming strategy for properties globally or per schema:
 
 ```ruby
 EasyTalk.configure do |config|
   config.property_naming_strategy = :snake_case  # Options: :identity, :snake_case, :camel_case, :pascal_case
+end
+
+define_schema do
+  property_naming_strategy :camel_case  # Overrides global setting for this schema
+  property :name, String
 end
 ```
 

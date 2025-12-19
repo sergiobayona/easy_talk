@@ -24,6 +24,7 @@ module EasyTalk
       @schema[:additional_properties] = false unless schema.key?(:additional_properties)
       @name = name
       @klass = nil # Initialize klass to nil
+      @property_naming_strategy = EasyTalk.configuration.property_naming_strategy
     end
 
     EasyTalk::KEYWORDS.each do |keyword|
@@ -38,7 +39,7 @@ module EasyTalk
     end
 
     def property(name, type, constraints = {}, &)
-      constraints[:as] ||= EasyTalk.configuration.property_naming_strategy.call(name)
+      constraints[:as] ||= @property_naming_strategy.call(name)
       validate_property_name(constraints[:as])
       @schema[:properties] ||= {}
 
@@ -54,7 +55,7 @@ module EasyTalk
       return if name.to_s.match?(/^[A-Za-z_][A-Za-z0-9_]*$/)
 
       message = "Invalid property name '#{name}'. Must start with letter/underscore " \
-                'and contain only letters, numbers, underscores'
+        'and contain only letters, numbers, underscores'
       raise InvalidPropertyNameError, message
     end
 
@@ -76,6 +77,10 @@ module EasyTalk
 
       # Call standard property method
       property(name, nilable_type, constraints)
+    end
+
+    def property_naming_strategy(strategy)
+      @property_naming_strategy = EasyTalk::NamingStrategies.derive_strategy(strategy)
     end
   end
 end

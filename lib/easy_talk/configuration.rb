@@ -34,13 +34,7 @@ module EasyTalk
     end
 
     def property_naming_strategy=(strategy)
-      @property_naming_strategy = if strategy.is_a?(Symbol)
-                                    "EasyTalk::NamingStrategies::#{strategy.to_s.upcase}".constantize
-                                  elsif strategy.is_a?(Proc)
-                                    strategy
-                                  else
-                                    raise ArgumentError, 'Invalid property naming strategy. Must be a Symbol or a Proc.'
-                                  end
+      @property_naming_strategy = EasyTalk::NamingStrategies.derive_strategy(strategy)
     end
   end
 
