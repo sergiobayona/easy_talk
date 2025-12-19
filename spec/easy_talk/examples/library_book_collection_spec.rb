@@ -15,8 +15,8 @@ RSpec.describe 'Library Book Collection' do
         title 'Book'
         property :title, String, description: 'The title of the book.'
         property :author, String, description: "The name of the book's author."
-        property :ISBN, String, pattern: '\A(\d{3}-?\d{10})\z', description: 'The International Standard Book Number.'
-        property :publicationYear, Integer, description: 'The year the book was published.'
+        property :isbn, String, pattern: '\A(\d{3}-?\d{10})\z', description: 'The International Standard Book Number.', as: :ISBN
+        property :publication_year, Integer, description: 'The year the book was published.'
       end
     end
   end
@@ -30,7 +30,7 @@ RSpec.describe 'Library Book Collection' do
       end
 
       define_schema do
-        property :ISSN, String, pattern: '\A\d{4}-\d{4}\z', description: 'The International Standard Serial Number for periodicals.'
+        property :issn, String, pattern: '\A\d{4}-\d{4}\z', description: 'The International Standard Serial Number for periodicals.', as: :ISSN
       end
     end
   end
@@ -82,6 +82,9 @@ RSpec.describe 'Library Book Collection' do
       ]
     }
   end
+
+  before { EasyTalk.configure { |config| config.property_naming_strategy = :camel_case } }
+  after { EasyTalk.configure { |config| config.property_naming_strategy = :identity } }
 
   it 'returns a json schema for the book class' do
     expect(book.json_schema).to include_json(expected_book_schema)

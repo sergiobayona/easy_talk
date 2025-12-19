@@ -99,8 +99,8 @@ module EasyTalk
         # Cache with a key based on property name and its full configuration
         @properties_cache ||= {}
 
-        properties_hash.each_with_object({}) do |(prop_name, prop_options), result|
-          property_name = prop_options.dig(:constraints, :as)&.to_sym || prop_name
+        properties_hash.each_with_object({}) do |(_prop_name, prop_options), result|
+          property_name = prop_options[:constraints].delete(:as).to_sym
           cache_key = [property_name, prop_options].hash
 
           # Use cache if the exact property and configuration have been processed before
