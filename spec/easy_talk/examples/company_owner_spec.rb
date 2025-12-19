@@ -22,8 +22,8 @@ RSpec.describe 'json for user model' do
       end
 
       define_schema do
-        property :first_name, String
-        property :last_name, String
+        property :first_name, String, as: :firstName
+        property :last_name, String, as: 'lastName'
         property :dob, String
       end
     end
@@ -51,17 +51,17 @@ RSpec.describe 'json for user model' do
           'title' => 'Owner',
           'description' => 'The company owner',
           'properties' => {
-            'first_name' => {
+            'firstName' => {
               'type' => 'string'
             },
-            'last_name' => {
+            'lastName' => {
               'type' => 'string'
             },
             'dob' => {
               'type' => 'string'
             }
           },
-          'required' => %w[first_name last_name dob]
+          'required' => %w[firstName lastName dob]
         }
       },
       'required' => %w[name owner]

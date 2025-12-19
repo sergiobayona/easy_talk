@@ -38,7 +38,7 @@ module EasyTalk
     end
 
     def property(name, type, constraints = {}, &)
-      validate_property_name(name)
+      validate_property_name(constraints[:as] || name)
       @schema[:properties] ||= {}
 
       if block_given?

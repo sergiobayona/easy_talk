@@ -12,7 +12,8 @@ module EasyTalk
       COMMON_OPTIONS = {
         title: { type: T.nilable(String), key: :title },
         description: { type: T.nilable(String), key: :description },
-        optional: { type: T.nilable(T::Boolean), key: :optional }
+        optional: { type: T.nilable(T::Boolean), key: :optional },
+        as: { type: T.nilable(T.any(String, Symbol)), key: :as }
       }.freeze
 
       attr_reader :property_name, :schema, :options
