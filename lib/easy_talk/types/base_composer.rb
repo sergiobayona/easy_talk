@@ -3,7 +3,7 @@
 module EasyTalk
   module Types
     # no-doc
-    class BaseComposer
+    class BaseComposer < T::Types::Base
       extend T::Sig
       extend T::Generic
 

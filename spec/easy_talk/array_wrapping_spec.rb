@@ -20,6 +20,34 @@ RSpec.describe 'Array wrapping' do
     end
   end
 
+  let(:phone_number) do
+    Class.new do
+      include EasyTalk::Model
+
+      def self.name
+        'PhoneNumber'
+      end
+
+      define_schema do
+        property :phone_number, String, format: 'phone'
+      end
+    end
+  end
+
+  let(:email_address) do
+    Class.new do
+      include EasyTalk::Model
+
+      def self.name
+        'EmailAddress'
+      end
+
+      define_schema do
+        property :email, String, format: 'email'
+      end
+    end
+  end
+
   let(:addresses) do
     Class.new do
       include EasyTalk::Model
@@ -30,14 +58,45 @@ RSpec.describe 'Array wrapping' do
 
       define_schema do
         property :addresses, T::Array[Address]
+        property :details, T::Array[T::OneOf[PhoneNumber, EmailAddress]]
+        property :detail_ref, T::OneOf[PhoneNumber, EmailAddress], ref: true
+        property :details_ref, T::Array[T::OneOf[PhoneNumber, EmailAddress]], ref: true
       end
     end
   end
 
   it 'wraps an array in an object' do
     stub_const('Address', address)
+    stub_const('PhoneNumber', phone_number)
+    stub_const('EmailAddress', email_address)
     stub_const('Addresses', addresses)
-    expect(Addresses.json_schema).to eq({ 'type' => 'object',
+    puts JSON.pretty_generate(Addresses.json_schema)
+    expect(Addresses.json_schema).to eq({
+                                          '$defs' => {
+                                            'PhoneNumber' => {
+                                              'type' => 'object',
+                                              'properties' => {
+                                                'phone_number' => {
+                                                  'format' => 'phone',
+                                                  'type' => 'string'
+                                                }
+                                              },
+                                              'required' => ['phone_number'],
+                                              'additionalProperties' => false
+                                            },
+                                            'EmailAddress' =>  {
+                                              'type' => 'object',
+                                              'properties' => {
+                                                'email' => {
+                                                  'format' => 'email',
+                                                  'type' => 'string'
+                                                }
+                                              },
+                                              'required' => ['email'],
+                                              'additionalProperties' => false
+                                            }
+                                          },
+                                          'type' => 'object',
                                           'properties' => {
                                             'addresses' => {
                                               'type' => 'array',
@@ -60,9 +119,64 @@ RSpec.describe 'Array wrapping' do
                                                 'additionalProperties' => false,
                                                 'required' => %w[street city state zip]
                                               }
+                                            },
+                                            'details' => {
+                                              'type' => 'array',
+                                              'items' => {
+                                                'type' => 'object',
+                                                'oneOf' => [
+                                                  {
+                                                    'type' => 'object',
+                                                    'properties' => {
+                                                      'phone_number' => {
+                                                        'format' => 'phone',
+                                                        'type' => 'string'
+                                                      }
+                                                    },
+                                                    'required' => ['phone_number'],
+                                                    'additionalProperties' => false
+                                                  },
+                                                  {
+                                                    'type' => 'object',
+                                                    'properties' => {
+                                                      'email' => {
+                                                        'format' => 'email',
+                                                        'type' => 'string'
+                                                      }
+                                                    },
+                                                    'required' => ['email'],
+                                                    'additionalProperties' => false
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            'details_ref' => {
+                                              'type' => 'array',
+                                              'items' => {
+                                                'type' => 'object',
+                                                'oneOf' => [
+                                                  {
+                                                    '$ref' => '#/$defs/PhoneNumber'
+                                                  },
+                                                  {
+                                                    '$ref' => '#/$defs/EmailAddress'
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            'detail_ref' => {
+                                              'type' => 'object',
+                                              'oneOf' => [
+                                                {
+                                                  '$ref' => '#/$defs/PhoneNumber'
+                                                },
+                                                {
+                                                  '$ref' => '#/$defs/EmailAddress'
+                                                }
+                                              ]
                                             }
                                           },
                                           'additionalProperties' => false,
-                                          'required' => ['addresses'] })
+                                          'required' => ['addresses', 'details', 'detail_ref', 'details_ref'] })
   end
 end

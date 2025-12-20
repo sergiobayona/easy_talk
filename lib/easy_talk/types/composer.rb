@@ -16,6 +16,10 @@ module EasyTalk
         self.class.name
       end
 
+      def to_s
+        name.to_s
+      end
+
       # Represents a composition type that allows all of the specified types.
       class AllOf < Composer
         def self.name

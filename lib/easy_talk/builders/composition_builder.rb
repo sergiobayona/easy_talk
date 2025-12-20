@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'collection_helpers'
+require_relative '../ref_helper'
 
 module EasyTalk
   module Builders
@@ -15,17 +16,18 @@ module EasyTalk
         'OneOfBuilder' => 'oneOf'
       }.freeze
 
-      sig { params(name: Symbol, type: T.untyped, _constraints: Hash).void }
+      sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
       # Initializes a new instance of the CompositionBuilder class.
       #
       # @param name [Symbol] The name of the composition.
       # @param type [Class] The type of the composition.
-      # @param _constraints [Hash] The constraints for the composition (not used in this method).
-      def initialize(name, type, _constraints)
+      # @param constraints [Hash] The constraints for the composition.
+      def initialize(name, type, constraints)
         @composer_type = self.class.name.split('::').last
         @name = name
         @type = type
         @context = {}
+        @constraints = constraints
       end
 
       # Builds the composed JSON schema.
@@ -50,7 +52,9 @@ module EasyTalk
       # @return [Array<Hash>] The array of schemas.
       def schemas
         items.map do |type|
-          if type.respond_to?(:schema)
+          if EasyTalk::RefHelper.should_use_ref?(type, @constraints)
+            EasyTalk::RefHelper.build_ref_schema(type, @constraints)
+          elsif type.respond_to?(:schema)
             type.schema
           else
             # Map Float type to 'number' in JSON Schema
