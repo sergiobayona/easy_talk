@@ -84,7 +84,7 @@ RSpec.describe 'Array wrapping' do
                                               'required' => ['phone_number'],
                                               'additionalProperties' => false
                                             },
-                                            'EmailAddress' =>  {
+                                            'EmailAddress' => {
                                               'type' => 'object',
                                               'properties' => {
                                                 'email' => {
@@ -177,6 +177,7 @@ RSpec.describe 'Array wrapping' do
                                             }
                                           },
                                           'additionalProperties' => false,
-                                          'required' => ['addresses', 'details', 'detail_ref', 'details_ref'] })
+                                          'required' => %w[addresses details detail_ref details_ref]
+                                        })
   end
 end

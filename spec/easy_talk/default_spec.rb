@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe 'default values' do
@@ -23,7 +24,7 @@ RSpec.describe 'default values' do
 
     expect(instance.default_enum).to eq('two')
     expect(instance.default_string).to eq('foo')
-    expect(instance.default_boolean).to eq(false)
+    expect(instance.default_boolean).to be(false)
   end
 
   it 'preserves explicitly passed nil values' do
@@ -32,7 +33,7 @@ RSpec.describe 'default values' do
     expect(instance.default_string).to be_nil
     expect(instance.default_enum).to be_nil
     # Boolean not passed, so default applies
-    expect(instance.default_boolean).to eq(false)
+    expect(instance.default_boolean).to be(false)
   end
 
   it 'applies defaults only for unprovided attributes' do
@@ -40,7 +41,7 @@ RSpec.describe 'default values' do
 
     expect(instance.default_string).to eq('custom')
     expect(instance.default_enum).to eq('two')
-    expect(instance.default_boolean).to eq(false)
+    expect(instance.default_boolean).to be(false)
   end
 
   it 'handles string keys in attributes hash' do
@@ -49,7 +50,6 @@ RSpec.describe 'default values' do
     expect(instance.default_string).to be_nil
     # Other defaults still apply
     expect(instance.default_enum).to eq('two')
-    expect(instance.default_boolean).to eq(false)
+    expect(instance.default_boolean).to be(false)
   end
 end
-

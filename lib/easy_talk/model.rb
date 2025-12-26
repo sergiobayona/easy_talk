@@ -48,7 +48,7 @@ module EasyTalk
       def initialize(attributes = {})
         @additional_properties = {}
         # Normalize keys to symbols to track provided attributes
-        provided_keys = attributes.keys.map(&:to_sym).to_set
+        provided_keys = attributes.keys.to_set(&:to_sym)
 
         super # Perform initial mass assignment
 

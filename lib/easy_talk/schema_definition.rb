@@ -55,7 +55,7 @@ module EasyTalk
       return if name.to_s.match?(/^[A-Za-z_][A-Za-z0-9_]*$/)
 
       message = "Invalid property name '#{name}'. Must start with letter/underscore " \
-        'and contain only letters, numbers, underscores'
+                'and contain only letters, numbers, underscores'
       raise InvalidPropertyNameError, message
     end
 
