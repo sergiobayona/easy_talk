@@ -162,7 +162,10 @@ module EasyTalk
       }
 
       config = format_configs[format.to_s]
-      @klass.validates @property_name, format: config if config
+      return unless config
+
+      config[:allow_nil] = optional? || nilable_type?
+      @klass.validates @property_name, format: config
     end
 
     # Validate integer-specific constraints

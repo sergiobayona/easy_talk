@@ -214,4 +214,57 @@ RSpec.describe 'Auto Validations' do
       expect(instance.errors[:required_enum]).not_to be_empty
     end
   end
+
+  describe 'optional properties with format validation' do
+    let(:format_class) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name
+          'FormatProps'
+        end
+
+        define_schema do
+          property :required_email, String, format: 'email'
+          property :optional_email, String, format: 'email', optional: true
+          property :nilable_email, T.nilable(String), format: 'email'
+        end
+      end
+    end
+
+    it 'does not allow nil for required email' do
+      instance = format_class.new(required_email: nil)
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:required_email]).to include("can't be blank")
+    end
+
+    it 'allows nil for optional email' do
+      instance = format_class.new(required_email: 'test@example.com', optional_email: nil)
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:optional_email]).to be_empty
+    end
+
+    it 'allows nil for nilable email' do
+      instance = format_class.new(required_email: 'test@example.com', nilable_email: nil)
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:nilable_email]).to be_empty
+    end
+
+    it 'validates format when optional email has a value' do
+      instance = format_class.new(required_email: 'test@example.com', optional_email: 'not-an-email')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:optional_email]).to include('must be a valid email address')
+    end
+
+    it 'validates format when nilable email has a value' do
+      instance = format_class.new(required_email: 'test@example.com', nilable_email: 'not-an-email')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:nilable_email]).to include('must be a valid email address')
+    end
+  end
 end
