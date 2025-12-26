@@ -25,5 +25,31 @@ RSpec.describe 'default values' do
     expect(instance.default_string).to eq('foo')
     expect(instance.default_boolean).to eq(false)
   end
+
+  it 'preserves explicitly passed nil values' do
+    instance = default_class.new(default_string: nil, default_enum: nil)
+
+    expect(instance.default_string).to be_nil
+    expect(instance.default_enum).to be_nil
+    # Boolean not passed, so default applies
+    expect(instance.default_boolean).to eq(false)
+  end
+
+  it 'applies defaults only for unprovided attributes' do
+    instance = default_class.new(default_string: 'custom')
+
+    expect(instance.default_string).to eq('custom')
+    expect(instance.default_enum).to eq('two')
+    expect(instance.default_boolean).to eq(false)
+  end
+
+  it 'handles string keys in attributes hash' do
+    instance = default_class.new('default_string' => nil)
+
+    expect(instance.default_string).to be_nil
+    # Other defaults still apply
+    expect(instance.default_enum).to eq('two')
+    expect(instance.default_boolean).to eq(false)
+  end
 end
 
