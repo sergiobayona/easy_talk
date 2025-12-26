@@ -310,7 +310,8 @@ module EasyTalk
     def apply_enum_validation
       @klass.validates @property_name, inclusion: {
         in: @constraints[:enum],
-        message: "must be one of: #{@constraints[:enum].join(', ')}"
+        message: "must be one of: #{@constraints[:enum].join(', ')}",
+        allow_nil: optional?
       }
     end
 
