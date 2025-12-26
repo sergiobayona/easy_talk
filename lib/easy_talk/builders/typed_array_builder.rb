@@ -45,7 +45,11 @@ module EasyTalk
       def inner_type
         return unless type.is_a?(T::Types::TypedArray)
 
-        type.type.raw_type
+        if type.type.is_a?(EasyTalk::Types::Composer)
+          type.type
+        else
+          type.type.raw_type
+        end
       end
 
       sig { void }

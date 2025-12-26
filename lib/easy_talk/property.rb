@@ -124,8 +124,8 @@ module EasyTalk
     def build
       if nilable_type?
         build_nilable_schema
-      elsif should_use_ref?
-        build_ref_schema
+      elsif RefHelper.should_use_ref?(type, constraints)
+        RefHelper.build_ref_schema(type, constraints)
       elsif builder
         args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
         builder.new(*args).build
@@ -203,7 +203,7 @@ module EasyTalk
       return { type: 'null' } unless actual_type
 
       # Check if the underlying type is an EasyTalk model that should use $ref
-      if easytalk_model?(actual_type) && should_use_ref_for_type?(actual_type)
+      if RefHelper.should_use_ref_for_type?(actual_type, constraints)
         # Use anyOf with $ref and null type
         ref_constraints = constraints.except(:ref, :optional)
         schema = { anyOf: [{ '$ref': actual_type.ref_template }, { type: 'null' }] }
@@ -217,55 +217,6 @@ module EasyTalk
       non_nil_schema.merge(
         type: [non_nil_schema[:type], 'null'].compact
       )
-    end
-
-    # Determines if $ref should be used for the current type.
-    #
-    # @return [Boolean] true if $ref should be used, false otherwise
-    # @api private
-    def should_use_ref?
-      return false unless easytalk_model?(type)
-
-      should_use_ref_for_type?(type)
-    end
-
-    # Determines if $ref should be used for a given type based on constraints and config.
-    #
-    # @param check_type [Class] The type to check
-    # @return [Boolean] true if $ref should be used, false otherwise
-    # @api private
-    def should_use_ref_for_type?(check_type)
-      return false unless easytalk_model?(check_type)
-
-      # Per-property constraint takes precedence
-      return constraints[:ref] if constraints.key?(:ref)
-
-      # Fall back to global configuration
-      EasyTalk.configuration.use_refs
-    end
-
-    # Checks if a type is an EasyTalk model.
-    #
-    # @param check_type [Object] The type to check
-    # @return [Boolean] true if the type is an EasyTalk model
-    # @api private
-    def easytalk_model?(check_type)
-      check_type.is_a?(Class) &&
-        check_type.respond_to?(:schema) &&
-        check_type.respond_to?(:ref_template) &&
-        defined?(EasyTalk::Model) &&
-        check_type.include?(EasyTalk::Model)
-    end
-
-    # Builds a $ref schema for an EasyTalk model.
-    #
-    # @return [Hash] A schema with $ref pointing to the model's definition
-    # @api private
-    def build_ref_schema
-      # Remove ref and optional from constraints as they're not JSON Schema keywords
-      ref_constraints = constraints.except(:ref, :optional)
-      schema = { '$ref': type.ref_template }
-      ref_constraints.empty? ? schema : schema.merge(ref_constraints)
     end
   end
 end

@@ -43,7 +43,7 @@ module EasyTalk
       # Builds the schema object based on the provided options.
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
-        @valid_options.each_with_object(schema) do |(constraint_name, value), obj|
+        @valid_options.except(:ref).each_with_object(schema) do |(constraint_name, value), obj|
           next if @options[constraint_name].nil?
 
           # Use our centralized validation

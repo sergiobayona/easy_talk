@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'base_builder'
+require_relative '../model_helper'
 
 module EasyTalk
   module Builders
@@ -166,10 +167,11 @@ module EasyTalk
         # Check if this type should use $ref
         if should_collect_ref?(prop_type, constraints)
           @ref_models.add(prop_type)
+        elsif prop_type.is_a?(EasyTalk::Types::Composer)
+          collect_ref_models(prop_type.items, constraints)
         # Handle typed arrays with EasyTalk model items
-        elsif typed_array_with_model?(prop_type)
-          inner_type = prop_type.type.raw_type
-          @ref_models.add(inner_type) if should_collect_ref?(inner_type, constraints)
+        elsif typed_array?(prop_type)
+          extract_inner_types(prop_type).each { |inner_type| collect_ref_models(inner_type, constraints) }
         # Handle nilable types
         elsif nilable_with_model?(prop_type)
           actual_type = T::Utils::Nilable.get_underlying_type(prop_type)
@@ -181,7 +183,7 @@ module EasyTalk
       # Determines if a type should be collected for $ref based on config and constraints.
       #
       def should_collect_ref?(check_type, constraints)
-        return false unless easytalk_model?(check_type)
+        return false unless ModelHelper.easytalk_model?(check_type)
 
         # Per-property constraint takes precedence
         return constraints[:ref] if constraints.key?(:ref)
@@ -190,25 +192,18 @@ module EasyTalk
         EasyTalk.configuration.use_refs
       end
 
-      ##
-      # Checks if a type is an EasyTalk model.
-      #
-      def easytalk_model?(check_type)
-        check_type.is_a?(Class) &&
-          check_type.respond_to?(:schema) &&
-          check_type.respond_to?(:ref_template) &&
-          defined?(EasyTalk::Model) &&
-          check_type.include?(EasyTalk::Model)
+      def typed_array?(prop_type)
+        prop_type.is_a?(T::Types::TypedArray)
       end
 
-      ##
-      # Checks if type is a typed array containing an EasyTalk model.
-      #
-      def typed_array_with_model?(prop_type)
-        return false unless prop_type.is_a?(T::Types::TypedArray)
+      def extract_inner_types(prop_type)
+        return [] unless typed_array?(prop_type)
 
-        inner_type = prop_type.type.raw_type
-        easytalk_model?(inner_type)
+        if prop_type.type.is_a?(EasyTalk::Types::Composer)
+          prop_type.type.items
+        else
+          [prop_type.type.raw_type]
+        end
       end
 
       ##
@@ -220,7 +215,7 @@ module EasyTalk
         return false unless prop_type.types.any? { |t| t.raw_type == NilClass }
 
         actual_type = T::Utils::Nilable.get_underlying_type(prop_type)
-        easytalk_model?(actual_type)
+        ModelHelper.easytalk_model?(actual_type)
       end
 
       ##
