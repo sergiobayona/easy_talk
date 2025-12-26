@@ -60,6 +60,10 @@ module EasyTalk
           defined_type = prop_definition[:type]
           current_value = public_send(prop_name)
           nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
+          default_value = prop_definition.dig(:constraints, :default)
+          if current_value.nil? && !default_value.nil?
+            public_send("#{prop_name}=", default_value)
+          end
 
           next if nilable_type && current_value.nil?
 
