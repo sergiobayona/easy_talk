@@ -47,6 +47,9 @@ module EasyTalk
     module InstanceMethods
       def initialize(attributes = {})
         @additional_properties = {}
+        # Normalize keys to symbols to track provided attributes
+        provided_keys = attributes.keys.map(&:to_sym).to_set
+
         super # Perform initial mass assignment
 
         # After initial assignment, instantiate nested EasyTalk::Model objects
@@ -58,12 +61,16 @@ module EasyTalk
         (schema_def.schema[:properties] || {}).each do |prop_name, prop_definition|
           # Get the defined type and the currently assigned value
           defined_type = prop_definition[:type]
-          current_value = public_send(prop_name)
           nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
-          default_value = prop_definition.dig(:constraints, :default)
-          if current_value.nil? && !default_value.nil?
-            public_send("#{prop_name}=", default_value)
+
+          # Only apply default if attribute was NOT provided at all
+          unless provided_keys.include?(prop_name)
+            default_value = prop_definition.dig(:constraints, :default)
+            public_send("#{prop_name}=", default_value) unless default_value.nil?
           end
+
+          # Re-read current_value after potential default assignment
+          current_value = public_send(prop_name)
 
           next if nilable_type && current_value.nil?
 
