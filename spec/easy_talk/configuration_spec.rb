@@ -17,6 +17,10 @@ RSpec.describe EasyTalk::Configuration do
     it 'defaults auto_validations to true' do
       expect(config.auto_validations).to be true
     end
+
+    it 'defaults property_naming_strategy to identity' do
+      expect(config.property_naming_strategy).to eq(EasyTalk::NamingStrategies::IDENTITY)
+    end
   end
 end
 

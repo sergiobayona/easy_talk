@@ -367,6 +367,27 @@ company.location = "New York"     # Additional property
 company.employee_count = 100      # Additional property
 ```
 
+### Property Naming
+You can configure the naming strategy for properties globally or per schema:
+
+```ruby
+EasyTalk.configure do |config|
+  config.property_naming_strategy = :snake_case  # Options: :identity, :snake_case, :camel_case, :pascal_case
+end
+
+define_schema do
+  property_naming_strategy :camel_case  # Overrides global setting for this schema
+  property :name, String
+end
+```
+
+This affects how property names are represented in the generated JSON Schema. 
+Additionally, names can be overridden per property:
+
+```ruby
+property :first_name, String, as: "firstName"  # Overrides global naming strategy
+```
+
 ## Schema Composition
 
 ### Using T::AnyOf
@@ -596,6 +617,7 @@ EasyTalk.configure do |config|
                                                # Options: :none, :draft202012, :draft201909, :draft7, :draft6, :draft4
   config.schema_id = nil                       # Base URI for $id keyword (nil = no $id)
   config.use_refs = false                      # Use $ref for nested models instead of inlining
+  config.property_naming_strategy = :camel_case # Options: :identity (default), :snake_case, :camel_case, :pascal_case
 end
 ```
 
