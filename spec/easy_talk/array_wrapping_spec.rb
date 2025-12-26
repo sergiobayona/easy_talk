@@ -70,7 +70,7 @@ RSpec.describe 'Array wrapping' do
     stub_const('PhoneNumber', phone_number)
     stub_const('EmailAddress', email_address)
     stub_const('Addresses', addresses)
-    puts JSON.pretty_generate(Addresses.json_schema)
+    JSON.pretty_generate(Addresses.json_schema)
     expect(Addresses.json_schema).to eq({
                                           '$defs' => {
                                             'PhoneNumber' => {
