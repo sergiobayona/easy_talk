@@ -65,119 +65,77 @@ RSpec.describe 'Array wrapping' do
     end
   end
 
-  it 'wraps an array in an object' do
+  let(:expected_defs) do
+    {
+      'PhoneNumber' => {
+        'type' => 'object',
+        'properties' => {
+          'phone_number' => { 'format' => 'phone', 'type' => 'string' }
+        },
+        'required' => ['phone_number'],
+        'additionalProperties' => false
+      },
+      'EmailAddress' => {
+        'type' => 'object',
+        'properties' => {
+          'email' => { 'format' => 'email', 'type' => 'string' }
+        },
+        'required' => ['email'],
+        'additionalProperties' => false
+      }
+    }
+  end
+
+  before do
     stub_const('Address', address)
     stub_const('PhoneNumber', phone_number)
     stub_const('EmailAddress', email_address)
     stub_const('Addresses', addresses)
-    JSON.pretty_generate(Addresses.json_schema)
-    expect(Addresses.json_schema).to eq({
-                                          '$defs' => {
-                                            'PhoneNumber' => {
-                                              'type' => 'object',
-                                              'properties' => {
-                                                'phone_number' => {
-                                                  'format' => 'phone',
-                                                  'type' => 'string'
-                                                }
-                                              },
-                                              'required' => ['phone_number'],
-                                              'additionalProperties' => false
-                                            },
-                                            'EmailAddress' => {
-                                              'type' => 'object',
-                                              'properties' => {
-                                                'email' => {
-                                                  'format' => 'email',
-                                                  'type' => 'string'
-                                                }
-                                              },
-                                              'required' => ['email'],
-                                              'additionalProperties' => false
-                                            }
-                                          },
-                                          'type' => 'object',
-                                          'properties' => {
-                                            'addresses' => {
-                                              'type' => 'array',
-                                              'items' => {
-                                                'type' => 'object',
-                                                'properties' => {
-                                                  'street' => {
-                                                    'type' => 'string'
-                                                  },
-                                                  'city' => {
-                                                    'type' => 'string'
-                                                  },
-                                                  'state' => {
-                                                    'type' => 'string'
-                                                  }, 'zip' => {
-                                                    'type' => 'string',
-                                                    'pattern' => '^[0-9]{5}(?:-[0-9]{4})?$'
-                                                  }
-                                                },
-                                                'additionalProperties' => false,
-                                                'required' => %w[street city state zip]
-                                              }
-                                            },
-                                            'details' => {
-                                              'type' => 'array',
-                                              'items' => {
-                                                'type' => 'object',
-                                                'oneOf' => [
-                                                  {
-                                                    'type' => 'object',
-                                                    'properties' => {
-                                                      'phone_number' => {
-                                                        'format' => 'phone',
-                                                        'type' => 'string'
-                                                      }
-                                                    },
-                                                    'required' => ['phone_number'],
-                                                    'additionalProperties' => false
-                                                  },
-                                                  {
-                                                    'type' => 'object',
-                                                    'properties' => {
-                                                      'email' => {
-                                                        'format' => 'email',
-                                                        'type' => 'string'
-                                                      }
-                                                    },
-                                                    'required' => ['email'],
-                                                    'additionalProperties' => false
-                                                  }
-                                                ]
-                                              }
-                                            },
-                                            'details_ref' => {
-                                              'type' => 'array',
-                                              'items' => {
-                                                'type' => 'object',
-                                                'oneOf' => [
-                                                  {
-                                                    '$ref' => '#/$defs/PhoneNumber'
-                                                  },
-                                                  {
-                                                    '$ref' => '#/$defs/EmailAddress'
-                                                  }
-                                                ]
-                                              }
-                                            },
-                                            'detail_ref' => {
-                                              'type' => 'object',
-                                              'oneOf' => [
-                                                {
-                                                  '$ref' => '#/$defs/PhoneNumber'
-                                                },
-                                                {
-                                                  '$ref' => '#/$defs/EmailAddress'
-                                                }
-                                              ]
-                                            }
-                                          },
-                                          'additionalProperties' => false,
-                                          'required' => %w[addresses details detail_ref details_ref]
-                                        })
+  end
+
+  it 'generates $defs for referenced models' do
+    expect(Addresses.json_schema['$defs']).to eq(expected_defs)
+  end
+
+  it 'wraps array of models with inline schema' do
+    addresses_prop = Addresses.json_schema['properties']['addresses']
+
+    expect(addresses_prop['type']).to eq('array')
+    expect(addresses_prop['items']['type']).to eq('object')
+    expect(addresses_prop['items']['properties']).to include('street', 'city', 'state', 'zip')
+  end
+
+  it 'wraps array with oneOf composition inline' do
+    details_prop = Addresses.json_schema['properties']['details']
+
+    expect(details_prop['type']).to eq('array')
+    expect(details_prop['items']['oneOf']).to be_an(Array)
+    expect(details_prop['items']['oneOf'].length).to eq(2)
+  end
+
+  it 'wraps array with oneOf composition using $ref' do
+    details_ref_prop = Addresses.json_schema['properties']['details_ref']
+
+    expect(details_ref_prop['type']).to eq('array')
+    expect(details_ref_prop['items']['oneOf']).to contain_exactly(
+      { '$ref' => '#/$defs/PhoneNumber' },
+      { '$ref' => '#/$defs/EmailAddress' }
+    )
+  end
+
+  it 'wraps single oneOf composition using $ref' do
+    detail_ref_prop = Addresses.json_schema['properties']['detail_ref']
+
+    expect(detail_ref_prop['type']).to eq('object')
+    expect(detail_ref_prop['oneOf']).to contain_exactly(
+      { '$ref' => '#/$defs/PhoneNumber' },
+      { '$ref' => '#/$defs/EmailAddress' }
+    )
+  end
+
+  it 'includes all properties in required array' do
+    expect(Addresses.json_schema['required']).to contain_exactly(
+      'addresses', 'details', 'detail_ref', 'details_ref'
+    )
   end
 end

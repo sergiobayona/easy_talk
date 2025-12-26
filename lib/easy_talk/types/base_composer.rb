@@ -16,6 +16,7 @@ module EasyTalk
       #
       # @param args [Array] the items to be assigned to the instance variable @items
       def initialize(*args)
+        super()
         @items = args
       end
     end
