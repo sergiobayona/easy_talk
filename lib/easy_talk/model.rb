@@ -10,6 +10,7 @@ require 'active_model'
 require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 require_relative 'validation_builder'
+require_relative 'error_formatter'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -41,6 +42,7 @@ module EasyTalk
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
       base.include(InstanceMethods)
+      base.include(ErrorFormatter::InstanceMethods)
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
