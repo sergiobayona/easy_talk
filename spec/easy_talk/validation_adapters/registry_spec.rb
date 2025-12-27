@@ -7,10 +7,8 @@ RSpec.describe EasyTalk::ValidationAdapters::Registry do
   let(:original_adapters) { described_class.adapters.dup }
 
   after do
+    # reset! now repopulates default adapters automatically
     described_class.reset!
-    # Re-register the default adapters
-    described_class.register(:active_model, EasyTalk::ValidationAdapters::ActiveModelAdapter)
-    described_class.register(:none, EasyTalk::ValidationAdapters::NoneAdapter)
   end
 
   describe '.register' do
@@ -100,9 +98,38 @@ RSpec.describe EasyTalk::ValidationAdapters::Registry do
   end
 
   describe '.reset!' do
-    it 'clears all registered adapters' do
+    it 'clears custom adapters and repopulates defaults' do
+      custom_adapter = Class.new(EasyTalk::ValidationAdapters::Base) do
+        def apply_validations; end
+      end
+      described_class.register(:custom, custom_adapter)
+
       described_class.reset!
-      expect(described_class.adapters).to be_empty
+
+      expect(described_class.registered?(:custom)).to be false
+      expect(described_class.registered?(:active_model)).to be true
+      expect(described_class.registered?(:none)).to be true
+    end
+
+    it 'restores default adapters to their original classes' do
+      described_class.reset!
+
+      expect(described_class.resolve(:active_model))
+        .to eq(EasyTalk::ValidationAdapters::ActiveModelAdapter)
+      expect(described_class.resolve(:none))
+        .to eq(EasyTalk::ValidationAdapters::NoneAdapter)
+    end
+  end
+
+  describe '.register_default_adapters' do
+    it 'registers the active_model and none adapters' do
+      # Clear registry manually without repopulating
+      described_class.instance_variable_set(:@adapters, nil)
+
+      described_class.register_default_adapters
+
+      expect(described_class.registered?(:active_model)).to be true
+      expect(described_class.registered?(:none)).to be true
     end
   end
 end
