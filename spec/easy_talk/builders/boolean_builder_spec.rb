@@ -58,7 +58,7 @@ RSpec.describe EasyTalk::Builders::BooleanBuilder do
       it 'raises ArgumentError for unknown constraints' do
         expect do
           described_class.new(:active, invalid_option: 'value').build
-        end.to raise_error(EasyTalk::UnknownOptionError, "Unknown option 'invalid_option' for property 'active'. Valid options are: title, description, optional, as, enum, default.")
+        end.to raise_error(EasyTalk::UnknownOptionError, "Unknown option 'invalid_option' for property 'active'. Valid options are: title, description, optional, as, validate, enum, default.")
       end
 
       it 'raises TypeError when enum contains non-boolean values' do

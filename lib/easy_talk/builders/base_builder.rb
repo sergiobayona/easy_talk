@@ -13,7 +13,8 @@ module EasyTalk
         title: { type: T.nilable(String), key: :title },
         description: { type: T.nilable(String), key: :description },
         optional: { type: T.nilable(T::Boolean), key: :optional },
-        as: { type: T.nilable(T.any(String, Symbol)), key: :as }
+        as: { type: T.nilable(T.any(String, Symbol)), key: :as },
+        validate: { type: T.nilable(T::Boolean), key: :validate }
       }.freeze
 
       attr_reader :property_name, :schema, :options
