@@ -225,14 +225,34 @@ module EasyTalk
 
       # Define the schema for the model using the provided block.
       #
+      # @param options [Hash] Options for schema definition
+      # @option options [Boolean, Symbol, Class] :validations Controls validation behavior:
+      #   - true: Enable validations using the configured adapter (default behavior)
+      #   - false: Disable validations for this model
+      #   - :none: Use the NoneAdapter (no validations)
+      #   - :active_model: Use the ActiveModelAdapter
+      #   - CustomAdapter: Use a custom adapter class
       # @yield The block to define the schema.
       # @raise [ArgumentError] If the class does not have a name.
-      def define_schema(&)
+      #
+      # @example Disable validations for a model
+      #   define_schema(validations: false) do
+      #     property :name, String
+      #   end
+      #
+      # @example Use a custom adapter
+      #   define_schema(validations: MyCustomAdapter) do
+      #     property :name, String
+      #   end
+      def define_schema(options = {}, &)
         raise ArgumentError, 'The class must have a name' unless name.present?
 
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.klass = self # Pass the model class to the schema definition
         @schema_definition.instance_eval(&)
+
+        # Store validation options for this model
+        @validation_options = normalize_validation_options(options)
 
         # Define accessors immediately based on schema_definition
         defined_properties = (@schema_definition.schema[:properties] || {}).keys
@@ -241,19 +261,62 @@ module EasyTalk
         # Track which properties have had validations applied
         @validated_properties ||= Set.new
 
-        # Apply auto-validations immediately after definition
-        if EasyTalk.configuration.auto_validations
-          (@schema_definition.schema[:properties] || {}).each do |prop_name, prop_def|
-            # Only apply validations if they haven't been applied yet
-            unless @validated_properties.include?(prop_name)
-              ValidationBuilder.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
-              @validated_properties.add(prop_name)
-            end
-          end
-        end
+        # Apply validations using the adapter system
+        apply_schema_validations
 
         @schema_definition
       end
+
+      private
+
+      # Normalize validation options from various input formats.
+      #
+      # @param options [Hash] The options hash from define_schema
+      # @return [Hash] Normalized options with :enabled and :adapter keys
+      def normalize_validation_options(options)
+        validations = options.fetch(:validations, nil)
+
+        case validations
+        when nil
+          # Use global configuration
+          { enabled: EasyTalk.configuration.auto_validations,
+            adapter: EasyTalk.configuration.validation_adapter }
+        when false
+          # Explicitly disabled
+          { enabled: false, adapter: :none }
+        when true
+          # Explicitly enabled with configured adapter
+          { enabled: true, adapter: EasyTalk.configuration.validation_adapter }
+        when Symbol, Class
+          # Specific adapter specified
+          { enabled: true, adapter: validations }
+        else
+          raise ArgumentError, "Invalid validations option: #{validations.inspect}. " \
+                               "Expected true, false, Symbol, or Class."
+        end
+      end
+
+      # Apply validations to all schema properties using the configured adapter.
+      #
+      # @return [void]
+      def apply_schema_validations
+        return unless @validation_options[:enabled]
+
+        adapter = ValidationAdapters::Registry.resolve(@validation_options[:adapter])
+
+        (@schema_definition.schema[:properties] || {}).each do |prop_name, prop_def|
+          # Skip if already validated
+          next if @validated_properties.include?(prop_name)
+
+          # Skip if property has validate: false
+          next if prop_def[:constraints][:validate] == false
+
+          adapter.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
+          @validated_properties.add(prop_name)
+        end
+      end
+
+      public
 
       # Returns the unvalidated schema definition for the model.
       #

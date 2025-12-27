@@ -14,13 +14,14 @@ module EasyTalk
     }.freeze
 
     attr_accessor :default_additional_properties, :nilable_is_optional, :auto_validations, :schema_version, :schema_id,
-                  :use_refs
+                  :use_refs, :validation_adapter
     attr_reader :property_naming_strategy
 
     def initialize
       @default_additional_properties = false
       @nilable_is_optional = false
       @auto_validations = true
+      @validation_adapter = :active_model
       @schema_version = :none
       @schema_id = nil
       @use_refs = false
