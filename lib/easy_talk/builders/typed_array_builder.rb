@@ -24,11 +24,18 @@ module EasyTalk
       def initialize(name, type, constraints = {})
         @name = name
         @type = type
+        @valid_options = deep_dup_options(VALID_OPTIONS)
         update_option_types
-        super(name, { type: 'array' }, constraints, VALID_OPTIONS)
+        super(name, { type: 'array' }, constraints, @valid_options)
       end
 
       private
+
+      # Creates a copy of options with duped nested hashes to avoid mutating the constant.
+      sig { params(options: T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
+      def deep_dup_options(options)
+        options.transform_values(&:dup)
+      end
 
       # Modifies the schema to include the `items` property.
       #
@@ -55,8 +62,8 @@ module EasyTalk
       sig { void }
       # Updates the option types for the array builder.
       def update_option_types
-        VALID_OPTIONS[:enum][:type] = T::Array[inner_type]
-        VALID_OPTIONS[:const][:type] = T::Array[inner_type]
+        @valid_options[:enum][:type] = T::Array[inner_type]
+        @valid_options[:const][:type] = T::Array[inner_type]
       end
     end
   end
