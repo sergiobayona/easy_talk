@@ -15,6 +15,9 @@ module EasyTalk
   require 'easy_talk/validation_adapters/active_model_adapter'
   require 'easy_talk/validation_adapters/none_adapter'
 
+  # Builder registry for pluggable type support
+  require 'easy_talk/builders/registry'
+
   require 'easy_talk/model'
   require 'easy_talk/schema'
   require 'easy_talk/property'
@@ -27,6 +30,43 @@ module EasyTalk
   # Register default validation adapters
   ValidationAdapters::Registry.register(:active_model, ValidationAdapters::ActiveModelAdapter)
   ValidationAdapters::Registry.register(:none, ValidationAdapters::NoneAdapter)
+
+  # Register built-in type builders
+  Builders::Registry.register(String, Builders::StringBuilder)
+  Builders::Registry.register(Integer, Builders::IntegerBuilder)
+  Builders::Registry.register(Float, Builders::NumberBuilder)
+  Builders::Registry.register(BigDecimal, Builders::NumberBuilder)
+  Builders::Registry.register('T::Boolean', Builders::BooleanBuilder)
+  Builders::Registry.register(TrueClass, Builders::BooleanBuilder)
+  Builders::Registry.register(NilClass, Builders::NullBuilder)
+  Builders::Registry.register(Date, Builders::TemporalBuilder::DateBuilder)
+  Builders::Registry.register(DateTime, Builders::TemporalBuilder::DatetimeBuilder)
+  Builders::Registry.register(Time, Builders::TemporalBuilder::TimeBuilder)
+  Builders::Registry.register('anyOf', Builders::CompositionBuilder::AnyOfBuilder, collection: true)
+  Builders::Registry.register('allOf', Builders::CompositionBuilder::AllOfBuilder, collection: true)
+  Builders::Registry.register('oneOf', Builders::CompositionBuilder::OneOfBuilder, collection: true)
+  Builders::Registry.register('T::Types::TypedArray', Builders::TypedArrayBuilder, collection: true)
+  Builders::Registry.register('T::Types::Union', Builders::UnionBuilder, collection: true)
+
+  # Register a custom type with its corresponding schema builder.
+  #
+  # This allows extending EasyTalk with domain-specific types without
+  # modifying the gem's source code.
+  #
+  # @param type_key [Class, String, Symbol] The type to register
+  # @param builder_class [Class] The builder class that generates JSON Schema
+  # @param collection [Boolean] Whether this is a collection type builder
+  #   Collection builders receive (name, type, constraints) instead of (name, constraints)
+  # @return [void]
+  #
+  # @example Register a custom Money type
+  #   EasyTalk.register_type(Money, MoneySchemaBuilder)
+  #
+  # @example Register a collection type
+  #   EasyTalk.register_type(CustomArray, CustomArrayBuilder, collection: true)
+  def self.register_type(type_key, builder_class, collection: false)
+    Builders::Registry.register(type_key, builder_class, collection: collection)
+  end
 
   def self.assert_valid_property_options(property_name, options, *valid_keys)
     valid_keys.flatten!
