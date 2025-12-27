@@ -45,28 +45,6 @@ module EasyTalk
     # @return [Hash<Symbol, Object>] Additional constraints applied to the property
     attr_reader :constraints
 
-    # Mapping of Ruby type names to their corresponding schema builder classes.
-    # Each builder knows how to convert a specific Ruby type to JSON Schema.
-    #
-    # @api private
-    TYPE_TO_BUILDER = {
-      'String' => Builders::StringBuilder,
-      'Integer' => Builders::IntegerBuilder,
-      'Float' => Builders::NumberBuilder,
-      'BigDecimal' => Builders::NumberBuilder,
-      'T::Boolean' => Builders::BooleanBuilder,
-      'TrueClass' => Builders::BooleanBuilder,
-      'NilClass' => Builders::NullBuilder,
-      'Date' => Builders::TemporalBuilder::DateBuilder,
-      'DateTime' => Builders::TemporalBuilder::DatetimeBuilder,
-      'Time' => Builders::TemporalBuilder::TimeBuilder,
-      'anyOf' => Builders::CompositionBuilder::AnyOfBuilder,
-      'allOf' => Builders::CompositionBuilder::AllOfBuilder,
-      'oneOf' => Builders::CompositionBuilder::OneOfBuilder,
-      'T::Types::TypedArray' => Builders::TypedArrayBuilder,
-      'T::Types::Union' => Builders::UnionBuilder
-    }.freeze
-
     # Initializes a new instance of the Property class.
     #
     # @param name [Symbol] The name of the property
@@ -126,9 +104,10 @@ module EasyTalk
         build_nilable_schema
       elsif RefHelper.should_use_ref?(type, constraints)
         RefHelper.build_ref_schema(type, constraints)
-      elsif builder
-        args = builder.collection_type? ? [name, type, constraints] : [name, constraints]
-        builder.new(*args).build
+      elsif (resolved = find_builder_for_type)
+        builder_class, is_collection = resolved
+        args = is_collection ? [name, type, constraints] : [name, constraints]
+        builder_class.new(*args).build
       elsif type.respond_to?(:schema)
         # merge the top-level constraints from *this* property
         # e.g. :title, :description, :default, etc
@@ -151,28 +130,18 @@ module EasyTalk
       build.as_json
     end
 
-    # Returns the builder class associated with the property type.
-    #
-    # The builder is responsible for converting the Ruby type to a JSON Schema type.
-    #
-    # @return [Class, nil] The builder class for this property's type, or nil if no dedicated builder exists
-    # @see #find_builder_for_type
-    def builder
-      @builder ||= find_builder_for_type
-    end
-
     private
 
-    # Finds the appropriate builder for the current type.
+    # Finds the appropriate builder for the current type using the Builders::Registry.
     #
-    # First checks if there's a builder for the class name, then falls back
-    # to checking if there's a builder for the type's name (if it responds to :name).
+    # The registry is checked for a matching builder based on the type's class name
+    # or the type's own name.
     #
-    # @return [Class, nil] The builder class for this type, or nil if none matches
+    # @return [Array(Class, Boolean), nil] A tuple of [builder_class, is_collection] or nil if none matches
     # @api private
+    # @see Builders::Registry.resolve
     def find_builder_for_type
-      TYPE_TO_BUILDER[type.class.name.to_s] ||
-        (type.respond_to?(:name) ? TYPE_TO_BUILDER[type.name.to_s] : nil)
+      Builders::Registry.resolve(type)
     end
 
     # Determines if the type is nilable (can be nil).

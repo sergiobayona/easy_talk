@@ -38,6 +38,24 @@ module EasyTalk
     def property_naming_strategy=(strategy)
       @property_naming_strategy = EasyTalk::NamingStrategies.derive_strategy(strategy)
     end
+
+    # Register a custom type with its corresponding schema builder.
+    #
+    # This convenience method delegates to Builders::Registry.register
+    # and allows type registration within a configuration block.
+    #
+    # @param type_key [Class, String, Symbol] The type to register
+    # @param builder_class [Class] The builder class that generates JSON Schema
+    # @param collection [Boolean] Whether this is a collection type builder
+    # @return [void]
+    #
+    # @example
+    #   EasyTalk.configure do |config|
+    #     config.register_type Money, MoneySchemaBuilder
+    #   end
+    def register_type(type_key, builder_class, collection: false)
+      EasyTalk::Builders::Registry.register(type_key, builder_class, collection: collection)
+    end
   end
 
   class << self
