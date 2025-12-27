@@ -34,21 +34,7 @@ module EasyTalk
   ValidationAdapters::Registry.register(:none, ValidationAdapters::NoneAdapter)
 
   # Register built-in type builders
-  Builders::Registry.register(String, Builders::StringBuilder)
-  Builders::Registry.register(Integer, Builders::IntegerBuilder)
-  Builders::Registry.register(Float, Builders::NumberBuilder)
-  Builders::Registry.register(BigDecimal, Builders::NumberBuilder)
-  Builders::Registry.register('T::Boolean', Builders::BooleanBuilder)
-  Builders::Registry.register(TrueClass, Builders::BooleanBuilder)
-  Builders::Registry.register(NilClass, Builders::NullBuilder)
-  Builders::Registry.register(Date, Builders::TemporalBuilder::DateBuilder)
-  Builders::Registry.register(DateTime, Builders::TemporalBuilder::DatetimeBuilder)
-  Builders::Registry.register(Time, Builders::TemporalBuilder::TimeBuilder)
-  Builders::Registry.register('anyOf', Builders::CompositionBuilder::AnyOfBuilder, collection: true)
-  Builders::Registry.register('allOf', Builders::CompositionBuilder::AllOfBuilder, collection: true)
-  Builders::Registry.register('oneOf', Builders::CompositionBuilder::OneOfBuilder, collection: true)
-  Builders::Registry.register('T::Types::TypedArray', Builders::TypedArrayBuilder, collection: true)
-  Builders::Registry.register('T::Types::Union', Builders::UnionBuilder, collection: true)
+  Builders::Registry.register_built_in_types
 
   # Register a custom type with its corresponding schema builder.
   #
