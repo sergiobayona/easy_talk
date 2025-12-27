@@ -8,6 +8,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'StringTest'
 
           define_schema do
@@ -34,6 +35,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'EmailTest'
 
           define_schema do
@@ -56,6 +58,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'IntegerTest'
 
           define_schema do
@@ -80,6 +83,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'EnumTest'
 
           define_schema do
@@ -102,6 +106,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'BooleanTest'
 
           define_schema do
@@ -126,6 +131,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'PresenceTest'
 
           define_schema do
@@ -148,6 +154,7 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'OptionalTest'
 
           define_schema do

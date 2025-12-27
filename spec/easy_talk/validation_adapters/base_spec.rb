@@ -6,6 +6,7 @@ RSpec.describe EasyTalk::ValidationAdapters::Base do
   let(:test_class) do
     Class.new do
       include EasyTalk::Model
+
       def self.name = 'TestModel'
     end
   end

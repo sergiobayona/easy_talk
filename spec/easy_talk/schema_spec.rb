@@ -7,6 +7,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'ApiContract'
 
         define_schema do
@@ -60,6 +61,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'HashTest'
 
         define_schema do
@@ -79,6 +81,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'JsonTest'
 
         define_schema do
@@ -97,6 +100,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'DefaultTest'
 
         define_schema do
@@ -123,6 +127,7 @@ RSpec.describe EasyTalk::Schema do
     let(:address_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'Address'
 
         define_schema do
@@ -136,6 +141,7 @@ RSpec.describe EasyTalk::Schema do
       address = address_class
       Class.new do
         include EasyTalk::Schema
+
         define_singleton_method(:name) { 'Person' }
 
         define_schema do
@@ -161,6 +167,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'PropertiesTest'
 
         define_schema do
@@ -179,6 +186,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'RefTest'
 
         define_schema do
@@ -196,6 +204,7 @@ RSpec.describe EasyTalk::Schema do
     let(:schema_class) do
       Class.new do
         include EasyTalk::Schema
+
         def self.name = 'CompareTest'
 
         define_schema do

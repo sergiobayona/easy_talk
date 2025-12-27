@@ -6,6 +6,7 @@ RSpec.describe EasyTalk::ValidationAdapters::NoneAdapter do
   let(:test_class) do
     Class.new do
       include EasyTalk::Model
+
       def self.name = 'NoneAdapterTest'
     end
   end
@@ -32,6 +33,7 @@ RSpec.describe EasyTalk::ValidationAdapters::NoneAdapter do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'NoneAdapterSchemaTest'
 
         define_schema(validations: :none) do

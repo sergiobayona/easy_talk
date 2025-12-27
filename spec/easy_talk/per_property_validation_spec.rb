@@ -7,6 +7,7 @@ RSpec.describe 'Per-property validation control' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'PerPropertyValidationModel'
 
         define_schema do
@@ -45,6 +46,7 @@ RSpec.describe 'Per-property validation control' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'MixedValidationModel'
 
         define_schema do
@@ -92,6 +94,7 @@ RSpec.describe 'Per-property validation control' do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'IntegerValidateTest'
 
           define_schema do
@@ -110,6 +113,7 @@ RSpec.describe 'Per-property validation control' do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'EnumValidateTest'
 
           define_schema do
@@ -128,6 +132,7 @@ RSpec.describe 'Per-property validation control' do
       let(:test_class) do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'BooleanValidateTest'
 
           define_schema do
@@ -147,6 +152,7 @@ RSpec.describe 'Per-property validation control' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'PresenceSkipTest'
 
         define_schema do
@@ -166,6 +172,7 @@ RSpec.describe 'Per-property validation control' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'OptionalValidateTest'
 
         define_schema do

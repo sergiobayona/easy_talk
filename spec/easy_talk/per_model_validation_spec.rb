@@ -7,6 +7,7 @@ RSpec.describe 'Per-model validation configuration' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'NoValidationModel'
 
         define_schema(validations: false) do
@@ -39,6 +40,7 @@ RSpec.describe 'Per-model validation configuration' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'ExplicitValidationModel'
 
         define_schema(validations: true) do
@@ -58,6 +60,7 @@ RSpec.describe 'Per-model validation configuration' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'NoneAdapterModel'
 
         define_schema(validations: :none) do
@@ -76,6 +79,7 @@ RSpec.describe 'Per-model validation configuration' do
     let(:test_class) do
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'ActiveModelAdapterModel'
 
         define_schema(validations: :active_model) do
@@ -104,6 +108,7 @@ RSpec.describe 'Per-model validation configuration' do
       adapter = custom_adapter
       Class.new do
         include EasyTalk::Model
+
         def self.name = 'CustomAdapterModel'
 
         define_schema(validations: adapter) do
@@ -131,6 +136,7 @@ RSpec.describe 'Per-model validation configuration' do
       expect do
         Class.new do
           include EasyTalk::Model
+
           def self.name = 'InvalidOptionsModel'
 
           define_schema(validations: 123) do
@@ -154,6 +160,7 @@ RSpec.describe 'Per-model validation configuration' do
       it 'does not apply validations by default' do
         test_class = Class.new do
           include EasyTalk::Model
+
           def self.name = 'GlobalDisabledModel'
 
           define_schema do
@@ -168,6 +175,7 @@ RSpec.describe 'Per-model validation configuration' do
       it 'can be overridden with validations: true' do
         test_class = Class.new do
           include EasyTalk::Model
+
           def self.name = 'OverrideGlobalModel'
 
           define_schema(validations: true) do
@@ -193,6 +201,7 @@ RSpec.describe 'Per-model validation configuration' do
 
       test_class = Class.new do
         include EasyTalk::Model
+
         def self.name = 'GlobalAdapterModel'
 
         define_schema do
