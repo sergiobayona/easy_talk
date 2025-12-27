@@ -7,6 +7,7 @@ module EasyTalk
   require 'easy_talk/errors'
   require 'easy_talk/errors_helper'
   require 'easy_talk/configuration'
+  require 'easy_talk/schema_methods'
   require 'easy_talk/types/composer'
 
   # Validation adapters

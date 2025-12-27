@@ -149,6 +149,8 @@ module EasyTalk
 
     # Module containing class-level methods for defining and accessing the schema of a model.
     module ClassMethods
+      include SchemaMethods
+
       # Returns the schema for the model.
       #
       # @return [Schema] The schema for the model.
@@ -159,71 +161,6 @@ module EasyTalk
                       {}
                     end
       end
-
-      # Returns the reference template for the model.
-      #
-      # @return [String] The reference template for the model.
-      def ref_template
-        "#/$defs/#{name}"
-      end
-
-      # Returns the JSON schema for the model.
-      # This is the final output that includes the $schema keyword if configured.
-      #
-      # @return [Hash] The JSON schema for the model.
-      def json_schema
-        @json_schema ||= build_json_schema
-      end
-
-      private
-
-      # Builds the final JSON schema with optional $schema and $id keywords.
-      def build_json_schema
-        result = schema.as_json
-        schema_uri = resolve_schema_uri
-        id_uri = resolve_schema_id
-
-        # Build prefix hash with $schema and $id (in that order per JSON Schema convention)
-        prefix = {}
-        prefix['$schema'] = schema_uri if schema_uri
-        prefix['$id'] = id_uri if id_uri
-
-        return result if prefix.empty?
-
-        prefix.merge(result)
-      end
-
-      # Resolves the schema URI from per-model setting or global config.
-      def resolve_schema_uri
-        model_version = @schema_definition&.schema&.dig(:schema_version)
-
-        if model_version
-          # Per-model override - :none means explicitly no $schema
-          return nil if model_version == :none
-
-          Configuration::SCHEMA_VERSIONS[model_version] || model_version.to_s
-        else
-          # Fall back to global configuration
-          EasyTalk.configuration.schema_uri
-        end
-      end
-
-      # Resolves the schema ID from per-model setting or global config.
-      def resolve_schema_id
-        model_id = @schema_definition&.schema&.dig(:schema_id)
-
-        if model_id
-          # Per-model override - :none means explicitly no $id
-          return nil if model_id == :none
-
-          model_id.to_s
-        else
-          # Fall back to global configuration
-          EasyTalk.configuration.schema_id
-        end
-      end
-
-      public
 
       # Define the schema for the model using the provided block.
       #
