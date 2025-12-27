@@ -143,7 +143,10 @@ module EasyTalk
         length_options = {}
         length_options[:minimum] = @constraints[:min_length] if @constraints[:min_length].is_a?(Numeric) && @constraints[:min_length] >= 0
         length_options[:maximum] = @constraints[:max_length] if @constraints[:max_length].is_a?(Numeric) && @constraints[:max_length] >= 0
-        @klass.validates @property_name, length: length_options if length_options.any?
+        if length_options.any?
+          length_options[:allow_nil] = optional? || nilable_type?
+          @klass.validates @property_name, length: length_options
+        end
       rescue ArgumentError
         # Silently ignore invalid length constraints
       end

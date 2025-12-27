@@ -267,4 +267,57 @@ RSpec.describe 'Auto Validations' do
       expect(instance.errors[:nilable_email]).to include('must be a valid email address')
     end
   end
+
+  describe 'optional properties with length validation' do
+    let(:length_class) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name
+          'LengthProps'
+        end
+
+        define_schema do
+          property :required_bio, String, min_length: 10
+          property :optional_bio, String, min_length: 10, optional: true
+          property :nilable_bio, T.nilable(String), min_length: 10
+        end
+      end
+    end
+
+    it 'does not allow nil for required bio' do
+      instance = length_class.new(required_bio: nil)
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:required_bio]).to include("can't be blank")
+    end
+
+    it 'allows nil for optional bio' do
+      instance = length_class.new(required_bio: 'This is a valid bio', optional_bio: nil)
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:optional_bio]).to be_empty
+    end
+
+    it 'allows nil for nilable bio' do
+      instance = length_class.new(required_bio: 'This is a valid bio', nilable_bio: nil)
+
+      expect(instance.valid?).to be(true)
+      expect(instance.errors[:nilable_bio]).to be_empty
+    end
+
+    it 'validates length when optional bio has a value' do
+      instance = length_class.new(required_bio: 'This is a valid bio', optional_bio: 'short')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:optional_bio]).to include('is too short (minimum is 10 characters)')
+    end
+
+    it 'validates length when nilable bio has a value' do
+      instance = length_class.new(required_bio: 'This is a valid bio', nilable_bio: 'short')
+
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:nilable_bio]).to include('is too short (minimum is 10 characters)')
+    end
+  end
 end
