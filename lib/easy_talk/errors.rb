@@ -5,5 +5,6 @@ module EasyTalk
   class ConstraintError < Error; end
   class UnknownOptionError < Error; end
   class UnknownTypeError < Error; end
+  class InvalidInstructionsError < Error; end
   class InvalidPropertyNameError < Error; end
 end

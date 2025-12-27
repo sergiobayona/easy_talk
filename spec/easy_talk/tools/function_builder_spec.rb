@@ -41,4 +41,30 @@ RSpec.describe EasyTalk::Tools::FunctionBuilder do
       expect(described_class.new(model)).to include_json(expected_json)
     end
   end
+
+  context 'when model has non-string instructions' do
+    let(:model_with_bad_instructions) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name
+          'BadModel'
+        end
+
+        def self.instructions
+          123 # Not a string
+        end
+
+        define_schema do
+          property :name, String
+        end
+      end
+    end
+
+    it 'raises InvalidInstructionsError' do
+      expect do
+        described_class.new(model_with_bad_instructions)
+      end.to raise_error(EasyTalk::InvalidInstructionsError, 'The instructions must be a string')
+    end
+  end
 end

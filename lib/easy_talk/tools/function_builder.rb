@@ -27,7 +27,7 @@ module EasyTalk
 
         def generate_function_description(model)
           if model.respond_to?(:instructions)
-            raise Instructor::Error, 'The instructions must be a string' unless model.instructions.is_a?(String)
+            raise InvalidInstructionsError, 'The instructions must be a string' unless model.instructions.is_a?(String)
 
             model.instructions
           else
