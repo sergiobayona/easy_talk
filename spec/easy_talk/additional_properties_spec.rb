@@ -84,9 +84,17 @@ RSpec.describe 'additional properties' do
           expect(instance.respond_to?(:name=)).to be true
         end
 
-        it 'returns true for additional property getters and setters' do
-          expect(instance.respond_to?(:custom_field)).to be true
+        it 'returns true for additional property setters (can always set)' do
           expect(instance.respond_to?(:custom_field=)).to be true
+        end
+
+        it 'returns false for additional property getters that have not been set' do
+          expect(instance.respond_to?(:custom_field)).to be false
+        end
+
+        it 'returns true for additional property getters that have been set' do
+          instance.custom_field = 'value'
+          expect(instance.respond_to?(:custom_field)).to be true
         end
       end
 

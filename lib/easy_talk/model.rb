@@ -104,9 +104,10 @@ module EasyTalk
       end
 
       def respond_to_missing?(method_name, include_private = false)
+        return super unless self.class.additional_properties_allowed?
+
         method_string = method_name.to_s
-        method_string.end_with?('=') ? method_string.chomp('=') : method_string
-        self.class.additional_properties_allowed? || super
+        method_string.end_with?('=') || @additional_properties.key?(method_string) || super
       end
 
       # Add to_hash method to convert defined properties to hash
