@@ -46,13 +46,8 @@ module EasyTalk
     def self.validate_typed_array_values(property_name:, constraint_name:, type_info:, array_value:)
       # Raise error if value is not an array but type expects one
       unless array_value.is_a?(Array)
-        # Extract the inner type to provide a better error message
         inner_type = extract_inner_type(type_info)
-        expected_desc = if TypeIntrospection.boolean_type?(inner_type)
-                          'Boolean (true or false)'
-                        else
-                          inner_type.to_s
-                        end
+        expected_desc = TypeIntrospection.boolean_type?(inner_type) ? 'Boolean (true or false)' : inner_type.to_s
         raise_constraint_error(
           property_name: property_name,
           constraint_name: constraint_name,
@@ -61,47 +56,58 @@ module EasyTalk
         )
       end
 
-      # Extract the inner type from the array type definition
       inner_type = extract_inner_type(type_info)
-
-      # Check each element of the array
       array_value.each_with_index do |element, index|
-        if inner_type.is_a?(Array)
-          # For union types, check if the element matches any of the allowed types
-          unless inner_type.any? { |t| element.is_a?(t) }
-            expected = inner_type.join(' or ')
-            raise_array_constraint_error(
-              property_name: property_name,
-              constraint_name: constraint_name,
-              index: index,
-              expected: expected,
-              got: element
-            )
-          end
-        else
-          # For single types, just check against that type
-          # Skip if element is a boolean (booleans are valid in many contexts)
-          next if [true, false].include?(element)
+        validate_array_element(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          inner_type: inner_type,
+          element: element,
+          index: index
+        )
+      end
+    end
 
-          # Handle boolean types specially since T::Boolean is not a Class
-          if TypeIntrospection.boolean_type?(inner_type)
-            raise_array_constraint_error(
-              property_name: property_name,
-              constraint_name: constraint_name,
-              index: index,
-              expected: 'Boolean (true or false)',
-              got: element
-            )
-          elsif !element.is_a?(inner_type)
-            raise_array_constraint_error(
-              property_name: property_name,
-              constraint_name: constraint_name,
-              index: index,
-              expected: inner_type,
-              got: element
-            )
-          end
-        end
+    def self.validate_array_element(property_name:, constraint_name:, inner_type:, element:, index:)
+      if inner_type.is_a?(Array)
+        validate_union_element(property_name, constraint_name, inner_type, element, index)
+      else
+        validate_single_type_element(property_name, constraint_name, inner_type, element, index)
+      end
+    end
+
+    def self.validate_union_element(property_name, constraint_name, inner_type, element, index)
+      return if inner_type.any? { |t| element.is_a?(t) }
+
+      raise_array_constraint_error(
+        property_name: property_name,
+        constraint_name: constraint_name,
+        index: index,
+        expected: inner_type.join(' or '),
+        got: element
+      )
+    end
+
+    def self.validate_single_type_element(property_name, constraint_name, inner_type, element, index)
+      # Skip if element is a boolean (booleans are valid in many contexts)
+      return if [true, false].include?(element)
+
+      if TypeIntrospection.boolean_type?(inner_type)
+        raise_array_constraint_error(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          index: index,
+          expected: 'Boolean (true or false)',
+          got: element
+        )
+      elsif !element.is_a?(inner_type)
+        raise_array_constraint_error(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          index: index,
+          expected: inner_type,
+          got: element
+        )
       end
     end
 
