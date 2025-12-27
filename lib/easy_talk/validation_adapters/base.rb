@@ -123,7 +123,7 @@ module EasyTalk
           rescue StandardError
             String
           end
-        elsif type_to_resolve.to_s.include?('T::Boolean')
+        elsif TypeIntrospection.boolean_type?(type_to_resolve)
           [TrueClass, FalseClass]
         elsif nilable_type?(type_to_resolve)
           extract_inner_type(type_to_resolve)

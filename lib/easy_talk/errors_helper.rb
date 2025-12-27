@@ -27,7 +27,7 @@ module EasyTalk
       if type_info.respond_to?(:type) && type_info.type.respond_to?(:raw_type)
         type_info.type.raw_type
       # special boolean handling
-      elsif type_info.try(:type).try(:name) == 'T::Boolean'
+      elsif TypeIntrospection.boolean_type?(type_info.try(:type))
         T::Boolean
       elsif type_info.respond_to?(:type_parameter)
         type_info.type_parameter
@@ -44,47 +44,77 @@ module EasyTalk
     end
 
     def self.validate_typed_array_values(property_name:, constraint_name:, type_info:, array_value:)
-      # Skip validation if it's not actually an array
-      return unless array_value.is_a?(Array)
+      # Raise error if value is not an array but type expects one
+      unless array_value.is_a?(Array)
+        inner_type = extract_inner_type(type_info)
+        expected_desc = TypeIntrospection.boolean_type?(inner_type) ? 'Boolean (true or false)' : inner_type.to_s
+        raise_constraint_error(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          expected: expected_desc,
+          got: array_value
+        )
+      end
 
-      # Extract the inner type from the array type definition
       inner_type = extract_inner_type(type_info)
-
-      # Check each element of the array
       array_value.each_with_index do |element, index|
-        if inner_type.is_a?(Array)
-          # For union types, check if the element matches any of the allowed types
-          unless inner_type.any? { |t| element.is_a?(t) }
-            expected = inner_type.join(' or ')
-            raise_array_constraint_error(
-              property_name: property_name,
-              constraint_name: constraint_name,
-              index: index,
-              expected: expected,
-              got: element
-            )
-          end
-        else
-          # For single types, just check against that type
-          next if [true, false].include?(element)
+        validate_array_element(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          inner_type: inner_type,
+          element: element,
+          index: index
+        )
+      end
+    end
 
-          unless element.is_a?(inner_type)
-            raise_array_constraint_error(
-              property_name: property_name,
-              constraint_name: constraint_name,
-              index: index,
-              expected: inner_type,
-              got: element
-            )
-          end
-        end
+    def self.validate_array_element(property_name:, constraint_name:, inner_type:, element:, index:)
+      if inner_type.is_a?(Array)
+        validate_union_element(property_name, constraint_name, inner_type, element, index)
+      else
+        validate_single_type_element(property_name, constraint_name, inner_type, element, index)
+      end
+    end
+
+    def self.validate_union_element(property_name, constraint_name, inner_type, element, index)
+      return if inner_type.any? { |t| element.is_a?(t) }
+
+      raise_array_constraint_error(
+        property_name: property_name,
+        constraint_name: constraint_name,
+        index: index,
+        expected: inner_type.join(' or '),
+        got: element
+      )
+    end
+
+    def self.validate_single_type_element(property_name, constraint_name, inner_type, element, index)
+      # Skip if element is a boolean (booleans are valid in many contexts)
+      return if [true, false].include?(element)
+
+      if TypeIntrospection.boolean_type?(inner_type)
+        raise_array_constraint_error(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          index: index,
+          expected: 'Boolean (true or false)',
+          got: element
+        )
+      elsif !element.is_a?(inner_type)
+        raise_array_constraint_error(
+          property_name: property_name,
+          constraint_name: constraint_name,
+          index: index,
+          expected: inner_type,
+          got: element
+        )
       end
     end
 
     def self.validate_constraint_value(property_name:, constraint_name:, value_type:, value:)
       return if value.nil?
 
-      if value_type.to_s.include?('Boolean')
+      if TypeIntrospection.boolean_type?(value_type)
         return if value.is_a?(Array) && value.all? { |v| [true, false].include?(v) }
 
         unless [true, false].include?(value)
@@ -109,8 +139,7 @@ module EasyTalk
           )
         end
       # Handle array types specifically
-      elsif value_type.class.name.include?('TypedArray') ||
-            (value_type.respond_to?(:to_s) && value_type.to_s.include?('T::Array'))
+      elsif TypeIntrospection.typed_array?(value_type)
         # This is an array type, validate it
         validate_typed_array_values(
           property_name: property_name,

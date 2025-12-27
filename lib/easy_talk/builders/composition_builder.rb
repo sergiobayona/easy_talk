@@ -57,14 +57,8 @@ module EasyTalk
           elsif type.respond_to?(:schema)
             type.schema
           else
-            # Map Float type to 'number' in JSON Schema
-            json_type = case type.to_s
-                       when 'Float', 'BigDecimal'
-                         'number'
-                       else
-                         type.to_s.downcase
-                       end
-            { type: json_type }
+            # Map Ruby type to JSON Schema type
+            { type: TypeIntrospection.json_schema_type(type) }
           end
         end
       end
