@@ -10,6 +10,20 @@ RSpec.describe EasyTalk::NamingStrategies do
     end
   end
 
+  describe 'snake_case' do
+    it 'converts camelCase to snake_case' do
+      expect(EasyTalk::NamingStrategies::SNAKE_CASE.call(:camelCase)).to eq(:camel_case)
+    end
+
+    it 'converts PascalCase to snake_case' do
+      expect(EasyTalk::NamingStrategies::SNAKE_CASE.call(:PascalCase)).to eq(:pascal_case)
+    end
+
+    it 'leaves snake_case unchanged' do
+      expect(EasyTalk::NamingStrategies::SNAKE_CASE.call(:snake_case)).to eq(:snake_case)
+    end
+  end
+
   describe 'camelCase' do
     it 'converts snake_case to camelCase' do
       expect(EasyTalk::NamingStrategies::CAMEL_CASE.call(:snake_case)).to eq(:snakeCase)
