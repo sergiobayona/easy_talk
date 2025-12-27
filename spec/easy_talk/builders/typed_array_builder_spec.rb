@@ -113,4 +113,20 @@ RSpec.describe EasyTalk::Builders::TypedArrayBuilder do
       end.to raise_error(EasyTalk::ConstraintError, "Error in property 'name': Constraint 'enum' at index 0 expects Integer, but received \"one\" (String).")
     end
   end
+
+  context 'with multiple inner types' do
+    it 'does not mutate VALID_OPTIONS across instances' do
+      original_enum_type = described_class::VALID_OPTIONS[:enum][:type]
+      original_const_type = described_class::VALID_OPTIONS[:const][:type]
+
+      # Build with String inner type
+      described_class.new(:strings, T::Array[String], enum: %w[a b]).build
+      # Build with Integer inner type
+      described_class.new(:integers, T::Array[Integer], enum: [1, 2]).build
+
+      # VALID_OPTIONS should remain unchanged
+      expect(described_class::VALID_OPTIONS[:enum][:type]).to eq(original_enum_type)
+      expect(described_class::VALID_OPTIONS[:const][:type]).to eq(original_const_type)
+    end
+  end
 end
