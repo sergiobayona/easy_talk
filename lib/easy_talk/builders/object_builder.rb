@@ -34,8 +34,8 @@ module EasyTalk
       def initialize(schema_definition)
         # Keep a reference to the original schema definition
         @schema_definition = schema_definition
-        # Duplicate the raw schema hash so we can mutate it safely
-        @original_schema = schema_definition.schema.dup
+        # Deep duplicate the raw schema hash so we can mutate it safely
+        @original_schema = deep_dup(schema_definition.schema)
 
         # We'll collect required property names in this Set
         @required_properties = Set.new
@@ -56,6 +56,24 @@ module EasyTalk
       end
 
       private
+
+      ##
+      # Deep duplicates a hash, including nested hashes.
+      # This prevents mutations from leaking back to the original schema.
+      #
+      def deep_dup(obj)
+        case obj
+        when Hash
+          obj.transform_values { |v| deep_dup(v) }
+        when Array
+          obj.map { |v| deep_dup(v) }
+        when Class, Module
+          # Don't duplicate Class or Module objects - they represent types
+          obj
+        else
+          obj.duplicable? ? obj.dup : obj
+        end
+      end
 
       ##
       # Main aggregator: merges the top-level schema keys (like :properties, :subschemas)
@@ -100,8 +118,9 @@ module EasyTalk
         # Cache with a key based on property name and its full configuration
         @properties_cache ||= {}
 
-        properties_hash.each_with_object({}) do |(_prop_name, prop_options), result|
-          property_name = prop_options[:constraints].delete(:as).to_sym
+        properties_hash.each_with_object({}) do |(original_name, prop_options), result|
+          # Use :as constraint for property name without mutating original constraints
+          property_name = (prop_options[:constraints][:as] || original_name).to_sym
           cache_key = [property_name, prop_options].hash
 
           # Use cache if the exact property and configuration have been processed before
@@ -147,8 +166,8 @@ module EasyTalk
 
         # Memoize so we only build each property once
         @property_cache[prop_name] ||= begin
-          # Remove optional constraints from the property
-          constraints = prop_options[:constraints].except(:optional)
+          # Remove internal constraints that shouldn't be passed to Property
+          constraints = prop_options[:constraints].except(:optional, :as)
           prop_type = prop_options[:type]
 
           # Track models that will use $ref for later $defs generation
