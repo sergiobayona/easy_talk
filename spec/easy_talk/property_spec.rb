@@ -94,6 +94,15 @@ RSpec.describe EasyTalk::Property do
     end
   end
 
+  context 'with an unknown type' do
+    it 'raises UnknownTypeError' do
+      unknown_type = Class.new
+      expect do
+        described_class.new(:field, unknown_type).build
+      end.to raise_error(EasyTalk::UnknownTypeError, /Unknown type.*for property 'field'/)
+    end
+  end
+
   # unsure if this should be supported
   context 'with a model' do
     let(:custom_class) do

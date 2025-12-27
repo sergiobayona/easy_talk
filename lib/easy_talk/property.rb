@@ -113,7 +113,9 @@ module EasyTalk
         # e.g. :title, :description, :default, etc
         type.schema.merge!(constraints)
       else
-        'object'
+        raise UnknownTypeError,
+              "Unknown type '#{type.inspect}' for property '#{name}'. " \
+              'Register a custom builder with EasyTalk.register_type or use a supported type.'
       end
     end
 
