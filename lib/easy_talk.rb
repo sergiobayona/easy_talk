@@ -20,6 +20,7 @@ module EasyTalk
   require 'easy_talk/property'
   require 'easy_talk/schema_definition'
   require 'easy_talk/validation_builder'
+  require 'easy_talk/error_formatter'
   require 'easy_talk/tools/function_builder'
   require 'easy_talk/version'
 

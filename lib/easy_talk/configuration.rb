@@ -14,7 +14,7 @@ module EasyTalk
     }.freeze
 
     attr_accessor :default_additional_properties, :nilable_is_optional, :auto_validations, :schema_version, :schema_id,
-                  :use_refs, :validation_adapter
+                  :use_refs, :validation_adapter, :default_error_format, :error_type_base_uri, :include_error_codes
     attr_reader :property_naming_strategy
 
     def initialize
@@ -25,6 +25,9 @@ module EasyTalk
       @schema_version = :none
       @schema_id = nil
       @use_refs = false
+      @default_error_format = :flat
+      @error_type_base_uri = 'about:blank'
+      @include_error_codes = true
       self.property_naming_strategy = :identity
     end
 
