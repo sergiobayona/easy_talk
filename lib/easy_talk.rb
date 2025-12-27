@@ -30,8 +30,7 @@ module EasyTalk
   require 'easy_talk/version'
 
   # Register default validation adapters
-  ValidationAdapters::Registry.register(:active_model, ValidationAdapters::ActiveModelAdapter)
-  ValidationAdapters::Registry.register(:none, ValidationAdapters::NoneAdapter)
+  ValidationAdapters::Registry.register_default_adapters
 
   # Register built-in type builders
   Builders::Registry.register_built_in_types

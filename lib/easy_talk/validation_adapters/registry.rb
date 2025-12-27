@@ -65,10 +65,21 @@ module EasyTalk
         end
 
         # Reset the registry (useful for testing).
+        # Re-registers the default adapters after clearing.
         #
         # @return [void]
         def reset!
           @adapters = nil
+          register_default_adapters
+        end
+
+        # Register the default validation adapters.
+        # This is called during gem initialization and after reset!
+        #
+        # @return [void]
+        def register_default_adapters
+          register(:active_model, ActiveModelAdapter)
+          register(:none, NoneAdapter)
         end
       end
     end
