@@ -5,6 +5,7 @@ module EasyTalk
   require 'sorbet-runtime'
   require 'easy_talk/sorbet_extension'
   require 'easy_talk/errors'
+  require 'easy_talk/type_introspection'
   require 'easy_talk/errors_helper'
   require 'easy_talk/configuration'
   require 'easy_talk/types/composer'

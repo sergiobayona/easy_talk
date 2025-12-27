@@ -33,7 +33,7 @@ module EasyTalk
         is_boolean = type_class == [TrueClass, FalseClass] ||
                      type_class == TrueClass ||
                      type_class == FalseClass ||
-                     @type.to_s.include?('T::Boolean')
+                     TypeIntrospection.boolean_type?(@type)
 
         # Skip presence validation for booleans and nilable types
         apply_presence_validation unless optional? || is_boolean || nilable_type?
@@ -67,7 +67,7 @@ module EasyTalk
           apply_array_validations(type)
         elsif type_class == [TrueClass,
                              FalseClass] || [TrueClass,
-                                             FalseClass].include?(type_class) || type.to_s.include?('T::Boolean')
+                                             FalseClass].include?(type_class) || TypeIntrospection.boolean_type?(type)
           apply_boolean_validations
         elsif type_class.is_a?(Object) && type_class.include?(EasyTalk::Model)
           apply_object_validations
