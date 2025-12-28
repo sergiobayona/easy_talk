@@ -35,8 +35,12 @@ module EasyTalk
                      type_class == FalseClass ||
                      TypeIntrospection.boolean_type?(@type)
 
-        # Skip presence validation for booleans and nilable types
-        apply_presence_validation unless optional? || is_boolean || nilable_type?
+        # Determine if the type is an array (empty arrays should be valid)
+        is_array = type_class == Array || @type.is_a?(T::Types::TypedArray)
+
+        # Skip presence validation for booleans, nilable types, and arrays
+        # (empty arrays are valid - use min_items constraint if you need non-empty)
+        apply_presence_validation unless optional? || is_boolean || nilable_type? || is_array
 
         if nilable_type?
           # For nilable types, get the inner type and apply validations to it
@@ -186,7 +190,7 @@ module EasyTalk
         apply_unique_items_validation if @constraints[:unique_items]
 
         # Validate array item types if using T::Array[SomeType]
-        apply_array_item_type_validation(type) if type.respond_to?(:type_parameter)
+        apply_array_item_type_validation(type) if type.is_a?(T::Types::TypedArray)
       end
 
       # Apply unique items validation for arrays
@@ -198,15 +202,30 @@ module EasyTalk
         end
       end
 
-      # Apply array item type validation
+      # Apply array item type and nested model validation
       def apply_array_item_type_validation(type)
-        inner_type = type.type_parameter
+        # Get inner type from T::Types::TypedArray (uses .type, which returns T::Types::Simple)
+        inner_type_wrapper = type.type
+        inner_type = inner_type_wrapper.respond_to?(:raw_type) ? inner_type_wrapper.raw_type : inner_type_wrapper
         prop_name = @property_name
+        is_easy_talk_model = inner_type.is_a?(Class) && inner_type.include?(EasyTalk::Model)
+
         @klass.validate do |record|
           value = record.public_send(prop_name)
-          if value.is_a?(Array)
-            value.each_with_index do |item, index|
-              record.errors.add(prop_name, "item at index #{index} must be a #{inner_type}") unless item.is_a?(inner_type)
+          next unless value.is_a?(Array)
+
+          value.each_with_index do |item, index|
+            unless item.is_a?(inner_type)
+              record.errors.add(prop_name, "item at index #{index} must be a #{inner_type}")
+              next
+            end
+
+            # Recursively validate nested EasyTalk::Model items
+            next unless is_easy_talk_model && !item.valid?
+
+            item.errors.each do |error|
+              nested_key = "#{prop_name}[#{index}].#{error.attribute}"
+              record.errors.add(nested_key.to_sym, error.message)
             end
           end
         end

@@ -168,5 +168,166 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
         expect(instance.valid?).to be true
       end
     end
+
+    context 'with T::Array[EasyTalk::Model] nested validation' do
+      let(:address_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Address'
+
+          define_schema do
+            property :street, String
+            property :city, String
+          end
+        end
+      end
+
+      let(:person_class) do
+        address = address_class
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Person'
+
+          define_schema do
+            property :name, String
+            property :addresses, T::Array[address]
+          end
+        end
+      end
+
+      before do
+        stub_const('Address', address_class)
+        stub_const('Person', person_class)
+      end
+
+      it 'validates nested models in arrays' do
+        person = Person.new(
+          name: 'John',
+          addresses: [
+            Address.new(street: '123 Main St', city: 'Boston')
+          ]
+        )
+        expect(person.valid?).to be true
+      end
+
+      it 'reports errors for invalid nested models with indexed paths' do
+        person = Person.new(
+          name: 'John',
+          addresses: [
+            Address.new(street: '', city: '')
+          ]
+        )
+        expect(person.valid?).to be false
+        expect(person.errors[:'addresses[0].street']).to include("can't be blank")
+        expect(person.errors[:'addresses[0].city']).to include("can't be blank")
+      end
+
+      it 'reports errors only for invalid items in mixed arrays' do
+        person = Person.new(
+          name: 'John',
+          addresses: [
+            Address.new(street: '123 Main St', city: 'Boston'),
+            Address.new(street: '', city: 'NYC'),
+            Address.new(street: '456 Oak Ave', city: '')
+          ]
+        )
+        expect(person.valid?).to be false
+        expect(person.errors.attribute_names).not_to include(:'addresses[0].street')
+        expect(person.errors.attribute_names).not_to include(:'addresses[0].city')
+        expect(person.errors[:'addresses[1].street']).to include("can't be blank")
+        expect(person.errors[:'addresses[2].city']).to include("can't be blank")
+      end
+
+      it 'validates empty arrays as valid' do
+        person = Person.new(name: 'John', addresses: [])
+        expect(person.valid?).to be true
+      end
+
+      it 'auto-instantiates hash items as model instances' do
+        person = Person.new(
+          name: 'John',
+          addresses: [
+            { street: '123 Main St', city: 'Boston' }
+          ]
+        )
+        expect(person.addresses.first).to be_a(Address)
+        expect(person.valid?).to be true
+      end
+
+      it 'auto-instantiates and validates invalid hash items' do
+        person = Person.new(
+          name: 'John',
+          addresses: [
+            { street: '', city: '' }
+          ]
+        )
+        expect(person.addresses.first).to be_a(Address)
+        expect(person.valid?).to be false
+        expect(person.errors[:'addresses[0].street']).to include("can't be blank")
+      end
+    end
+
+    context 'with T.nilable(T::Array[EasyTalk::Model]) nested validation' do
+      let(:address_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Address'
+
+          define_schema do
+            property :street, String
+            property :city, String
+          end
+        end
+      end
+
+      let(:employee_class) do
+        address = address_class
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Employee'
+
+          define_schema do
+            property :name, String
+            property :addresses, T.nilable(T::Array[address])
+          end
+        end
+      end
+
+      before do
+        stub_const('Address', address_class)
+        stub_const('Employee', employee_class)
+      end
+
+      it 'allows nil for nilable array property' do
+        employee = Employee.new(name: 'John', addresses: nil)
+        expect(employee.valid?).to be true
+      end
+
+      it 'validates nested models in nilable arrays' do
+        employee = Employee.new(
+          name: 'John',
+          addresses: [
+            Address.new(street: '', city: '')
+          ]
+        )
+        expect(employee.valid?).to be false
+        expect(employee.errors[:'addresses[0].street']).to include("can't be blank")
+      end
+
+      it 'auto-instantiates hash items in nilable arrays' do
+        employee = Employee.new(
+          name: 'John',
+          addresses: [
+            { street: '123 Main St', city: 'Boston' }
+          ]
+        )
+        expect(employee.addresses.first).to be_a(Address)
+        expect(employee.valid?).to be true
+      end
+    end
   end
 end
