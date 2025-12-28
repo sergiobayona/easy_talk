@@ -91,16 +91,24 @@ module EasyTalk
         type_to_check.respond_to?(:nilable?) && type_to_check.nilable?
       end
 
-      # Extract the inner type from a complex type like T.nilable(String).
+      # Extract the inner type from a complex type like T.nilable(String) or T.nilable(T::Array[Model]).
       #
       # @param type_to_unwrap [Class, Object] The type to unwrap (defaults to @type)
       # @return [Class, Object] The inner type, or the original type if not wrapped
       def extract_inner_type(type_to_unwrap = @type)
-        if type_to_unwrap.respond_to?(:unwrap_nilable) && type_to_unwrap.unwrap_nilable.respond_to?(:raw_type)
-          type_to_unwrap.unwrap_nilable.raw_type
-        elsif type_to_unwrap.respond_to?(:types)
-          # For union types like T.nilable(String), extract the non-nil type
-          type_to_unwrap.types.find { |inner| inner.respond_to?(:raw_type) && inner.raw_type != NilClass }
+        if type_to_unwrap.respond_to?(:unwrap_nilable)
+          unwrapped = type_to_unwrap.unwrap_nilable
+          # Return TypedArray directly (for T.nilable(T::Array[Model]))
+          return unwrapped if unwrapped.is_a?(T::Types::TypedArray)
+          # Return raw_type for simple types (for T.nilable(String))
+          return unwrapped.raw_type if unwrapped.respond_to?(:raw_type)
+        end
+
+        if type_to_unwrap.respond_to?(:types)
+          # For union types, find the non-nil type
+          # Prefer TypedArray if present, otherwise find type with raw_type
+          type_to_unwrap.types.find { |t| t.is_a?(T::Types::TypedArray) } ||
+            type_to_unwrap.types.find { |t| t.respond_to?(:raw_type) && t.raw_type != NilClass }
         else
           type_to_unwrap
         end

@@ -49,43 +49,62 @@ module EasyTalk
     module InstanceMethods
       def initialize(attributes = {})
         @additional_properties = {}
-        # Normalize keys to symbols to track provided attributes
         provided_keys = attributes.keys.to_set(&:to_sym)
 
         super # Perform initial mass assignment
 
-        # After initial assignment, instantiate nested EasyTalk::Model objects
         schema_def = self.class.schema_definition
-
-        # Only proceed if we have a valid schema definition
         return unless schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
 
         (schema_def.schema[:properties] || {}).each do |prop_name, prop_definition|
-          # Get the defined type and the currently assigned value
-          defined_type = prop_definition[:type]
-          nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
-
-          # Only apply default if attribute was NOT provided at all
-          unless provided_keys.include?(prop_name)
-            default_value = prop_definition.dig(:constraints, :default)
-            public_send("#{prop_name}=", default_value) unless default_value.nil?
-          end
-
-          # Re-read current_value after potential default assignment
-          current_value = public_send(prop_name)
-
-          next if nilable_type && current_value.nil?
-
-          defined_type = T::Utils::Nilable.get_underlying_type(defined_type) if nilable_type
-
-          # Check if the type is another EasyTalk::Model and the value is a Hash
-          next unless defined_type.is_a?(Class) && defined_type.include?(EasyTalk::Model) && current_value.is_a?(Hash)
-
-          # Instantiate the nested model and assign it back
-          nested_instance = defined_type.new(current_value)
-          public_send("#{prop_name}=", nested_instance)
+          process_property_initialization(prop_name, prop_definition, provided_keys)
         end
       end
+
+      private
+
+      def process_property_initialization(prop_name, prop_definition, provided_keys)
+        defined_type = prop_definition[:type]
+        nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
+
+        apply_default_value(prop_name, prop_definition, provided_keys)
+
+        current_value = public_send(prop_name)
+        return if nilable_type && current_value.nil?
+
+        defined_type = T::Utils::Nilable.get_underlying_type(defined_type) if nilable_type
+        instantiate_nested_models(prop_name, defined_type, current_value)
+      end
+
+      def apply_default_value(prop_name, prop_definition, provided_keys)
+        return if provided_keys.include?(prop_name)
+
+        default_value = prop_definition.dig(:constraints, :default)
+        public_send("#{prop_name}=", default_value) unless default_value.nil?
+      end
+
+      def instantiate_nested_models(prop_name, defined_type, current_value)
+        # Single nested model: convert Hash to model instance
+        if defined_type.is_a?(Class) && defined_type.include?(EasyTalk::Model) && current_value.is_a?(Hash)
+          public_send("#{prop_name}=", defined_type.new(current_value))
+          return
+        end
+
+        # Array of nested models: convert Hash items to model instances
+        instantiate_array_items(prop_name, defined_type, current_value)
+      end
+
+      def instantiate_array_items(prop_name, defined_type, current_value)
+        return unless defined_type.is_a?(T::Types::TypedArray) && current_value.is_a?(Array)
+
+        item_type = defined_type.type.respond_to?(:raw_type) ? defined_type.type.raw_type : nil
+        return unless item_type.is_a?(Class) && item_type.include?(EasyTalk::Model)
+
+        instantiated = current_value.map { |item| item.is_a?(Hash) ? item_type.new(item) : item }
+        public_send("#{prop_name}=", instantiated)
+      end
+
+      public
 
       def method_missing(method_name, *args)
         method_string = method_name.to_s

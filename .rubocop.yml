@@ -114,3 +114,7 @@ Lint/DuplicateBranch:
 
 Gemspec/DevelopmentDependencies:
   Enabled: false
+
+Naming/PredicateMethod:
+  Exclude:
+    - spec/support/schema_validation_matcher.rb

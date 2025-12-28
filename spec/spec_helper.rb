@@ -7,6 +7,9 @@ require 'easy_talk'
 require 'pry-byebug'
 require 'rspec/json_expectations'
 
+# Load support files
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
+
 RSpec.configure do |config|
   config.example_status_persistence_file_path = '.rspec_status'
 

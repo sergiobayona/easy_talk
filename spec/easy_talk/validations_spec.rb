@@ -127,7 +127,9 @@ RSpec.describe 'Auto Validations' do
       expect(user.errors[:email]).to include("can't be blank")
       expect(user.errors[:age]).to include("can't be blank")
       expect(user.errors[:gender]).to include("can't be blank")
-      expect(user.errors[:tags]).to include("can't be blank")
+      # Arrays skip presence validation (empty arrays are valid)
+      # Use min_items constraint to require non-empty arrays
+      expect(user.errors[:tags]).to include('is too short (minimum is 1 character)')
       expect(user.errors[:active]).to include("can't be blank")
     end
   end
