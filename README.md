@@ -3,6 +3,157 @@
 [![Gem Version](https://badge.fury.io/rb/easy_talk.svg)](https://badge.fury.io/rb/easy_talk)
 [![Ruby](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml/badge.svg)](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml)
 
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [What is EasyTalk?](#what-is-easytalk)
+  - [Key Features](#key-features)
+  - [Use Cases](#use-cases)
+  - [Inspiration](#inspiration)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Version 2.0.0 Breaking Changes](#version-200-breaking-changes)
+  - [Installation Steps](#installation-steps)
+  - [Verification](#verification)
+- [Quick Start](#quick-start)
+  - [Minimal Example](#minimal-example)
+  - [Generated JSON Schema](#generated-json-schema)
+  - [Basic Usage](#basic-usage)
+- [Core Concepts](#core-concepts)
+  - [Schema Definition](#schema-definition)
+  - [Property Types](#property-types)
+    - [Ruby Types](#ruby-types)
+    - [Sorbet-Style Types](#sorbet-style-types)
+    - [Custom Types](#custom-types)
+  - [Property Constraints](#property-constraints)
+  - [Required vs Optional Properties](#required-vs-optional-properties)
+  - [Automatic Validation Generation](#automatic-validation-generation)
+  - [Manual Validation Overrides](#manual-validation-overrides)
+- [Defining Schemas](#defining-schemas)
+  - [Basic Schema Structure](#basic-schema-structure)
+  - [Property Definitions](#property-definitions)
+  - [Arrays and Collections](#arrays-and-collections)
+  - [Constraints and Automatic Validations](#constraints-and-automatic-validations)
+  - [Supported Constraint-to-Validation Mappings](#supported-constraint-to-validation-mappings)
+  - [Additional Properties](#additional-properties)
+  - [Property Naming](#property-naming)
+- [Schema Composition](#schema-composition)
+  - [Using T::AnyOf](#using-tanyof)
+  - [Using T::OneOf](#using-toneof)
+  - [Using T::AllOf](#using-tallof)
+  - [Complex Compositions](#complex-compositions)
+  - [Reusing Models](#reusing-models)
+- [ActiveModel Integration](#activemodel-integration)
+  - [Enhanced Validation System](#enhanced-validation-system)
+  - [Error Handling](#error-handling)
+  - [Standardized Error Formatting](#standardized-error-formatting)
+    - [Available Formats](#available-formats)
+    - [Instance Methods](#instance-methods)
+    - [Direct API Usage](#direct-api-usage)
+    - [Configuration](#configuration)
+  - [Model Attributes](#model-attributes)
+- [Advanced Features](#advanced-features)
+  - [Schema-Only Mode (EasyTalk::Schema)](#schema-only-mode-easytalkschema)
+    - [Key Differences from EasyTalk::Model](#key-differences-from-easytalkmodel)
+    - [When to Use Each](#when-to-use-each)
+  - [LLM Function Generation](#llm-function-generation)
+  - [Schema Transformation](#schema-transformation)
+  - [Type Checking and Validation](#type-checking-and-validation)
+  - [Custom Type Builders](#custom-type-builders)
+    - [Registering Custom Types](#registering-custom-types)
+    - [Creating a Custom Builder](#creating-a-custom-builder)
+    - [Collection Type Builders](#collection-type-builders)
+    - [Overriding Built-in Types](#overriding-built-in-types)
+    - [Registry API](#registry-api)
+  - [Type Introspection](#type-introspection)
+- [Configuration](#configuration-1)
+  - [Global Settings](#global-settings)
+  - [Automatic Validation Configuration](#automatic-validation-configuration)
+  - [Per-Model Configuration](#per-model-configuration)
+  - [Validation Adapters](#validation-adapters)
+    - [Built-in Adapters](#built-in-adapters)
+    - [Global Adapter Configuration](#global-adapter-configuration)
+    - [Per-Model Validation Control](#per-model-validation-control)
+    - [Per-Property Validation Control](#per-property-validation-control)
+    - [Custom Validation Adapters](#custom-validation-adapters)
+- [Examples](#examples)
+  - [User Registration (with Auto-Validations)](#user-registration-with-auto-validations)
+  - [Payment Processing](#payment-processing)
+  - [Complex Object Hierarchies](#complex-object-hierarchies)
+  - [API Integration](#api-integration)
+- [Troubleshooting](#troubleshooting)
+  - [Common Errors](#common-errors)
+    - ["Invalid property name"](#invalid-property-name)
+    - ["Property type is missing"](#property-type-is-missing)
+    - ["Unknown option"](#unknown-option)
+  - [Schema Validation Issues](#schema-validation-issues)
+  - [Type Errors](#type-errors)
+  - [Best Practices](#best-practices)
+- [Nullable vs Optional Properties in EasyTalk](#nullable-vs-optional-properties-in-easytalk)
+  - [Key Concepts](#key-concepts)
+  - [Nullable Properties](#nullable-properties)
+  - [Optional Properties](#optional-properties)
+  - [Nullable AND Optional Properties](#nullable-and-optional-properties)
+  - [Configuration Options](#configuration-options)
+  - [Practical Examples](#practical-examples)
+    - [User Profile Schema](#user-profile-schema)
+  - [Common Gotchas](#common-gotchas)
+    - [Misconception: Nullable Implies Optional](#misconception-nullable-implies-optional)
+    - [Misconception: Optional Properties Accept Null](#misconception-optional-properties-accept-null)
+  - [Migration from Earlier Versions](#migration-from-earlier-versions)
+  - [Best Practices](#best-practices-1)
+  - [JSON Schema Comparison](#json-schema-comparison)
+- [Migration Guide from v1.x to v2.0](#migration-guide-from-v1x-to-v20)
+  - [Breaking Changes Summary](#breaking-changes-summary)
+  - [Migration Steps](#migration-steps)
+    - [1. Replace Hash-based Nested Schemas](#1-replace-hash-based-nested-schemas)
+    - [2. Review Automatic Validations](#2-review-automatic-validations)
+    - [3. Configuration Updates](#3-configuration-updates)
+  - [Compatibility Notes](#compatibility-notes)
+- [Development and Contributing](#development-and-contributing)
+  - [Setting Up the Development Environment](#setting-up-the-development-environment)
+  - [Running Tests](#running-tests)
+  - [Code Quality](#code-quality)
+  - [Contributing Guidelines](#contributing-guidelines)
+- [JSON Schema Version (`$schema` Keyword)](#json-schema-version-schema-keyword)
+  - [Why Use `$schema`?](#why-use-schema)
+  - [Supported Draft Versions](#supported-draft-versions)
+  - [Global Configuration](#global-configuration)
+  - [Per-Model Configuration](#per-model-configuration-1)
+  - [Disabling `$schema` for Specific Models](#disabling-schema-for-specific-models)
+  - [Custom Schema URIs](#custom-schema-uris)
+  - [Nested Models](#nested-models)
+  - [Default Behavior](#default-behavior)
+  - [Best Practices](#best-practices-2)
+- [Schema Identifier (`$id` Keyword)](#schema-identifier-id-keyword)
+  - [Why Use `$id`?](#why-use-id)
+  - [Global Configuration](#global-configuration-1)
+  - [Per-Model Configuration](#per-model-configuration-2)
+  - [Disabling `$id` for Specific Models](#disabling-id-for-specific-models)
+  - [Combining `$schema` and `$id`](#combining-schema-and-id)
+  - [Nested Models](#nested-models-1)
+  - [URI Formats](#uri-formats)
+  - [Default Behavior](#default-behavior-1)
+  - [Best Practices](#best-practices-3)
+- [Schema References (`$ref` and `$defs`)](#schema-references-ref-and-defs)
+  - [Why Use `$ref`?](#why-use-ref)
+  - [Default Behavior (Inline Schemas)](#default-behavior-inline-schemas)
+  - [Enabling `$ref` References](#enabling-ref-references)
+    - [Global Configuration](#global-configuration-2)
+    - [Per-Property Configuration](#per-property-configuration)
+  - [Arrays of Models](#arrays-of-models)
+  - [Nilable Models with `$ref`](#nilable-models-with-ref)
+  - [Multiple References to the Same Model](#multiple-references-to-the-same-model)
+  - [Combining `$ref` with Other Constraints](#combining-ref-with-other-constraints)
+  - [Interaction with `compose`](#interaction-with-compose)
+  - [Best Practices](#best-practices-4)
+  - [Default Behavior](#default-behavior-2)
+- [JSON Schema Compatibility](#json-schema-compatibility)
+  - [Supported Versions](#supported-versions)
+  - [Specification Compliance](#specification-compliance)
+  - [Known Limitations](#known-limitations)
+- [License](#license)
+
 ## Introduction
 
 ### What is EasyTalk?
@@ -1207,18 +1358,18 @@ property :status, String, enum: ["active", "inactive", "pending"]
 9. **Use nullable_optional_property** for fields that can be omitted or null
 10. **Document breaking changes** when updating schema definitions
 
-# Nullable vs Optional Properties in EasyTalk
+## Nullable vs Optional Properties in EasyTalk
 
 One of the most important distinctions when defining schemas is understanding the difference between **nullable** properties and **optional** properties. This guide explains these concepts and how to use them effectively in EasyTalk.
 
-## Key Concepts
+### Key Concepts
 
 | Concept | Description | JSON Schema Effect | EasyTalk Syntax |
 |---------|-------------|-------------------|-----------------|
 | **Nullable** | Property can have a `null` value | Adds `"null"` to the type array | `T.nilable(Type)` |
 | **Optional** | Property doesn't have to exist | Omits property from `"required"` array | `optional: true` constraint |
 
-## Nullable Properties
+### Nullable Properties
 
 A **nullable** property can contain a `null` value, but the property itself must still be present in the object:
 
@@ -1244,7 +1395,7 @@ In this case, the following data would be valid:
 But this would be invalid:
 - `{ }` (missing the age property entirely)
 
-## Optional Properties
+### Optional Properties
 
 An **optional** property doesn't have to be present in the object at all:
 
@@ -1270,7 +1421,7 @@ In this case, the following data would be valid:
 But this would be invalid:
 - `{ "nickname": null }` (null is not allowed because the property isn't nullable)
 
-## Nullable AND Optional Properties
+### Nullable AND Optional Properties
 
 For properties that should be both nullable and optional (can be omitted or null), you need to combine both approaches:
 
@@ -1297,7 +1448,7 @@ nullable_optional_property :bio, String
 
 Which is equivalent to the above.
 
-## Configuration Options
+### Configuration Options
 
 By default, nullable properties are still required. You can change this global behavior:
 
@@ -1309,9 +1460,9 @@ end
 
 With this configuration, any property defined with `T.nilable(Type)` will be treated as both nullable and optional.
 
-## Practical Examples
+### Practical Examples
 
-### User Profile Schema
+#### User Profile Schema
 
 ```ruby
 class UserProfile
@@ -1340,17 +1491,17 @@ This creates clear expectations for data validation:
 - `email` doesn't have to be present, but if it is, it cannot be null
 - `bio` doesn't have to be present, and if it is, it can be null
 
-## Common Gotchas
+### Common Gotchas
 
-### Misconception: Nullable Implies Optional
+#### Misconception: Nullable Implies Optional
 
 A common mistake is assuming that `T.nilable(Type)` makes a property optional. By default, it only allows the property to have a null value - the property itself is still required to exist in the object.
 
-### Misconception: Optional Properties Accept Null
+#### Misconception: Optional Properties Accept Null
 
 An optional property (defined with `optional: true`) can be omitted entirely, but if it is present, it must conform to its type constraint. If you want to allow null values, you must also make it nullable with `T.nilable(Type)`.
 
-## Migration from Earlier Versions
+### Migration from Earlier Versions
 
 If you're upgrading from EasyTalk version 1.0.1 or earlier, be aware that the handling of nullable vs optional properties has been improved for clarity.
 
@@ -1364,14 +1515,14 @@ end
 
 We recommend updating your schema definitions to explicitly declare which properties are optional using the `optional: true` constraint, as this makes your intent clearer.
 
-## Best Practices
+### Best Practices
 
 1. **Be explicit about intent**: Always clarify whether properties should be nullable, optional, or both
 2. **Use the helper method**: For properties that are both nullable and optional, use `nullable_optional_property`
 3. **Document expectations**: Use comments to clarify validation requirements for complex schemas
 4. **Consider validation implications**: Remember that ActiveModel validations operate independently of the schema definition
 
-## JSON Schema Comparison
+### JSON Schema Comparison
 
 | EasyTalk Definition | Required | Nullable | JSON Schema Equivalent |
 |--------------------|----------|----------|------------------------|
