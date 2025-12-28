@@ -615,6 +615,57 @@ user.address.street # => "123 Main St"
 
 ## Advanced Features
 
+### Schema-Only Mode (EasyTalk::Schema)
+
+For scenarios where you need JSON Schema generation without ActiveModel validations, use `EasyTalk::Schema` instead of `EasyTalk::Model`. This is ideal for:
+
+- API documentation and OpenAPI spec generation
+- Schema-first design where validation happens elsewhere
+- High-performance scenarios where validation overhead is unwanted
+- Generating schemas for external systems
+
+```ruby
+class ApiContract
+  include EasyTalk::Schema  # Not EasyTalk::Model
+
+  define_schema do
+    title 'API Contract'
+    description 'A schema-only contract'
+    property :name, String, min_length: 2
+    property :age, Integer, minimum: 0
+  end
+end
+
+# Schema generation works the same
+ApiContract.json_schema
+# => {"type" => "object", "title" => "API Contract", ...}
+
+# Instances can be created and accessed
+contract = ApiContract.new(name: 'Test', age: 25)
+contract.name  # => 'Test'
+
+# But no validation methods are available
+contract.valid?  # => NoMethodError
+contract.errors  # => NoMethodError
+```
+
+#### Key Differences from EasyTalk::Model
+
+| Feature | EasyTalk::Model | EasyTalk::Schema |
+|---------|-----------------|------------------|
+| JSON Schema generation | Yes | Yes |
+| Property accessors | Yes | Yes |
+| Nested model instantiation | Yes | Yes |
+| ActiveModel::Validations | Yes | No |
+| `valid?` / `errors` | Yes | No |
+| Validation adapters | Yes | N/A |
+| Error formatting | Yes | No |
+
+#### When to Use Each
+
+- **Use `EasyTalk::Model`** when you need runtime validation of data (form inputs, API requests, user data)
+- **Use `EasyTalk::Schema`** when you only need the schema definition (documentation, code generation, external validation)
+
 ### LLM Function Generation
 EasyTalk provides a helper method for generating OpenAI function specifications:
 
