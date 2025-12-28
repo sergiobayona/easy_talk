@@ -6,19 +6,18 @@
 ## Introduction
 
 ### What is EasyTalk?
-EasyTalk is a Ruby library that simplifies defining and generating JSON Schema. It provides an intuitive interface for Ruby developers to define structured data models that can be used for validation and documentation.
+EasyTalk is a Ruby library for defining structured data models with automatic JSON Schema generation and flexible validation. Define your schema once and get both a JSON Schema document and runtime validations from a single source of truth.
 
 ### Key Features
-* **Intuitive Schema Definition**: Use Ruby classes and methods to define JSON Schema documents easily.
-* **Automatic ActiveModel Validations**: Schema constraints automatically generate corresponding ActiveModel validations (configurable).
-* **Works for plain Ruby classes and ActiveModel classes**: Integrate with existing code or build from scratch.
-* **LLM Function Support**: Ideal for integrating with Large Language Models (LLMs) such as OpenAI's GPT series. EasyTalk enables you to effortlessly create JSON Schema documents describing the inputs and outputs of LLM function calls.
-* **Schema Composition**: Define EasyTalk models and reference them in other EasyTalk models to create complex schemas.
-* **Enhanced Model Integration**: Automatic instantiation of nested EasyTalk models from hash attributes.
-* **Flexible Configuration**: Global and per-model configuration options for fine-tuned control.
-* **JSON Schema Version Support**: Configure the `$schema` keyword to declare which JSON Schema draft version your schemas conform to (Draft-04 through Draft 2020-12).
-* **Schema Identification**: Configure the `$id` keyword to provide a unique identifier URI for your schemas.
-* **Schema References**: Use `$ref` and `$defs` for reusable schema definitions, reducing duplication when models are used in multiple places.
+* **Intuitive Schema Definition**: Define JSON Schema using Ruby classes with a clean, declarative DSL.
+* **Rich Type System**: Supports Ruby primitives plus Sorbet-style types (`T::Array[Type]`, `T.nilable(Type)`, `T::Boolean`) and composition types (`T::AnyOf`, `T::OneOf`, `T::AllOf`).
+* **Automatic Validations**: Schema constraints automatically generate ActiveModel validations, including nested model validation within arrays.
+* **API Error Formatting**: Format validation errors in multiple standards (flat, JSON Pointer, RFC 7807, JSON:API).
+* **LLM Function Support**: Generate JSON Schema for LLM function calling (OpenAI, Anthropic, etc.).
+* **Schema Composition**: Reference models within other models and use `$ref`/`$defs` for reusable definitions.
+* **Nested Model Instantiation**: Hash attributes automatically instantiate nested EasyTalk models, including within arrays.
+* **Flexible Configuration**: Global and per-model settings for validation behavior, naming strategies, and schema output.
+* **JSON Schema Versions**: Support for Draft-04 through Draft 2020-12 with configurable `$schema` and `$id` keywords.
 
 ### Use Cases
 - API request/response validation
