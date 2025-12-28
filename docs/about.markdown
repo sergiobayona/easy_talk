@@ -4,15 +4,35 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+# About EasyTalk
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+EasyTalk is a Ruby library for defining and generating JSON Schema from Ruby classes. Inspired by Python's Pydantic library, it provides an ActiveModel-like interface for defining structured data models with automatic validation and JSON Schema generation.
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+## Why EasyTalk?
 
+- **Type Safety** - Define your data structures once and get validation automatically
+- **JSON Schema Generation** - Produce standards-compliant JSON Schema from Ruby code
+- **LLM Integration** - Generate function schemas for OpenAI and other LLM providers
+- **ActiveModel Compatible** - Works with Rails forms, validations, and serialization
 
-[jekyll-organization]: https://github.com/jekyll
+## Use Cases
+
+- **API Request/Response Validation** - Define expected shapes for API payloads
+- **LLM Function Calling** - Generate structured output schemas for AI applications
+- **Configuration Files** - Validate configuration against a schema
+- **Data Pipelines** - Ensure data conforms to expected structures
+
+## Links
+
+- [GitHub Repository](https://github.com/sergiobayona/easy_talk)
+- [RubyGems](https://rubygems.org/gems/easy_talk)
+- [API Documentation](api/)
+- [Changelog](https://github.com/sergiobayona/easy_talk/blob/main/CHANGELOG.md)
+
+## Author
+
+Created by [Sergio Bayona](https://github.com/sergiobayona).
+
+## License
+
+EasyTalk is released under the [MIT License](https://github.com/sergiobayona/easy_talk/blob/main/LICENSE.txt).

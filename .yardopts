@@ -1,0 +1,13 @@
+--readme README.md
+--title "EasyTalk API Documentation"
+--markup markdown
+--output-dir docs/api
+--protected
+--no-private
+--hide-void-return
+--embed-mixins
+lib/**/*.rb
+-
+README.md
+CHANGELOG.md
+CONSTRAINTS.md
