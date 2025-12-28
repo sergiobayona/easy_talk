@@ -501,6 +501,78 @@ user.errors[:age] # => ["must be greater than 21"] # Custom validation
 user.errors[:height] # => ["must be greater than 0"] # Overridden validation
 ```
 
+### Standardized Error Formatting
+
+EasyTalk provides multiple output formats for validation errors, making it easy to build consistent API responses.
+
+#### Available Formats
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| `:flat` | Simple array of field/message/code objects | General purpose APIs |
+| `:json_pointer` | Array with JSON Pointer (RFC 6901) paths | JSON Schema validation |
+| `:rfc7807` | RFC 7807 Problem Details format | Standards-compliant APIs |
+| `:jsonapi` | JSON:API specification error format | JSON:API implementations |
+
+#### Instance Methods
+
+Every EasyTalk model includes convenient methods for error formatting:
+
+```ruby
+user = User.new(name: "", email: "invalid")
+user.valid?
+
+# Use default format (configurable globally)
+user.validation_errors
+# => [{"field" => "name", "message" => "can't be blank", "code" => "blank"}, ...]
+
+# Flat format
+user.validation_errors_flat
+# => [{"field" => "name", "message" => "can't be blank", "code" => "blank"}]
+
+# JSON Pointer format
+user.validation_errors_json_pointer
+# => [{"pointer" => "/properties/name", "message" => "can't be blank", "code" => "blank"}]
+
+# RFC 7807 Problem Details
+user.validation_errors_rfc7807
+# => {
+#      "type" => "about:blank#validation-error",
+#      "title" => "Validation Failed",
+#      "status" => 422,
+#      "detail" => "The request contains invalid parameters",
+#      "errors" => [...]
+#    }
+
+# JSON:API format
+user.validation_errors_jsonapi
+# => {
+#      "errors" => [
+#        {"status" => "422", "source" => {"pointer" => "/data/attributes/name"}, ...}
+#      ]
+#    }
+```
+
+#### Direct API Usage
+
+You can also format errors directly using the `ErrorFormatter` module:
+
+```ruby
+EasyTalk::ErrorFormatter.format(user.errors, format: :rfc7807, title: "User Validation Failed")
+```
+
+#### Configuration
+
+Configure error formatting globally:
+
+```ruby
+EasyTalk.configure do |config|
+  config.default_error_format = :rfc7807        # Default format for validation_errors
+  config.error_type_base_uri = 'https://api.example.com/errors'  # Base URI for RFC 7807
+  config.include_error_codes = true             # Include error codes in output
+end
+```
+
 ### Model Attributes
 EasyTalk models provide getters and setters for all defined properties:
 
@@ -590,16 +662,125 @@ property :age, Integer, enum: ["young", "old"]  # Error!
 ```
 
 ### Custom Type Builders
-For advanced use cases, you can create custom type builders:
+
+EasyTalk provides a type registry that allows you to register custom types with their corresponding schema builders.
+
+#### Registering Custom Types
+
+Register types in your configuration:
 
 ```ruby
-module EasyTalk
-  module Builders
-    class MyCustomTypeBuilder < BaseBuilder
-      # Custom implementation
-    end
+EasyTalk.configure do |config|
+  config.register_type(Money, MoneySchemaBuilder)
+end
+```
+
+Or register directly with the registry:
+
+```ruby
+EasyTalk::Builders::Registry.register(Money, MoneySchemaBuilder)
+```
+
+#### Creating a Custom Builder
+
+Custom builders extend `BaseBuilder` and implement the schema generation logic:
+
+```ruby
+class MoneySchemaBuilder < EasyTalk::Builders::BaseBuilder
+  VALID_OPTIONS = {
+    currency: { type: T.nilable(String), key: :currency }
+  }.freeze
+
+  def initialize(name, options = {})
+    super(name, { type: 'object' }, options, VALID_OPTIONS)
+  end
+
+  def build
+    schema.merge(
+      properties: {
+        amount: { type: 'number' },
+        currency: { type: 'string', default: options[:currency] || 'USD' }
+      },
+      required: %w[amount currency]
+    )
   end
 end
+
+# Register and use
+EasyTalk::Builders::Registry.register(Money, MoneySchemaBuilder)
+
+class Order
+  include EasyTalk::Model
+
+  define_schema do
+    property :total, Money, currency: 'EUR'
+  end
+end
+```
+
+#### Collection Type Builders
+
+For types that wrap other types (like arrays), use the `collection: true` option:
+
+```ruby
+EasyTalk::Builders::Registry.register(
+  CustomCollection,
+  CustomCollectionBuilder,
+  collection: true
+)
+```
+
+Collection builders receive `(name, inner_type, constraints)` instead of `(name, constraints)`.
+
+#### Overriding Built-in Types
+
+You can override built-in type builders:
+
+```ruby
+class EnhancedStringBuilder < EasyTalk::Builders::StringBuilder
+  def build
+    result = super
+    result[:custom_extension] = true
+    result
+  end
+end
+
+EasyTalk::Builders::Registry.register(String, EnhancedStringBuilder)
+```
+
+#### Registry API
+
+```ruby
+# Check if a type is registered
+EasyTalk::Builders::Registry.registered?(Money)  # => true
+
+# List all registered types
+EasyTalk::Builders::Registry.registered_types
+
+# Unregister a type
+EasyTalk::Builders::Registry.unregister(Money)
+
+# Reset registry to defaults
+EasyTalk::Builders::Registry.reset!
+```
+
+### Type Introspection
+
+EasyTalk provides a `TypeIntrospection` module for reliable type detection, useful when building custom type builders:
+
+```ruby
+# Check type categories
+EasyTalk::TypeIntrospection.boolean_type?(T::Boolean)   # => true
+EasyTalk::TypeIntrospection.typed_array?(T::Array[String])  # => true
+EasyTalk::TypeIntrospection.nilable_type?(T.nilable(String))  # => true
+EasyTalk::TypeIntrospection.primitive_type?(Integer)    # => true
+
+# Get JSON Schema type string
+EasyTalk::TypeIntrospection.json_schema_type(Integer)   # => 'integer'
+EasyTalk::TypeIntrospection.json_schema_type(Float)     # => 'number'
+
+# Extract inner type from nilable
+EasyTalk::TypeIntrospection.extract_inner_type(T.nilable(String))  # => String
 ```
 
 ## Configuration
@@ -612,12 +793,20 @@ EasyTalk.configure do |config|
   # Schema behavior options
   config.default_additional_properties = false  # Control additional properties on all models
   config.nilable_is_optional = false           # Makes T.nilable properties also optional
-  config.auto_validations = true               # Automatically generate ActiveModel validations
   config.schema_version = :none                # JSON Schema version for $schema keyword
                                                # Options: :none, :draft202012, :draft201909, :draft7, :draft6, :draft4
   config.schema_id = nil                       # Base URI for $id keyword (nil = no $id)
   config.use_refs = false                      # Use $ref for nested models instead of inlining
   config.property_naming_strategy = :camel_case # Options: :identity (default), :snake_case, :camel_case, :pascal_case
+
+  # Validation options
+  config.auto_validations = true               # Automatically generate ActiveModel validations
+  config.validation_adapter = :active_model    # Validation backend (:active_model, :none, or custom)
+
+  # Error formatting options
+  config.default_error_format = :flat          # Default format (:flat, :json_pointer, :rfc7807, :jsonapi)
+  config.error_type_base_uri = 'about:blank'   # Base URI for RFC 7807 error types
+  config.include_error_codes = true            # Include error codes in formatted output
 end
 ```
 
@@ -650,13 +839,81 @@ You can configure additional properties for individual models:
 ```ruby
 class User
   include EasyTalk::Model
-  
+
   define_schema do
     title "User"
     additional_properties true  # Allow arbitrary additional properties on this model
     property :name, String
     property :email, String, format: "email"
   end
+end
+```
+
+### Validation Adapters
+
+EasyTalk uses a pluggable validation adapter system that allows you to customize how validations are generated from schema constraints.
+
+#### Built-in Adapters
+
+| Adapter | Description |
+|---------|-------------|
+| `:active_model` | Default. Generates ActiveModel validations from schema constraints |
+| `:none` | Skips validation generation entirely (schema-only mode) |
+
+#### Global Adapter Configuration
+
+```ruby
+EasyTalk.configure do |config|
+  config.validation_adapter = :none  # Disable all automatic validations
+end
+```
+
+#### Per-Model Validation Control
+
+Disable validations for a specific model while keeping them enabled globally:
+
+```ruby
+class LegacyModel
+  include EasyTalk::Model
+
+  define_schema(validations: false) do
+    property :data, String, min_length: 1  # No validation generated
+  end
+end
+```
+
+#### Per-Property Validation Control
+
+Disable validation for specific properties:
+
+```ruby
+class User
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String, min_length: 2              # Validation generated
+    property :legacy_field, String, validate: false    # No validation for this property
+  end
+end
+```
+
+#### Custom Validation Adapters
+
+Create custom adapters for specialized validation needs:
+
+```ruby
+class MyCustomAdapter < EasyTalk::ValidationAdapters::Base
+  def self.build_validations(klass, property_name, type, constraints)
+    # Custom validation logic
+  end
+end
+
+# Register the adapter
+EasyTalk::ValidationAdapters::Registry.register(:custom, MyCustomAdapter)
+
+# Use it globally
+EasyTalk.configure do |config|
+  config.validation_adapter = :custom
 end
 ```
 
