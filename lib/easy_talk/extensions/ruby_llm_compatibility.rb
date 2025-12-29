@@ -40,10 +40,7 @@ module EasyTalk
         klass_name = self.class.name
         return 'unnamed_tool' if klass_name.nil?
 
-        normalized = klass_name.to_s.dup.force_encoding('UTF-8')
-        normalized = normalized.unicode_normalize(:nfkd) if normalized.respond_to?(:unicode_normalize)
-        normalized.encode('ASCII', replace: '')
-                  .gsub(/[^a-zA-Z0-9_-]/, '-')
+        klass_name.gsub('::', '_')
                   .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
                   .gsub(/([a-z\d])([A-Z])/, '\1_\2')
                   .downcase
