@@ -12,6 +12,7 @@ require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 require_relative 'validation_builder'
 require_relative 'error_formatter'
+require_relative 'extensions/ruby_llm_compatibility'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -38,12 +39,14 @@ module EasyTalk
   module Model
     def self.included(base)
       base.extend(ClassMethods)
+      base.extend(EasyTalk::Extensions::RubyLLMCompatibility) # Add class-level methods
 
       base.include ActiveModel::API
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
       base.include(InstanceMethods)
       base.include(ErrorFormatter::InstanceMethods)
+      base.include(EasyTalk::Extensions::RubyLLMToolInstanceMethods) # Add instance-level RubyLLM tool methods
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
