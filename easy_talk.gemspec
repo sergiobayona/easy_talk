@@ -8,8 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ['Sergio Bayona']
   spec.email = ['bayona.sergio@gmail.com']
 
-  spec.summary = 'Generate json-schema from Ruby classes with ActiveModel integration.'
-  spec.description = 'Generate json-schema from plain Ruby classes with ActiveModel integration for validations and serialization.'
+  spec.summary = 'JSON Schema generation and validation for Ruby classes, ideal for LLM function calling.'
+  spec.description = 'Define schemas using a clean DSL and get both JSON Schema documents and runtime validations. ' \
+                     'Perfect for API request/response validation, LLM function definitions (OpenAI, Anthropic), ' \
+                     'and structured data modeling. Features Sorbet-style types, schema composition, ' \
+                     'pluggable validation adapters, and multiple error output formats (JSON:API, RFC 7807).'
   spec.homepage = 'https://github.com/sergiobayona/easy_talk'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.2'
