@@ -1,3 +1,78 @@
+## [Unreleased]
+
+### Added
+
+- **Pluggable Validation Adapter System**: Complete overhaul of the validation layer to make it a distinct, pluggable component (#89)
+  - New `EasyTalk::ValidationAdapters::Base` abstract class defining the adapter interface
+  - New `EasyTalk::ValidationAdapters::Registry` for adapter registration and lookup
+  - New `EasyTalk::ValidationAdapters::ActiveModelAdapter` as the default adapter
+  - New `EasyTalk::ValidationAdapters::NoneAdapter` for schema-only use cases
+  - Per-model validation configuration: `define_schema(validations: false)`, `define_schema(validations: :none)`, or `define_schema(validations: CustomAdapter)`
+  - Per-property validation control with `validate: false` constraint
+  - Global configuration via `config.validation_adapter = :active_model`
+
+- **Schema-Only Module**: New `EasyTalk::Schema` module for schema generation without ActiveModel (#89)
+  - Does not include `ActiveModel::API` or `ActiveModel::Validations`
+  - Ideal for API documentation, OpenAPI specs, and schema-first design
+
+- **Pluggable Type Registry**: Runtime registration of custom types with their corresponding schema builders (#80)
+  - New `EasyTalk::Builders::Registry` class with `register`, `resolve`, `registered?`, `unregister`, `registered_types`, and `reset!` methods
+  - Added `EasyTalk.register_type` convenience method at module level
+  - Added `config.register_type` for configuration block registration
+  - Allows extending EasyTalk with custom types (e.g., Money, GeoPoint) without modifying gem source
+
+- **Robust Type Introspection**: New `TypeIntrospection` module replacing brittle string-based type detection (#83)
+  - Predicate methods: `boolean_type?`, `typed_array?`, `nilable_type?`, `primitive_type?`
+  - Helper methods: `json_schema_type`, `get_type_class`, `extract_inner_type`
+  - Uses Sorbet's type system properly instead of string pattern matching
+
+- **Standardized Validation Error Output**: Helper methods for API-friendly error formats (#88)
+  - **Flat format**: Simple array of field/message/code objects
+  - **JSON Pointer (RFC 6901)**: Paths like `/properties/name`
+  - **RFC 7807**: Problem Details for HTTP APIs
+  - **JSON:API**: Standard JSON:API error format
+  - Instance methods: `validation_errors(format:)`, `validation_errors_flat`, `validation_errors_json_pointer`, `validation_errors_rfc7807`, `validation_errors_jsonapi`
+  - Configuration options: `default_error_format`, `error_type_base_uri`, `include_error_codes`
+
+- **Naming Strategies**: Support for automatic property name transformation (#61)
+  - Built-in strategies: `CAMEL_CASE`, `SNAKE_CASE`
+  - Optional `as:` property constraint for per-property name override
+  - Per-schema configuration: `define_schema { naming_strategy :camel_case }`
+  - Global configuration: `config.naming_strategy = :camel_case`
+
+- **Array Composition Support**: `T::AnyOf`, `T::OneOf`, and `T::AllOf` now work with `T::Array` (#63)
+  - Example: `property :items, T::Array[T::OneOf[ProductA, ProductB]]`
+
+- **Nested Model Validation in Arrays**: Arrays of EasyTalk::Model objects are now recursively validated (#112)
+  - Hash items in arrays are auto-instantiated to model instances
+  - Errors from nested models are merged with indexed paths (e.g., `addresses[0].street`)
+
+### Changed
+
+- **Deprecated `EasyTalk::ValidationBuilder`**: Use `EasyTalk::ValidationAdapters::ActiveModelAdapter` instead (deprecation warning shown on first use)
+
+### Fixed
+
+- **Default Value Assignment**: Default values are now properly assigned during initialization (#72)
+- **Explicit Nil Preservation**: Explicitly passed `nil` values are preserved instead of being replaced with defaults (#79)
+- **Optional Enum Validation**: Allow `nil` for optional properties with enum constraints (#64)
+- **Optional Pattern Validation**: Allow `nil` for optional properties with pattern validation (#65)
+- **Optional Format Validation**: Allow `nil` for optional properties with format validation (email, uri, uuid, etc.) (#75)
+- **Optional Length Validation**: Allow `nil` for optional properties with length constraints (#76)
+- **Schema Definition Mutation**: Avoid mutating schema definition during property building (#95)
+- **Unknown Property Types**: Fail fast with `UnknownPropertyTypeError` instead of silently returning 'object' (#97)
+- **respond_to_missing?**: Fixed `respond_to_missing?` implementation for additional properties (#98)
+- **VALID_OPTIONS Mutation**: Avoid mutating `VALID_OPTIONS` constant in TypedArrayBuilder (#99)
+- **Registry Reset**: `ValidationAdapters::Registry.reset!` now repopulates defaults (#100)
+- **FunctionBuilder Error**: Replace deprecated Instructor error with `EasyTalk::UnsupportedTypeError` (#96)
+- **Missing snake_case Strategy**: Added `SNAKE_CASE` constant to NamingStrategies module (#77)
+
+### Internal
+
+- Extracted shared schema methods into `SchemaMethods` mixin for code reuse between `Model` and `Schema` modules (#103)
+- Centralized built-in type registration in `Builders::Registry` (#102)
+- Added json_schemer for systematic validation testing with custom RSpec matchers
+
 ## [3.1.0] - 2025-12-18
 
 ### Added

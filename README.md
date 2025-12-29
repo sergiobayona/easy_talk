@@ -42,6 +42,7 @@
   - [Using T::AnyOf](#using-tanyof)
   - [Using T::OneOf](#using-toneof)
   - [Using T::AllOf](#using-tallof)
+  - [Array Composition](#array-composition)
   - [Complex Compositions](#complex-compositions)
   - [Reusing Models](#reusing-models)
 - [ActiveModel Integration](#activemodel-integration)
@@ -584,13 +585,67 @@ class VehicleRegistration
 end
 ```
 
+### Array Composition
+Composition types can be combined with arrays to define collections where each item must match one of several schemas:
+
+```ruby
+class ProductA
+  include EasyTalk::Model
+  define_schema do
+    property :sku, String
+    property :weight, Float
+  end
+end
+
+class ProductB
+  include EasyTalk::Model
+  define_schema do
+    property :sku, String
+    property :digital_url, String
+  end
+end
+
+class Order
+  include EasyTalk::Model
+
+  define_schema do
+    property :order_id, String
+    # Each item in the array must match exactly one of the product schemas
+    property :items, T::Array[T::OneOf[ProductA, ProductB]]
+  end
+end
+```
+
+This generates a JSON Schema where the `items` array validates each element against `oneOf`:
+
+```json
+{
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "object", "properties": { "sku": {...}, "weight": {...} }, ... },
+          { "type": "object", "properties": { "sku": {...}, "digital_url": {...} }, ... }
+        ]
+      }
+    }
+  }
+}
+```
+
+You can use any composition type with arrays:
+- `T::Array[T::OneOf[A, B]]` - each item matches exactly one schema
+- `T::Array[T::AnyOf[A, B]]` - each item matches one or more schemas
+- `T::Array[T::AllOf[A, B]]` - each item matches all schemas
+
 ### Complex Compositions
 You can combine composition types to create complex schemas:
 
 ```ruby
 class ComplexObject
   include EasyTalk::Model
-  
+
   define_schema do
     property :basic_info, BaseInfo
     property :specific_details, T::OneOf[DetailTypeA, DetailTypeB]
