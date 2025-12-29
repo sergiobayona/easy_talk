@@ -8,7 +8,7 @@ require 'faraday'
 # Example: Tools Integration
 # Demonstrates using EasyTalk models as Tools for RubyLLM.
 RubyLLM.configure do |config|
-  config.openai_api_key = ENV['OPENAI_API_KEY']
+  config.openai_api_key = ENV.fetch('OPENAI_API_KEY', nil)
 end
 
 # 1. Define the Tool using EasyTalk

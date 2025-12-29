@@ -8,13 +8,13 @@ require 'easy_talk'
 # Demonstrates using EasyTalk models to generate structured JSON responses.
 
 RubyLLM.configure do |config|
-  config.openai_api_key = ENV['OPENAI_API_KEY']
+  config.openai_api_key = ENV.fetch('OPENAI_API_KEY', nil)
 end
 
 # 1. Define the Schema using EasyTalk
 class Recipe
   include EasyTalk::Model
-  
+
   define_schema do
     description "A simple cooking recipe"
     property :name, String, description: "Name of the dish"
@@ -44,4 +44,4 @@ puts "Time: #{recipe.prep_time_minutes} mins"
 puts "Ingredients:"
 recipe.ingredients.each { |ing| puts "- #{ing}" }
 puts "Steps:"
-recipe.steps.each_with_index { |step, i| puts "#{i+1}. #{step}" }
+recipe.steps.each_with_index { |step, i| puts "#{i + 1}. #{step}" }
