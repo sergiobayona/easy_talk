@@ -153,6 +153,10 @@
   - [Supported Versions](#supported-versions)
   - [Specification Compliance](#specification-compliance)
   - [Known Limitations](#known-limitations)
+- [API Reference](#api-reference)
+  - [Core Modules](#core-modules)
+  - [Builders](#builders)
+  - [Configuration & Utilities](#configuration--utilities)
 - [License](#license)
 
 ## Introduction
@@ -179,7 +183,7 @@ EasyTalk is a Ruby library for defining structured data models with automatic JS
 - Configuration schema definitions
 
 ### Inspiration
-Inspired by Python's Pydantic library, EasyTalk brings similar functionality to the Ruby ecosystem, providing a Ruby-friendly approach to JSON Schema operations.
+Inspired by Python's [Pydantic](https://docs.pydantic.dev/) library, EasyTalk brings similar functionality to the Ruby ecosystem, providing a Ruby-friendly approach to JSON Schema operations.
 
 ## Installation
 
@@ -2308,6 +2312,47 @@ To learn about current capabilities, see the [spec/easy_talk/examples](https://g
 - Limited support for custom formats
 - Some draft-specific keywords may not be supported
 - Complex composition scenarios may require manual adjustment
+
+## API Reference
+
+For complete API documentation, visit [RubyDoc.info](https://rubydoc.info/gems/easy_talk).
+
+### Core Modules
+
+| Module | Description | Source |
+|--------|-------------|--------|
+| [`EasyTalk::Model`](https://rubydoc.info/gems/easy_talk/EasyTalk/Model) | Main mixin providing schema definition, validation, and JSON Schema generation | [lib/easy_talk/model.rb](lib/easy_talk/model.rb) |
+| [`EasyTalk::Schema`](https://rubydoc.info/gems/easy_talk/EasyTalk/Schema) | Schema-only mode without ActiveModel validations | [lib/easy_talk/schema.rb](lib/easy_talk/schema.rb) |
+| [`EasyTalk::SchemaDefinition`](https://rubydoc.info/gems/easy_talk/EasyTalk/SchemaDefinition) | DSL for defining properties, titles, and descriptions | [lib/easy_talk/schema_definition.rb](lib/easy_talk/schema_definition.rb) |
+| [`EasyTalk::Property`](https://rubydoc.info/gems/easy_talk/EasyTalk/Property) | Property definition and type dispatching | [lib/easy_talk/property.rb](lib/easy_talk/property.rb) |
+
+### Builders
+
+Type-specific builders that convert Ruby definitions to JSON Schema. See the [builders directory](lib/easy_talk/builders/) for all available builders.
+
+| Builder | Description |
+|---------|-------------|
+| [`ObjectBuilder`](lib/easy_talk/builders/object_builder.rb) | Handles EasyTalk::Model classes |
+| [`StringBuilder`](lib/easy_talk/builders/string_builder.rb) | String type with format, pattern, length constraints |
+| [`IntegerBuilder`](lib/easy_talk/builders/integer_builder.rb) | Integer type with min/max constraints |
+| [`NumberBuilder`](lib/easy_talk/builders/number_builder.rb) | Float/Number type with numeric constraints |
+| [`BooleanBuilder`](lib/easy_talk/builders/boolean_builder.rb) | Boolean type (T::Boolean) |
+| [`TypedArrayBuilder`](lib/easy_talk/builders/typed_array_builder.rb) | Typed arrays (T::Array[Type]) |
+| [`CompositionBuilder`](lib/easy_talk/builders/composition_builder.rb) | Composition types (T::AnyOf, T::OneOf, T::AllOf) |
+| [`UnionBuilder`](lib/easy_talk/builders/union_builder.rb) | Nilable types (T.nilable) |
+| [`TemporalBuilder`](lib/easy_talk/builders/temporal_builder.rb) | Date and DateTime types |
+| [`BaseBuilder`](lib/easy_talk/builders/base_builder.rb) | Base class for all builders |
+| [`Registry`](lib/easy_talk/builders/registry.rb) | Type-to-builder registration |
+
+### Configuration & Utilities
+
+| Class/Module | Description | Source |
+|--------------|-------------|--------|
+| [`EasyTalk::Configuration`](https://rubydoc.info/gems/easy_talk/EasyTalk/Configuration) | Global configuration options | [lib/easy_talk/configuration.rb](lib/easy_talk/configuration.rb) |
+| [`EasyTalk::ValidationBuilder`](https://rubydoc.info/gems/easy_talk/EasyTalk/ValidationBuilder) | Generates ActiveModel validations from constraints | [lib/easy_talk/validation_builder.rb](lib/easy_talk/validation_builder.rb) |
+| [`EasyTalk::ErrorFormatter`](https://rubydoc.info/gems/easy_talk/EasyTalk/ErrorFormatter) | Formats validation errors (flat, JSON Pointer, RFC 7807, JSON:API) | [lib/easy_talk/error_formatter.rb](lib/easy_talk/error_formatter.rb) |
+| [`EasyTalk::TypeIntrospection`](https://rubydoc.info/gems/easy_talk/EasyTalk/TypeIntrospection) | Type detection utilities | [lib/easy_talk/type_introspection.rb](lib/easy_talk/type_introspection.rb) |
+| [`EasyTalk::Tools::FunctionBuilder`](https://rubydoc.info/gems/easy_talk/EasyTalk/Tools/FunctionBuilder) | LLM function specification generator | [lib/easy_talk/tools/function_builder.rb](lib/easy_talk/tools/function_builder.rb) |
 
 ## License
 
