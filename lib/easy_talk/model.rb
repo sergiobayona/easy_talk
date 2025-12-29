@@ -46,7 +46,11 @@ module EasyTalk
       base.extend ActiveModel::Callbacks
       base.include(InstanceMethods)
       base.include(ErrorFormatter::InstanceMethods)
-      base.include(EasyTalk::Extensions::RubyLLMToolInstanceMethods) # Add instance-level RubyLLM tool methods
+
+      # If inheriting from RubyLLM::Tool, override schema methods to use EasyTalk's schema
+      if defined?(RubyLLM::Tool) && base < RubyLLM::Tool
+        base.include(EasyTalk::Extensions::RubyLLMToolOverrides)
+      end
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
@@ -151,6 +155,14 @@ module EasyTalk
       # to_h includes both defined and additional properties
       def to_h
         to_hash.merge(@additional_properties)
+      end
+
+      # Returns a Hash representing the schema in a format compatible with RubyLLM.
+      # Delegates to the class method. Required for RubyLLM's with_schema method.
+      #
+      # @return [Hash] The RubyLLM-compatible schema representation
+      def to_json_schema
+        self.class.to_json_schema
       end
 
       # Allow comparison with hashes
