@@ -2,6 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/easy_talk.svg)](https://badge.fury.io/rb/easy_talk)
 [![Ruby](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml/badge.svg)](https://github.com/sergiobayona/easy_talk/actions/workflows/dev-build.yml)
+[![Documentation](https://img.shields.io/badge/docs-rubydoc.info-blue.svg)](https://rubydoc.info/gems/easy_talk)
 
 ## Table of Contents
 
