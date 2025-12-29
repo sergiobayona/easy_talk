@@ -3,6 +3,24 @@
 require 'easy_talk'
 
 class JsonSchemaConverter
+  TYPE_MAPPING = {
+    'string' => String,
+    'integer' => Integer,
+    'number' => Float,
+    'boolean' => T::Boolean,
+    'array' => T::Array[String]
+  }.freeze
+
+  CONSTRAINT_KEYS = {
+    'minimum' => :minimum,
+    'maximum' => :maximum,
+    'minLength' => :min_length,
+    'maxLength' => :max_length,
+    'pattern' => :pattern,
+    'enum' => :enum,
+    'format' => :format
+  }.freeze
+
   def initialize(schema, name = "TestModel_#{SecureRandom.hex(4)}")
     @schema = schema
     @name = name
@@ -11,84 +29,56 @@ class JsonSchemaConverter
   def to_class
     schema_data = @schema
     model_name = @name
+    converter = self
 
     Class.new do
       include EasyTalk::Model
 
-      # Define a closure to capture schema_data within the class scope if needed,
-      # though we mostly process it before define_schema.
-
-      # We need to process properties outside define_schema or pass them in a way
-      # that doesn't lose context, but define_schema block runs in class context.
-      # The cleanest way is to define a local variable and use it.
-
       singleton_class.send(:define_method, :name) { model_name }
 
       define_schema do
-        # JSON Schema defaults to allowing additional properties.
-        # EasyTalk defaults to disallowing them.
-        # We must explicitly allow them unless the schema says false.
-        if schema_data.key?('additionalProperties') && schema_data['additionalProperties'] == false
-          additional_properties false
-        else
-          additional_properties true
-        end
+        additional_properties converter.allows_additional_properties?(schema_data)
 
         title schema_data['title'] if schema_data['title']
-
         description schema_data['description'] if schema_data['description']
 
         schema_data['properties']&.each do |prop_name, prop_def|
-          # Sanitize property name for Ruby method
-          safe_prop_name = prop_name.to_s.gsub(/[^a-zA-Z0-9_]/, '_')
-          safe_prop_name = "prop_#{safe_prop_name}" if safe_prop_name =~ /^\d/
-          safe_prop_name += "_" if safe_prop_name.empty? # Handle empty string key?
+          safe_prop_name = converter.sanitize_property_name(prop_name)
+          type, constraints = converter.extract_type_and_constraints(prop_def)
 
-          # Determine constraints
-          constraints = {}
-
-          # Handle Boolean Schemas or other non-Hash definitions
-          if prop_def.is_a?(TrueClass) || prop_def.is_a?(FalseClass)
-            # In JSON Schema, property: true means valid, property: false means invalid.
-            # For now, let's treat 'true' as Optional String (loose approximation).
-            type = String # Placeholder
-            constraints[:optional] = true
-          elsif prop_def.is_a?(Hash)
-            # Determine type
-            type = case prop_def['type']
-                   when 'string' then String
-                   when 'integer' then Integer
-                   when 'number' then Float
-                   when 'boolean' then T::Boolean
-                   when 'array' then T::Array[String] # simplified
-                   else String # fallback
-                   end
-
-            # Constraints Mapping
-            constraints[:minimum] = prop_def['minimum'] if prop_def['minimum']
-            constraints[:maximum] = prop_def['maximum'] if prop_def['maximum']
-            constraints[:min_length] = prop_def['minLength'] if prop_def['minLength']
-            constraints[:max_length] = prop_def['maxLength'] if prop_def['maxLength']
-            constraints[:pattern] = prop_def['pattern'] if prop_def['pattern']
-            constraints[:enum] = prop_def['enum'] if prop_def['enum']
-            constraints[:format] = prop_def['format'] if prop_def['format']
-          else
-            # Fallback
-            type = String
-          end
-
-          # Always map original name
           constraints[:as] = prop_name
-
-          # Optional/Required Handling
-          # JSON Schema: properties optional by default, required in 'required' list
-          # EasyTalk: properties required by default, optional: true explicitly
-          is_required = schema_data['required']&.include?(prop_name)
-          constraints[:optional] = true unless is_required
+          constraints[:optional] = true unless schema_data['required']&.include?(prop_name)
 
           property safe_prop_name.to_sym, type, **constraints
         end
       end
+    end
+  end
+
+  def allows_additional_properties?(schema_data)
+    !(schema_data.key?('additionalProperties') && schema_data['additionalProperties'] == false)
+  end
+
+  def sanitize_property_name(prop_name)
+    safe_name = prop_name.to_s.gsub(/[^a-zA-Z0-9_]/, '_')
+    safe_name = "prop_#{safe_name}" if safe_name.match?(/^\d/)
+    safe_name = "prop_" if safe_name.empty?
+    safe_name
+  end
+
+  def extract_type_and_constraints(prop_def)
+    return [String, { optional: true }] if prop_def.is_a?(TrueClass) || prop_def.is_a?(FalseClass)
+    return [String, {}] unless prop_def.is_a?(Hash)
+
+    type = TYPE_MAPPING.fetch(prop_def['type'], String)
+    constraints = extract_constraints(prop_def)
+
+    [type, constraints]
+  end
+
+  def extract_constraints(prop_def)
+    CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), constraints|
+      constraints[ruby_key] = prop_def[json_key] if prop_def[json_key]
     end
   end
 end
