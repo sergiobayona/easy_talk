@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+# EasyTalk from the parent directory
+gem 'easy_talk', path: '../..'
+
+# RubyLLM for LLM interactions
+gem 'ruby_llm'
+
+# HTTP client for API calls (used in tools example)
+gem 'faraday'
