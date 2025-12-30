@@ -4,7 +4,6 @@ require 'rake'
 require 'rspec'
 require 'rspec/mocks'
 require 'easy_talk'
-require 'pry-byebug'
 require 'rspec/json_expectations'
 
 # Load support files

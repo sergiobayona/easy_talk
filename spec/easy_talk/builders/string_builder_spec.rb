@@ -147,7 +147,9 @@ RSpec.describe EasyTalk::Builders::StringBuilder do
 
     context 'with empty values on pattern' do
       it 'returns empty pattern' do
-        # this is invalid in json schema but there is not practical way to validate non empty strings.
+        # An empty pattern is valid JSON Schema but matches all strings (including empty).
+        # We preserve explicit user input rather than filtering it out.
+        # To validate non-empty strings, use minLength: 1 instead.
         builder = described_class.new(:name, pattern: '')
         expect(builder.build).to eq({ type: 'string', pattern: '' })
       end

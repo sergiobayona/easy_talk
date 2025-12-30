@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 module EasyTalk
   # @deprecated Use EasyTalk::ValidationAdapters::ActiveModelAdapter instead.

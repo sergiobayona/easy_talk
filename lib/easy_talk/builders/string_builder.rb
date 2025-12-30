@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require_relative 'base_builder'
 require 'js_regex' # Compile the ruby regex to JS regex
@@ -20,11 +21,12 @@ module EasyTalk
         default: { type: String, key: :default }
       }.freeze
 
-      sig { params(name: Symbol, constraints: Hash).void }
+      sig { params(name: Symbol, constraints: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, constraints = {})
         super(name, { type: 'string' }, constraints, VALID_OPTIONS)
       end
 
+      sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
         super.tap do |schema|
           pattern = schema[:pattern]

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require_relative 'collection_helpers'
 
@@ -20,7 +21,7 @@ module EasyTalk
 
       attr_reader :type
 
-      sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
+      sig { params(name: Symbol, type: T.untyped, constraints: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, type, constraints = {})
         @name = name
         @type = type
@@ -49,6 +50,7 @@ module EasyTalk
         end
       end
 
+      sig { returns(T.untyped) }
       def inner_type
         return unless type.is_a?(T::Types::TypedArray)
 

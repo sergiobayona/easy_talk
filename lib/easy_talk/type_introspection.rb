@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require 'bigdecimal'
 
@@ -31,6 +32,8 @@ module EasyTalk
     }.freeze
 
     class << self
+      extend T::Sig
+
       # Check if type represents a boolean (T::Boolean or TrueClass/FalseClass).
       #
       # @param type [Object] The type to check
@@ -41,6 +44,7 @@ module EasyTalk
       #   boolean_type?(TrueClass)   # => true
       #   boolean_type?(FalseClass)  # => true
       #   boolean_type?(String)      # => false
+      sig { params(type: T.untyped).returns(T::Boolean) }
       def boolean_type?(type)
         return false if type.nil?
         return true if [TrueClass, FalseClass].include?(type)
@@ -66,6 +70,7 @@ module EasyTalk
       # @example
       #   typed_array?(T::Array[String]) # => true
       #   typed_array?(Array)            # => false
+      sig { params(type: T.untyped).returns(T::Boolean) }
       def typed_array?(type)
         return false if type.nil?
 
@@ -80,6 +85,7 @@ module EasyTalk
       # @example
       #   nilable_type?(T.nilable(String)) # => true
       #   nilable_type?(String)            # => false
+      sig { params(type: T.untyped).returns(T::Boolean) }
       def nilable_type?(type)
         return false if type.nil?
 
@@ -90,6 +96,7 @@ module EasyTalk
       #
       # @param type [Object] The type to check
       # @return [Boolean] true if the type is a primitive
+      sig { params(type: T.untyped).returns(T::Boolean) }
       def primitive_type?(type)
         return false if type.nil?
 
@@ -111,6 +118,7 @@ module EasyTalk
       #   json_schema_type(Float)      # => 'number'
       #   json_schema_type(BigDecimal) # => 'number'
       #   json_schema_type(String)     # => 'string'
+      sig { params(type: T.untyped).returns(String) }
       def json_schema_type(type)
         return 'object' if type.nil?
         return 'boolean' if boolean_type?(type)
@@ -133,6 +141,7 @@ module EasyTalk
       #   get_type_class(String)           # => String
       #   get_type_class(T::Boolean)       # => [TrueClass, FalseClass]
       #   get_type_class(T::Array[String]) # => Array
+      sig { params(type: T.untyped).returns(T.untyped) }
       def get_type_class(type)
         return nil if type.nil?
         return type if type.is_a?(Class)
@@ -155,6 +164,7 @@ module EasyTalk
       #
       # @example
       #   extract_inner_type(T.nilable(String)) # => String
+      sig { params(type: T.untyped).returns(T.untyped) }
       def extract_inner_type(type)
         return type if type.nil?
 

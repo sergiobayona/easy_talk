@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require_relative 'base_builder'
 
@@ -20,7 +21,7 @@ module EasyTalk
       }.freeze
 
       # Initializes a new instance of the IntegerBuilder class.
-      sig { params(name: Symbol, constraints: Hash).void }
+      sig { params(name: Symbol, constraints: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, constraints = {})
         super(name, { type: 'integer' }, constraints, VALID_OPTIONS)
       end

@@ -12,13 +12,25 @@ class JsonSchemaConverter
   }.freeze
 
   CONSTRAINT_KEYS = {
-    'minimum' => :minimum,
-    'maximum' => :maximum,
+    # String constraints
     'minLength' => :min_length,
     'maxLength' => :max_length,
     'pattern' => :pattern,
+    'format' => :format,
+    # Numeric constraints
+    'minimum' => :minimum,
+    'maximum' => :maximum,
+    'exclusiveMinimum' => :exclusive_minimum,
+    'exclusiveMaximum' => :exclusive_maximum,
+    'multipleOf' => :multiple_of,
+    # Array constraints
+    'minItems' => :min_items,
+    'maxItems' => :max_items,
+    'uniqueItems' => :unique_items,
+    # Common constraints
     'enum' => :enum,
-    'format' => :format
+    'const' => :const,
+    'default' => :default
   }.freeze
 
   def initialize(schema, name = "TestModel_#{SecureRandom.hex(4)}")
@@ -70,15 +82,58 @@ class JsonSchemaConverter
     return [String, { optional: true }] if prop_def.is_a?(TrueClass) || prop_def.is_a?(FalseClass)
     return [String, {}] unless prop_def.is_a?(Hash)
 
-    type = TYPE_MAPPING.fetch(prop_def['type'], String)
+    type = determine_type(prop_def)
     constraints = extract_constraints(prop_def)
 
     [type, constraints]
   end
 
+  def determine_type(prop_def)
+    type_value = prop_def['type']
+
+    # Handle array of types (e.g., ["string", "null"])
+    if type_value.is_a?(Array)
+      non_null_types = type_value - ['null']
+      is_nullable = type_value.include?('null')
+
+      base_type = resolve_single_type(non_null_types.first, prop_def)
+      return is_nullable ? T.nilable(base_type) : base_type
+    end
+
+    # Handle single type
+    resolve_single_type(type_value, prop_def)
+  end
+
+  def resolve_single_type(type_name, prop_def)
+    case type_name
+    when 'array'
+      determine_array_type(prop_def)
+    when 'string'
+      String
+    when 'integer'
+      Integer
+    when 'number'
+      Float
+    when 'boolean'
+      T::Boolean
+    when 'null'
+      NilClass
+    else
+      String
+    end
+  end
+
+  def determine_array_type(prop_def)
+    items_schema = prop_def['items']
+    return T::Array[String] unless items_schema.is_a?(Hash)
+
+    item_type = TYPE_MAPPING.fetch(items_schema['type'], String)
+    T::Array[item_type]
+  end
+
   def extract_constraints(prop_def)
     CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), constraints|
-      constraints[ruby_key] = prop_def[json_key] if prop_def[json_key]
+      constraints[ruby_key] = prop_def[json_key] if prop_def.key?(json_key)
     end
   end
 end

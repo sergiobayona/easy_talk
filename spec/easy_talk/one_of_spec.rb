@@ -121,7 +121,7 @@ RSpec.describe EasyTalk::Types::Composer::OneOf do
       }
     end
 
-    it 'not supported yet' do
+    it 'returns the schema with oneOf for the property' do
       stub_const('PhoneNumber', phone_number)
       stub_const('EmailAddress', email_address)
 

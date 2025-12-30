@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require_relative 'base_builder'
 
@@ -14,7 +15,7 @@ module EasyTalk
         default: { type: T::Boolean, key: :default }
       }.freeze
 
-      sig { params(name: Symbol, constraints: Hash).void }
+      sig { params(name: Symbol, constraints: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, constraints = {})
         super(name, { type: 'boolean' }, constraints, VALID_OPTIONS)
       end

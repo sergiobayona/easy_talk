@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require_relative 'collection_helpers'
 require_relative '../ref_helper'
@@ -16,7 +17,7 @@ module EasyTalk
         'OneOfBuilder' => 'oneOf'
       }.freeze
 
-      sig { params(name: Symbol, type: T.untyped, constraints: Hash).void }
+      sig { params(name: Symbol, type: T.untyped, constraints: T::Hash[Symbol, T.untyped]).void }
       # Initializes a new instance of the CompositionBuilder class.
       #
       # @param name [Symbol] The name of the composition.
@@ -32,7 +33,8 @@ module EasyTalk
 
       # Builds the composed JSON schema.
       #
-      # @return [void]
+      # @return [Hash] The composed JSON schema.
+      sig { returns(T::Hash[Symbol, T.untyped]) }
       def build
         @context[@name.to_sym] = {
           type: 'object',
@@ -43,6 +45,7 @@ module EasyTalk
       # Returns the composer keyword based on the composer type.
       #
       # @return [String] The composer keyword.
+      sig { returns(T.nilable(String)) }
       def composer_keyword
         COMPOSER_TO_KEYWORD[@composer_type]
       end
@@ -50,6 +53,7 @@ module EasyTalk
       # Returns an array of schemas for the composed JSON schema.
       #
       # @return [Array<Hash>] The array of schemas.
+      sig { returns(T::Array[T.untyped]) }
       def schemas
         items.map do |type|
           if EasyTalk::RefHelper.should_use_ref?(type, @constraints)
@@ -66,6 +70,7 @@ module EasyTalk
       # Returns the items of the type.
       #
       # @return [T.untyped] The items of the type.
+      sig { returns(T.untyped) }
       def items
         @type.items
       end

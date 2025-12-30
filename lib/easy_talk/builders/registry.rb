@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 module EasyTalk
   module Builders
@@ -22,9 +23,12 @@ module EasyTalk
     #
     class Registry
       class << self
+        extend T::Sig
+
         # Get the hash of registered type builders.
         #
         # @return [Hash{String => Hash}] The registered builders with metadata
+        sig { returns(T::Hash[String, T::Hash[Symbol, T.untyped]]) }
         def registry
           @registry ||= {}
         end
@@ -43,6 +47,7 @@ module EasyTalk
         #
         # @example Register a collection type
         #   Registry.register(CustomArray, CustomArrayBuilder, collection: true)
+        sig { params(type_key: T.any(T::Class[T.anything], String, Symbol), builder_class: T.untyped, collection: T::Boolean).void }
         def register(type_key, builder_class, collection: false)
           raise ArgumentError, 'Builder must respond to .new' unless builder_class.respond_to?(:new)
 
@@ -63,6 +68,7 @@ module EasyTalk
         # @example
         #   builder_class, is_collection = Registry.resolve(String)
         #   # => [StringBuilder, false]
+        sig { params(type: T.untyped).returns(T.nilable(T::Array[T.untyped])) }
         def resolve(type)
           entry = find_registration(type)
           return nil unless entry
@@ -74,6 +80,7 @@ module EasyTalk
         #
         # @param type_key [Class, String, Symbol] The type to check
         # @return [Boolean] true if the type is registered
+        sig { params(type_key: T.any(T::Class[T.anything], String, Symbol)).returns(T::Boolean) }
         def registered?(type_key)
           registry.key?(normalize_key(type_key))
         end
@@ -82,6 +89,7 @@ module EasyTalk
         #
         # @param type_key [Class, String, Symbol] The type to unregister
         # @return [Hash, nil] The removed registration or nil if not found
+        sig { params(type_key: T.any(T::Class[T.anything], String, Symbol)).returns(T.nilable(T::Hash[Symbol, T.untyped])) }
         def unregister(type_key)
           registry.delete(normalize_key(type_key))
         end
@@ -89,6 +97,7 @@ module EasyTalk
         # Get a list of all registered type keys.
         #
         # @return [Array<String>] The registered type keys
+        sig { returns(T::Array[String]) }
         def registered_types
           registry.keys
         end
@@ -96,6 +105,7 @@ module EasyTalk
         # Reset the registry to empty state and re-register built-in types.
         #
         # @return [void]
+        sig { void }
         def reset!
           @registry = nil
           register_built_in_types
@@ -105,6 +115,7 @@ module EasyTalk
         # This is called during gem initialization and after reset!
         #
         # @return [void]
+        sig { void }
         def register_built_in_types
           register(String, Builders::StringBuilder)
           register(Integer, Builders::IntegerBuilder)
@@ -129,6 +140,7 @@ module EasyTalk
         #
         # @param type_key [Class, String, Symbol] The type key to normalize
         # @return [String] The normalized key
+        sig { params(type_key: T.any(T::Class[T.anything], String, Symbol)).returns(String) }
         def normalize_key(type_key)
           case type_key
           when Class
@@ -146,6 +158,7 @@ module EasyTalk
         #
         # @param type [Object] The type to find
         # @return [Hash, nil] The registration entry or nil
+        sig { params(type: T.untyped).returns(T.nilable(T::Hash[Symbol, T.untyped])) }
         def find_registration(type)
           # Strategy 1: Check type.class.name (for Sorbet types like T::Types::TypedArray)
           class_name = type.class.name.to_s
