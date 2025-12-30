@@ -167,9 +167,11 @@ RSpec.describe 'Schema Validation Matcher' do
         )
       end
 
-      it 'detects mismatch for array with wrong type (schema invalid, ActiveModel valid)' do
-        # JSON Schema catches type mismatch in array items
-        # ActiveModel doesn't validate array item types for T.nilable(T::Array[Model])
+      it 'detects mismatch for array with wrong type (error path granularity difference)' do
+        # Both validators correctly reject this data, but report errors differently:
+        # - JSON Schema reports at `/addresses/0` (specific array index)
+        # - ActiveModel reports on `addresses` (the field name)
+        # The matcher detects this as a path mismatch, not a validation gap.
         expect(Employee).not_to have_matching_validations_for(
           name: 'Test',
           gender: 'male',
