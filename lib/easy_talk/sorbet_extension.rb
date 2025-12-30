@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 # This module provides additional functionality for working with Sorbet types.
 module SorbetExtension

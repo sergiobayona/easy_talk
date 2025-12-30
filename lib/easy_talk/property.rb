@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require 'json'
 require_relative 'builders/integer_builder'
@@ -99,6 +100,7 @@ module EasyTalk
     # @example Nested schema with $ref
     #   property = Property.new(:shipping_address, Address, ref: true)
     #   property.build  # => {"$ref"=>"#/$defs/Address", ...constraints}
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def build
       if nilable_type?
         build_nilable_schema
@@ -128,6 +130,7 @@ module EasyTalk
     #
     # @see #build
     # @see https://ruby-doc.org/stdlib-2.7.2/libdoc/json/rdoc/JSON.html#as_json-method
+    sig { params(_args: T.untyped).returns(T.untyped) }
     def as_json(*_args)
       build.as_json
     end
@@ -142,6 +145,7 @@ module EasyTalk
     # @return [Array(Class, Boolean), nil] A tuple of [builder_class, is_collection] or nil if none matches
     # @api private
     # @see Builders::Registry.resolve
+    sig { returns(T.nilable(T::Array[T.untyped])) }
     def find_builder_for_type
       Builders::Registry.resolve(type)
     end
@@ -153,6 +157,7 @@ module EasyTalk
     #
     # @return [Boolean] true if the type is nilable, false otherwise
     # @api private
+    sig { returns(T::Boolean) }
     def nilable_type?
       return false unless type.respond_to?(:types)
       return false unless type.types.all? { |t| t.respond_to?(:raw_type) }
@@ -167,6 +172,7 @@ module EasyTalk
     # @example
     #   # For a T.nilable(String) type:
     #   {"type"=>["string", "null"]}
+    sig { returns(T::Hash[Symbol, T.untyped]) }
     def build_nilable_schema
       # Extract the non-nil type from the Union
       actual_type = T::Utils::Nilable.get_underlying_type(type)

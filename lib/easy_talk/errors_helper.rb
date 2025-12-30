@@ -1,8 +1,11 @@
 # frozen_string_literal: true
+# typed: true
 
 module EasyTalk
   # Helper module for generating consistent error messages
   module ErrorHelper
+    extend T::Sig
+
     def self.raise_constraint_error(property_name:, constraint_name:, expected:, got:)
       message = "Error in property '#{property_name}': Constraint '#{constraint_name}' expects #{expected}, " \
                 "but received #{got.inspect} (#{got.class})."

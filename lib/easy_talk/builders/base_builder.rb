@@ -23,7 +23,7 @@ module EasyTalk
         params(
           property_name: Symbol,
           schema: T::Hash[Symbol, T.untyped],
-          options: T::Hash[Symbol, String],
+          options: T::Hash[Symbol, T.untyped],
           valid_options: T::Hash[Symbol, T.untyped]
         ).void
       end
@@ -59,6 +59,7 @@ module EasyTalk
         end
       end
 
+      sig { returns(T::Boolean) }
       def self.collection_type?
         false
       end

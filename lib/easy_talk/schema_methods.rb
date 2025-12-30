@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 module EasyTalk
   # Shared methods for JSON Schema generation.

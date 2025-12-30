@@ -1,7 +1,3 @@
-plugins:
-  - rubocop-rspec
-  - rubocop-rake
-
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.2
@@ -55,6 +51,7 @@ Metrics/BlockNesting:
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
+    - easy_talk.gemspec
 
 Layout/EndAlignment:
   Enabled: false
@@ -70,45 +67,6 @@ Lint/EmptyBlock:
   Exclude:
     - spec/**/*
 
-RSpec/DescribeClass:
-  Enabled: false
-
-RSpec/LeakyConstantDeclaration:
-  Enabled: false
-
-RSpec/RemoveConst:
-  Enabled: false
-
-RSpec/BeforeAfterAll:
-  Enabled: false
-
-RSpec/NestedGroups:
-  Max: 4
-
-RSpec/RepeatedDescription:
-  Enabled: false
-
-RSpec/PendingWithoutReason:
-  Enabled: false
-
-RSpec/MultipleDescribes:
-  Enabled: false
-
-RSpec/ContextWording:
-  Enabled: false
-
-RSpec/MultipleMemoizedHelpers:
-  Max: 10
-
-RSpec/ExampleLength:
-  Max: 40
-
-RSpec/MultipleExpectations:
-  Max: 10
-
-RSpec/SpecFilePathFormat:
-  Enabled: false
-
 Lint/DuplicateBranch:
   Enabled: false
 
@@ -118,3 +76,15 @@ Gemspec/DevelopmentDependencies:
 Naming/PredicateMethod:
   Exclude:
     - spec/support/schema_validation_matcher.rb
+
+Naming/BlockForwarding:
+  Enabled: false
+
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true
+  Exclude:
+    - lib/easy_talk/configuration.rb
+    - lib/easy_talk/schema_definition.rb
+
+Style/DefWithParentheses:
+  Enabled: false

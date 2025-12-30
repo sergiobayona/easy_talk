@@ -35,14 +35,15 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
   }.freeze
 
   Dir.glob(File.join(TEST_SUITE_PATH, '*.json')).each do |file_path|
-    file_name = File.basename(file_path)
     next unless File.exist?(file_path)
 
+    file_name = File.basename(file_path)
     test_groups = JSON.parse(File.read(file_path, encoding: 'UTF-8'))
 
     describe "Suite: #{file_name}" do
       # 2. Skip entire files if they are known unsupported features
       before { skip(KNOWN_FAILURES[file_name]) if KNOWN_FAILURES.key?(file_name) }
+
       test_groups.each do |group|
         describe group['description'] do
           let(:schema) { group['schema'] }
