@@ -188,4 +188,43 @@ RSpec.describe EasyTalk::SchemaDefinition do
       expect { model.schema_definition.property('name name', String) }.to raise_error(EasyTalk::InvalidPropertyNameError)
     end
   end
+
+  describe ':as constraint with special characters' do
+    it 'allows JSON-LD style property names with @' do
+      expect { model.schema_definition.property(:type_field, String, as: '@type') }.not_to raise_error
+    end
+
+    it 'allows JSON Schema style property names with $' do
+      expect { model.schema_definition.property(:id_field, String, as: '$id') }.not_to raise_error
+    end
+
+    it 'allows property names with spaces' do
+      expect { model.schema_definition.property(:full_name, String, as: 'full name') }.not_to raise_error
+    end
+
+    it 'allows property names with special characters' do
+      expect { model.schema_definition.property(:quoted, String, as: 'foo"bar') }.not_to raise_error
+    end
+
+    it 'validates the Ruby property name, not the :as value' do
+      # Ruby name is invalid (starts with number)
+      expect { model.schema_definition.property('1invalid', String, as: 'valid_json_key') }
+        .to raise_error(EasyTalk::InvalidPropertyNameError)
+    end
+
+    it 'generates correct JSON schema with :as containing special characters' do
+      json_ld_model = Class.new do
+        include EasyTalk::Model
+        def self.name = 'JsonLdModel'
+
+        define_schema do
+          property :type_field, String, as: '@type'
+          property :id_field, String, as: '$id'
+        end
+      end
+
+      schema = json_ld_model.json_schema
+      expect(schema['properties'].keys).to include('@type', '$id')
+    end
+  end
 end
