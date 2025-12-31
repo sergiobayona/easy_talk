@@ -194,6 +194,7 @@ RSpec.describe EasyTalk do
     it 'sets additionalProperties to false by default' do
       test_class = Class.new do
         include EasyTalk::Model
+
         def self.name = 'TestModel'
 
         define_schema do
@@ -211,6 +212,7 @@ RSpec.describe EasyTalk do
 
       test_class = Class.new do
         include EasyTalk::Model
+
         def self.name = 'TestModel'
 
         define_schema do
@@ -228,6 +230,7 @@ RSpec.describe EasyTalk do
 
       test_class = Class.new do
         include EasyTalk::Model
+
         def self.name = 'TestModel'
 
         define_schema do
