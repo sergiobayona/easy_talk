@@ -57,9 +57,7 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
               test_data = converter.needs_wrapping? ? converter.wrap_data(data) : data
 
               # For object schemas, data must be a hash
-              unless test_data.is_a?(Hash)
-                skip "Data is not a hash after transformation (#{test_data.class})"
-              end
+              skip "Data is not a hash after transformation (#{test_data.class})" unless test_data.is_a?(Hash)
 
               begin
                 instance = model_class.new(test_data)

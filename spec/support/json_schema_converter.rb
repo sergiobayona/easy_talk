@@ -61,7 +61,6 @@ class JsonSchemaConverter
   def to_class
     schema_data = @schema
     model_name = @name
-    converter = self
 
     if needs_wrapping?
       build_wrapped_class(schema_data, model_name)

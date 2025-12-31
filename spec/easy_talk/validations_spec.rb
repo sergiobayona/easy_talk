@@ -303,7 +303,7 @@ RSpec.describe 'Auto Validations' do
       # Per JSON Schema: format validations should be ignored for non-string types.
       # Currently, EasyTalk applies format validation to any value, including integers.
       it 'currently applies format validation to non-string types (non-compliant behavior)' do
-        instance = format_scope_class.new(email: 12345)
+        instance = format_scope_class.new(email: 12_345)
         instance.valid?
         # Current behavior: format validation runs on the integer and fails
         # because 12345.to_s doesn't match the email pattern
@@ -311,7 +311,7 @@ RSpec.describe 'Auto Validations' do
       end
 
       pending 'should ignore format validation for non-string types (strict JSON Schema compliance)' do
-        instance = format_scope_class.new(email: 12345)
+        instance = format_scope_class.new(email: 12_345)
         instance.valid?
         # Expected behavior per JSON Schema: format should be ignored for non-strings
         # The value would still be invalid due to type mismatch, but not due to format
