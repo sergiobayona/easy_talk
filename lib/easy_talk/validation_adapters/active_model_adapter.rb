@@ -90,8 +90,13 @@ module EasyTalk
 
         # Handle pattern (regex) constraints
         if @constraints[:pattern]
-          @klass.validates @property_name, format: { with: Regexp.new(@constraints[:pattern]) },
-                                           allow_nil: optional?
+          begin
+            regex = Regexp.new(@constraints[:pattern], timeout: 1.0)
+            @klass.validates @property_name, format: { with: regex },
+                                             allow_nil: optional?
+          rescue RegexpError => e
+            raise ArgumentError, "Invalid regex pattern for #{@property_name}: #{e.message}"
+          end
         end
 
         # Handle length constraints
