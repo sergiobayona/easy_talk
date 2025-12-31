@@ -100,8 +100,8 @@ module EasyTalk
         # Populate the final "required" array from @required_properties
         merged[:required] = @required_properties.to_a if @required_properties.any?
 
-        # Add additionalProperties: false by default if not explicitly set
-        merged[:additional_properties] = false unless merged.key?(:additional_properties)
+        # Add additionalProperties based on config default if not explicitly set
+        merged[:additional_properties] = EasyTalk.configuration.default_additional_properties unless merged.key?(:additional_properties)
 
         # Prune empty or nil values so we don't produce stuff like "properties": {} unnecessarily
         merged.reject! { |_k, v| v.nil? || v == {} || v == [] }
