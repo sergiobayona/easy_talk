@@ -268,6 +268,56 @@ RSpec.describe 'Auto Validations' do
       expect(instance.valid?).to be(false)
       expect(instance.errors[:nilable_email]).to include('must be a valid email address')
     end
+
+    # JSON Schema Compliance Gap: Format Validation Scope
+    # Per JSON Schema spec, format validations should only apply to strings and
+    # should be ignored for non-string types. Currently, EasyTalk validates format
+    # on any value that is present, which can cause issues when non-string values
+    # are assigned to a property with a format constraint.
+    describe 'format validation scope (JSON Schema compliance gap)' do
+      let(:format_scope_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'FormatScopeTest'
+          end
+
+          define_schema do
+            property :email, String, format: 'email', optional: true
+          end
+        end
+      end
+
+      it 'validates format for string values' do
+        instance = format_scope_class.new(email: 'not-an-email')
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:email]).to include('must be a valid email address')
+      end
+
+      it 'passes format validation for valid email string' do
+        instance = format_scope_class.new(email: 'test@example.com')
+        expect(instance.valid?).to be(true)
+      end
+
+      # Per JSON Schema: format validations should be ignored for non-string types.
+      # Currently, EasyTalk applies format validation to any value, including integers.
+      it 'currently applies format validation to non-string types (non-compliant behavior)' do
+        instance = format_scope_class.new(email: 12345)
+        instance.valid?
+        # Current behavior: format validation runs on the integer and fails
+        # because 12345.to_s doesn't match the email pattern
+        expect(instance.errors[:email]).to include('must be a valid email address')
+      end
+
+      pending 'should ignore format validation for non-string types (strict JSON Schema compliance)' do
+        instance = format_scope_class.new(email: 12345)
+        instance.valid?
+        # Expected behavior per JSON Schema: format should be ignored for non-strings
+        # The value would still be invalid due to type mismatch, but not due to format
+        expect(instance.errors[:email]).not_to include('must be a valid email address')
+      end
+    end
   end
 
   describe 'optional properties with length validation' do
