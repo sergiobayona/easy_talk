@@ -185,4 +185,61 @@ RSpec.describe EasyTalk do
       expect(config.nilable_is_optional).to be true
     end
   end
+
+  describe 'default_additional_properties affects schema generation' do
+    after do
+      described_class.instance_variable_set(:@configuration, nil)
+    end
+
+    it 'sets additionalProperties to false by default' do
+      test_class = Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'TestModel'
+
+        define_schema do
+          property :name, String
+        end
+      end
+
+      expect(test_class.json_schema['additionalProperties']).to be false
+    end
+
+    it 'sets additionalProperties to true when configured' do
+      described_class.configure do |config|
+        config.default_additional_properties = true
+      end
+
+      test_class = Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'TestModel'
+
+        define_schema do
+          property :name, String
+        end
+      end
+
+      expect(test_class.json_schema['additionalProperties']).to be true
+    end
+
+    it 'allows explicit override in schema even when config is true' do
+      described_class.configure do |config|
+        config.default_additional_properties = true
+      end
+
+      test_class = Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'TestModel'
+
+        define_schema do
+          additional_properties false
+          property :name, String
+        end
+      end
+
+      expect(test_class.json_schema['additionalProperties']).to be false
+    end
+  end
 end

@@ -22,8 +22,8 @@ module EasyTalk
 
     sig { params(name: String, schema: T::Hash[Symbol, T.untyped]).void }
     def initialize(name, schema = {})
-      @schema = schema
-      @schema[:additional_properties] = false unless schema.key?(:additional_properties)
+      @schema = schema.dup
+      @schema[:additional_properties] = EasyTalk.configuration.default_additional_properties unless @schema.key?(:additional_properties)
       @name = name
       @klass = nil # Initialize klass to nil
       @property_naming_strategy = EasyTalk.configuration.property_naming_strategy
