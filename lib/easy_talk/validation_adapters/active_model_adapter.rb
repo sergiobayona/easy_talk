@@ -257,7 +257,7 @@ module EasyTalk
         prop_name = @property_name
         @klass.validate do |record|
           value = record.public_send(prop_name)
-          record.errors.add(prop_name, "can't be blank") if value.nil?
+          record.errors.add(prop_name, :blank) if value.nil?
         end
       end
 
@@ -266,7 +266,7 @@ module EasyTalk
         prop_name = @property_name
         @klass.validate do |record|
           value = record.public_send(prop_name)
-          record.errors.add(prop_name, "can't be blank") if value.nil?
+          record.errors.add(prop_name, :blank) if value.nil?
         end
       end
 
