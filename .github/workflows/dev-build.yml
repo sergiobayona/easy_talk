@@ -29,3 +29,11 @@ jobs:
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Run tests
       run: bundle exec rake
+    - name: Upload coverage to Codecov
+      if: matrix.ruby-version == '3.4.7'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/coverage.xml
+        fail_ci_if_error: false
+        verbose: true

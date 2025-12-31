@@ -1,5 +1,24 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+require 'simplecov-cobertura'
+
+SimpleCov.start do
+  add_filter '/spec/'
+  add_filter '/vendor/'
+
+  add_group 'Builders', 'lib/easy_talk/builders'
+  add_group 'Core', 'lib/easy_talk'
+
+  enable_coverage :branch
+
+  if ENV['CI']
+    formatter SimpleCov::Formatter::CoberturaFormatter
+  else
+    formatter SimpleCov::Formatter::HTMLFormatter
+  end
+end
+
 require 'rake'
 require 'rspec'
 require 'rspec/mocks'
