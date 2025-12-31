@@ -38,9 +38,57 @@ class JsonSchemaConverter
     @name = name
   end
 
+  # Check if this schema needs to be wrapped (i.e., it's not an object schema)
+  def needs_wrapping?
+    return false if @schema.is_a?(TrueClass) || @schema.is_a?(FalseClass)
+    return true unless @schema.is_a?(Hash)
+
+    # If schema has explicit type: object, no wrapping needed
+    return false if @schema['type'] == 'object'
+
+    # If schema has properties, treat as object schema
+    return false if @schema.key?('properties')
+
+    # Everything else needs wrapping (primitives, arrays, schemas with only constraints)
+    true
+  end
+
+  # Wrap test data for schemas that were wrapped
+  def wrap_data(data)
+    { 'value' => data }
+  end
+
   def to_class
     schema_data = @schema
     model_name = @name
+    converter = self
+
+    if needs_wrapping?
+      build_wrapped_class(schema_data, model_name)
+    else
+      build_object_class(schema_data, model_name)
+    end
+  end
+
+  private
+
+  def build_wrapped_class(schema_data, model_name)
+    converter = self
+
+    Class.new do
+      include EasyTalk::Model
+
+      singleton_class.send(:define_method, :name) { model_name }
+
+      define_schema do
+        # The entire original schema becomes constraints on the 'value' property
+        type, constraints = converter.extract_type_and_constraints(schema_data)
+        property :value, type, **constraints
+      end
+    end
+  end
+
+  def build_object_class(schema_data, model_name)
     converter = self
 
     Class.new do
@@ -66,6 +114,8 @@ class JsonSchemaConverter
       end
     end
   end
+
+  public
 
   def allows_additional_properties?(schema_data)
     !(schema_data.key?('additionalProperties') && schema_data['additionalProperties'] == false)
