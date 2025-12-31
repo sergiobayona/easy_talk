@@ -215,6 +215,7 @@ RSpec.describe EasyTalk::SchemaDefinition do
     it 'generates correct JSON schema with :as containing special characters' do
       json_ld_model = Class.new do
         include EasyTalk::Model
+
         def self.name = 'JsonLdModel'
 
         define_schema do
