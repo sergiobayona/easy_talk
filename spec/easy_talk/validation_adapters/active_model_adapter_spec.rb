@@ -169,6 +169,60 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       end
     end
 
+    context 'with required T::Array[String] property' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'ArrayTest'
+
+          define_schema do
+            property :tags, T::Array[String]
+          end
+        end
+      end
+
+      it 'validates empty arrays as valid' do
+        instance = test_class.new(tags: [])
+        expect(instance.valid?).to be true
+      end
+
+      it 'validates non-empty arrays as valid' do
+        instance = test_class.new(tags: %w[ruby rails])
+        expect(instance.valid?).to be true
+      end
+
+      it 'rejects nil for required array properties' do
+        instance = test_class.new(tags: nil)
+        expect(instance.valid?).to be false
+        expect(instance.errors[:tags]).to include("can't be blank")
+      end
+    end
+
+    context 'with optional T::Array[String] property' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'OptionalArrayTest'
+
+          define_schema do
+            property :tags, T::Array[String], optional: true
+          end
+        end
+      end
+
+      it 'allows nil for optional array properties' do
+        instance = test_class.new(tags: nil)
+        expect(instance.valid?).to be true
+      end
+
+      it 'validates empty arrays as valid' do
+        instance = test_class.new(tags: [])
+        expect(instance.valid?).to be true
+      end
+    end
+
     context 'with T::Array[EasyTalk::Model] nested validation' do
       let(:address_class) do
         Class.new do
@@ -243,6 +297,12 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       it 'validates empty arrays as valid' do
         person = Person.new(name: 'John', addresses: [])
         expect(person.valid?).to be true
+      end
+
+      it 'rejects nil for required array properties' do
+        person = Person.new(name: 'John', addresses: nil)
+        expect(person.valid?).to be false
+        expect(person.errors[:addresses]).to include("can't be blank")
       end
 
       it 'auto-instantiates hash items as model instances' do

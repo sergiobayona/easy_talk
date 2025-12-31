@@ -42,6 +42,9 @@ module EasyTalk
         # (empty arrays are valid - use min_items constraint if you need non-empty)
         apply_presence_validation unless optional? || is_boolean || nilable_type? || is_array
 
+        # For required arrays, add nil check (but allow empty arrays)
+        apply_array_presence_validation if is_array && !optional? && !nilable_type?
+
         if nilable_type?
           # For nilable types, get the inner type and apply validations to it
           inner_type = extract_inner_type(@type)
@@ -249,6 +252,15 @@ module EasyTalk
 
       # Apply presence validation for boolean (nil check with custom message)
       def apply_boolean_presence_validation
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          record.errors.add(prop_name, "can't be blank") if value.nil?
+        end
+      end
+
+      # Apply presence validation for arrays (nil check, but allow empty arrays)
+      def apply_array_presence_validation
         prop_name = @property_name
         @klass.validate do |record|
           value = record.public_send(prop_name)
