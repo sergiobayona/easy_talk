@@ -212,7 +212,34 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
         end
       end
 
-      it 'allows nil for optional array properties' do
+      # Per JSON Schema: optional means the property can be omitted from the object,
+      # but if present, null is still invalid unless type includes null
+      it 'rejects nil for optional non-nilable array properties' do
+        instance = test_class.new(tags: nil)
+        expect(instance.valid?).to be false
+        expect(instance.errors[:tags]).to include("can't be blank")
+      end
+
+      it 'validates empty arrays as valid' do
+        instance = test_class.new(tags: [])
+        expect(instance.valid?).to be true
+      end
+    end
+
+    context 'with optional T.nilable(T::Array[String]) property' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'OptionalNilableArrayTest'
+
+          define_schema do
+            property :tags, T.nilable(T::Array[String]), optional: true
+          end
+        end
+      end
+
+      it 'allows nil for optional nilable array properties' do
         instance = test_class.new(tags: nil)
         expect(instance.valid?).to be true
       end
