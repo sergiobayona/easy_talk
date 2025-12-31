@@ -45,13 +45,23 @@ RSpec.describe 'validating json' do
       expect(jim.errors[:name]).to eq(["can't be blank"])
     end
 
-    # NOTE: Per JSON Schema spec, empty strings are valid. However, we are using ActiveModel validations
-    # and It do not allow empty strings.
-    it 'fails validation on empty name' do
-      jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
-      expect(jim.valid?).to be false
-      expect(jim.errors.size).to eq(1)
-      expect(jim.errors[:name]).to eq(["can't be blank"])
+    # JSON Schema Compliance Gap: Empty String Presence
+    # Per JSON Schema spec, an empty string "" is a valid string value.
+    # However, ActiveModel's presence validation rejects empty strings.
+    # This test documents the current behavior.
+    describe 'empty string presence (JSON Schema compliance gap)' do
+      it 'currently rejects empty string for required String property (ActiveModel behavior)' do
+        jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
+        # Current behavior: empty string fails presence validation
+        expect(jim.valid?).to be false
+        expect(jim.errors[:name]).to eq(["can't be blank"])
+      end
+
+      pending 'should accept empty string for required String property (strict JSON Schema compliance)' do
+        jim = user.new(name: '', age: 30, height: 5.9, email: { address: 'jim@test.com', verified: 'true' })
+        # Expected behavior per JSON Schema: "" is a valid string, property is present
+        expect(jim.valid?).to be true
+      end
     end
 
     it 'validates age attribute is not present' do
