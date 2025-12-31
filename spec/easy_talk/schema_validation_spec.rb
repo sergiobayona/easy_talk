@@ -88,4 +88,25 @@ RSpec.describe 'validating json' do
     expect(jim.errors.size).to eq(1)
     expect(jim.errors[:age]).to eq(['is not a number'])
   end
+
+  # JSON Schema Compliance Gap: Type Coercion
+  # Per JSON Schema spec, a string "30" should NOT be valid for type: integer.
+  # Currently, EasyTalk uses ActiveModel's numericality validation which coerces
+  # strings to numbers, allowing "30" to pass validation for Integer properties.
+  # This test documents the current behavior - when strict type checking is
+  # implemented, the pending block should be activated.
+  describe 'type coercion (JSON Schema compliance gap)' do
+    it 'currently allows string "30" for Integer property (coercion behavior)' do
+      jim = user.new(name: 'Jim', age: '30', height: 5.9, email: { address: 'test@jim.com', verified: 'true' })
+      # Current behavior: string "30" passes because numericality validator coerces it
+      expect(jim.valid?).to be true
+    end
+
+    pending 'should reject string "30" for Integer property (strict JSON Schema compliance)' do
+      jim = user.new(name: 'Jim', age: '30', height: 5.9, email: { address: 'test@jim.com', verified: 'true' })
+      # Expected behavior per JSON Schema: string is not an integer, even if numeric
+      expect(jim.valid?).to be false
+      expect(jim.errors[:age]).to include('must be an integer')
+    end
+  end
 end
