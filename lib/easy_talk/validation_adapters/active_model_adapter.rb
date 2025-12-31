@@ -94,13 +94,21 @@ module EasyTalk
         apply_format_validation(@constraints[:format]) if @constraints[:format]
 
         # Handle pattern (regex) constraints
-        if @constraints[:pattern]
-          @klass.validates @property_name, format: { with: Regexp.new(@constraints[:pattern]) },
-                                           allow_nil: optional?
-        end
+        apply_pattern_validation if @constraints[:pattern]
 
         # Handle length constraints
         apply_length_validations
+      end
+
+      # Apply pattern validation (only for string values per JSON Schema spec)
+      def apply_pattern_validation
+        prop_name = @property_name
+        pattern = Regexp.new(@constraints[:pattern])
+        is_optional = optional?
+
+        @klass.validates prop_name, format: { with: pattern },
+                                    allow_nil: is_optional,
+                                    if: ->(record) { record.public_send(prop_name).is_a?(String) }
       end
 
       # Apply length validations for strings
@@ -122,6 +130,7 @@ module EasyTalk
       end
 
       # Apply format-specific validations (email, url, etc.)
+      # Per JSON Schema spec, format validation only applies to string values
       def apply_format_validation(format)
         format_configs = {
           'email' => { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
@@ -138,8 +147,10 @@ module EasyTalk
         config = format_configs[format.to_s]
         return unless config
 
+        prop_name = @property_name
         config[:allow_nil] = optional? || nilable_type?
-        @klass.validates @property_name, format: config
+        # Per JSON Schema spec, format validation only applies when value is a string
+        @klass.validates prop_name, format: config, if: ->(record) { record.public_send(prop_name).is_a?(String) }
       end
 
       # Validate integer-specific constraints

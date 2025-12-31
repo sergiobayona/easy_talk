@@ -301,21 +301,44 @@ RSpec.describe 'Auto Validations' do
       end
 
       # Per JSON Schema: format validations should be ignored for non-string types.
-      # Currently, EasyTalk applies format validation to any value, including integers.
-      it 'currently applies format validation to non-string types (non-compliant behavior)' do
+      it 'ignores format validation for non-string types (JSON Schema compliant)' do
         instance = format_scope_class.new(email: 12_345)
         instance.valid?
-        # Current behavior: format validation runs on the integer and fails
-        # because 12345.to_s doesn't match the email pattern
-        expect(instance.errors[:email]).to include('must be a valid email address')
+        # Per JSON Schema: format should be ignored for non-strings
+        expect(instance.errors[:email]).not_to include('must be a valid email address')
+      end
+    end
+
+    describe 'pattern validation scope (JSON Schema compliance)' do
+      let(:pattern_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'PatternTest'
+          end
+
+          define_schema do
+            property :code, String, pattern: '\\A[A-Z]{3}\\z', optional: true
+          end
+        end
       end
 
-      pending 'should ignore format validation for non-string types (strict JSON Schema compliance)' do
-        instance = format_scope_class.new(email: 12_345)
+      it 'validates pattern for string values' do
+        instance = pattern_class.new(code: 'abc')
+        expect(instance.valid?).to be(false)
+      end
+
+      it 'passes pattern validation for valid string' do
+        instance = pattern_class.new(code: 'ABC')
+        expect(instance.valid?).to be(true)
+      end
+
+      it 'ignores pattern validation for non-string types (JSON Schema compliant)' do
+        instance = pattern_class.new(code: 12_345)
         instance.valid?
-        # Expected behavior per JSON Schema: format should be ignored for non-strings
-        # The value would still be invalid due to type mismatch, but not due to format
-        expect(instance.errors[:email]).not_to include('must be a valid email address')
+        # Per JSON Schema: pattern should be ignored for non-strings
+        expect(instance.errors[:code]).to be_empty
       end
     end
   end
