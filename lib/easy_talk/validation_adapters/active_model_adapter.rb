@@ -103,12 +103,11 @@ module EasyTalk
       # Apply pattern validation (only for string values per JSON Schema spec)
       def apply_pattern_validation
         prop_name = @property_name
-        pattern = Regexp.new(@constraints[:pattern])
-        is_optional = optional?
 
-        @klass.validates prop_name, format: { with: pattern },
-                                    allow_nil: is_optional,
-                                    if: ->(record) { record.public_send(prop_name).is_a?(String) }
+        @klass.validates prop_name,
+                         format: { with: Regexp.new(@constraints[:pattern]) },
+                         allow_nil: optional?,
+                         if: -> { public_send(prop_name).is_a?(String) }
       end
 
       # Apply length validations for strings
@@ -150,7 +149,7 @@ module EasyTalk
         prop_name = @property_name
         config[:allow_nil] = optional? || nilable_type?
         # Per JSON Schema spec, format validation only applies when value is a string
-        @klass.validates prop_name, format: config, if: ->(record) { record.public_send(prop_name).is_a?(String) }
+        @klass.validates prop_name, format: config, if: -> { public_send(prop_name).is_a?(String) }
       end
 
       # Validate integer-specific constraints
