@@ -43,8 +43,8 @@ module EasyTalk
 
     sig { params(name: T.any(Symbol, String), type: T.untyped, constraints: T::Hash[Symbol, T.untyped], block: T.nilable(T.proc.void)).void }
     def property(name, type, constraints = {}, &block)
+      validate_property_name(name)
       constraints[:as] ||= @property_naming_strategy.call(name)
-      validate_property_name(constraints[:as])
       @schema[:properties] ||= {}
 
       if block_given?
