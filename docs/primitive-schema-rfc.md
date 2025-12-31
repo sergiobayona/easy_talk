@@ -23,6 +23,8 @@ These features address user feedback about API verbosity and enable more express
 
 ### Problem Statement
 
+**1. API Verbosity**
+
 Users have expressed that the current API requires explicit type declarations that can feel verbose:
 
 ```ruby
@@ -35,12 +37,26 @@ property :is_active, T::Boolean
 
 Common patterns are repeated across models, and property names often imply their types (`:email` is almost always an email-formatted string).
 
+**2. JSON Schema Compliance Gap**
+
+EasyTalk cannot generate or validate root-level primitive schemas. The `EasyTalk::Model` mixin always produces object schemas (`{ "type": "object", ... }`). This means:
+
+- The [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) tests for root integers, strings, booleans, etc. must be skipped (see [json_schema_compliance.md](json_schema_compliance.md))
+- Users cannot define standalone primitive schemas for LLM function calls or API validation
+
+```ruby
+# NOT POSSIBLE TODAY:
+# Generate { "type": "string", "format": "email" } as a root schema
+# Validate a raw string value against that schema
+```
+
 ### Goals
 
 1. **Reduce boilerplate** for common patterns
 2. **Enable reusable type definitions** across models
 3. **Provide intuitive defaults** based on naming conventions
-4. **Maintain backward compatibility** — existing code must continue to work unchanged
+4. **Enable JSON Schema compliance** for root-level primitive schemas
+5. **Maintain backward compatibility** — existing code must continue to work unchanged
 
 ---
 
@@ -55,11 +71,13 @@ Create reusable primitive schema definitions that encapsulate type + constraints
 #### Syntax
 
 ```ruby
-class Email < EasyTalk::Primitive(:string) { format 'email' }
-class PhoneNumber < EasyTalk::Primitive(:string) { pattern '^\+?[1-9]\d{1,14}$' }
-class PositiveInteger < EasyTalk::Primitive(:integer) { minimum 0 }
-class Percentage < EasyTalk::Primitive(:number) { minimum 0; maximum 100 }
+class Email < EasyTalk::Primitive(:string, format: 'email')
+class PhoneNumber < EasyTalk::Primitive(:string, pattern: '^\+?[1-9]\d{1,14}$')
+class PositiveInteger < EasyTalk::Primitive(:integer, minimum: 0)
+class Percentage < EasyTalk::Primitive(:number, minimum: 0, maximum: 100)
 ```
+
+This syntax passes constraints directly as keyword arguments, leveraging the existing builder `VALID_OPTIONS` for validation. No separate DSL is needed.
 
 #### Usage in Models
 
@@ -98,14 +116,17 @@ module EasyTalk
   class Primitive
     class << self
       # Factory method for creating primitive type classes
-      # Usage: class Email < EasyTalk::Primitive(:string) { format 'email' }
-      def call(type_name, &block)
+      # Usage: class Email < EasyTalk::Primitive(:string, format: 'email')
+      #
+      # Constraints are passed as keyword arguments and validated by the
+      # underlying builder's VALID_OPTIONS - no separate DSL needed.
+      def call(type_name, **constraints)
         Class.new(self) do
           @base_type = type_name
-          @schema_block = block
+          @constraints = constraints.freeze
 
           class << self
-            attr_reader :base_type, :schema_block
+            attr_reader :base_type, :constraints
 
             # IMPORTANT: Must be named `schema` (not `json_schema`) to match
             # Property#build expectation at lib/easy_talk/property.rb:111
@@ -120,18 +141,12 @@ module EasyTalk
               EasyTalk::TypeResolver.resolve(@base_type)
             end
 
-            # Public: Returns the constraints hash defined in the block
-            # Used by ActiveModelAdapter to merge with property constraints
-            def constraints
-              return {} unless @schema_block
-              ConstraintCollector.new.tap { |c| c.instance_eval(&@schema_block) }.constraints
-            end
-
             private
 
             def build_schema
               builder_class = EasyTalk::Builders::Registry.fetch(ruby_type)
-              builder = builder_class.new(:value, **constraints)
+              # Builder validates constraints via its VALID_OPTIONS
+              builder = builder_class.new(:value, **@constraints)
               builder.build
             end
           end
@@ -140,35 +155,14 @@ module EasyTalk
       alias_method :[], :call
     end
   end
-
-  # DSL for collecting constraints in block
-  class ConstraintCollector
-    attr_reader :constraints
-
-    def initialize
-      @constraints = {}
-    end
-
-    # String constraints
-    def min_length(val); @constraints[:min_length] = val; end
-    def max_length(val); @constraints[:max_length] = val; end
-    def pattern(val); @constraints[:pattern] = val; end
-    def format(val); @constraints[:format] = val; end
-
-    # Numeric constraints
-    def minimum(val); @constraints[:minimum] = val; end
-    def maximum(val); @constraints[:maximum] = val; end
-    def exclusive_minimum(val); @constraints[:exclusive_minimum] = val; end
-    def exclusive_maximum(val); @constraints[:exclusive_maximum] = val; end
-    def multiple_of(val); @constraints[:multiple_of] = val; end
-
-    # Common constraints
-    def enum(*vals); @constraints[:enum] = vals.flatten; end
-    def const(val); @constraints[:const] = val; end
-    def default(val); @constraints[:default] = val; end
-  end
 end
 ```
+
+**Key Design Decision**: No `ConstraintCollector` DSL is needed. The existing builders already define `VALID_OPTIONS` that enumerate valid constraints with type checking. By passing constraints as keyword arguments directly to `EasyTalk::Primitive(:type, **constraints)`, we:
+
+1. **Eliminate duplication** — builders remain the single source of truth for constraint validation
+2. **Get automatic validation** — `BaseBuilder#build` validates constraint types via `ErrorHelper.validate_constraint_value`
+3. **Simplify the API** — one syntax (`key: value`) instead of learning DSL methods
 
 #### ActiveModel Validation Integration (CRITICAL)
 
@@ -208,6 +202,144 @@ Since Primitive implements `.schema`, Property will:
 1. Detect `Email.respond_to?(:schema)` → true
 2. Call `Email.schema` → `{ type: 'string', format: 'email' }`
 3. Merge property-level constraints
+
+#### Validation: Two Contexts
+
+Primitives can be validated in two different contexts:
+
+**Context 1: Wrapped in a Model (property validation)**
+
+When a Primitive is used as a property type within an `EasyTalk::Model`, validation happens at the Model level via ActiveModel:
+
+```ruby
+class Email < EasyTalk::Primitive(:string, format: 'email')
+
+class User
+  include EasyTalk::Model
+  define_schema do
+    property :email, Email
+  end
+end
+
+user = User.new(email: "invalid")
+user.valid?        # => false (ActiveModel validation)
+user.errors[:email] # => ["must be a valid email address"]
+```
+
+The `ActiveModelAdapter` unwraps the Primitive to its base type (`String`) and merges its constraints (`format: 'email'`), then applies standard ActiveModel validations. **No special Primitive validation logic runs** — it's all standard Model validation.
+
+**Context 2: Standalone (direct validation)**
+
+For root-level primitive validation (e.g., JSON Schema compliance tests), Primitives provide class-level validation:
+
+```ruby
+class Email < EasyTalk::Primitive(:string, format: 'email')
+
+# Class-level validation for raw values
+Email.valid?("test@example.com")  # => true
+Email.valid?("invalid")           # => false
+Email.validate("invalid")         # => ["must be a valid email address"]
+```
+
+This enables JSON Schema compliance testing for root primitives:
+
+```ruby
+# In spec/integration/json_schema_compliance_spec.rb
+PositiveInteger = EasyTalk::Primitive(:integer, minimum: 0)
+
+# Test cases from JSON Schema Test Suite
+expect(PositiveInteger.valid?(5)).to eq(true)
+expect(PositiveInteger.valid?(-1)).to eq(false)
+expect(PositiveInteger.valid?("foo")).to eq(false)
+```
+
+**Implementation for standalone validation:**
+
+Standalone validation reuses `ActiveModelAdapter` to ensure identical behavior in both contexts. A lightweight validator class is created once and cached:
+
+```ruby
+module EasyTalk
+  class Primitive
+    class << self
+      def call(type_name, **constraints)
+        Class.new(self) do
+          @base_type = type_name
+          @constraints = constraints.freeze
+
+          class << self
+            attr_reader :base_type, :constraints
+
+            # ... existing schema/ruby_type methods ...
+
+            # Validate a raw value against this Primitive's schema
+            # Returns true if valid, false otherwise
+            def valid?(value)
+              validator_instance(value).valid?
+            end
+
+            # Returns ActiveModel::Errors-style error messages
+            # Example: { value: ["must be a valid email address"] }
+            def validate(value)
+              instance = validator_instance(value)
+              instance.valid?
+              instance.errors.to_hash
+            end
+
+            private
+
+            # Creates a validator instance with the given value
+            def validator_instance(value)
+              validator_class.new(value)
+            end
+
+            # Lazily builds and caches a validator class with ActiveModel validations
+            # This class is created once per Primitive subclass
+            def validator_class
+              @validator_class ||= build_validator_class
+            end
+
+            def build_validator_class
+              primitive_type = ruby_type
+              primitive_constraints = @constraints
+
+              Class.new do
+                include ActiveModel::Validations
+
+                attr_accessor :value
+
+                def initialize(value)
+                  @value = value
+                end
+
+                # Make error messages cleaner (not "Value must be..." but "must be...")
+                def self.name
+                  'PrimitiveValidator'
+                end
+              end.tap do |klass|
+                # Reuse ActiveModelAdapter to apply the same validations
+                # used when Primitive is wrapped in a Model
+                ValidationAdapters::ActiveModelAdapter.build_validations(
+                  klass,
+                  :value,
+                  primitive_type,
+                  primitive_constraints
+                )
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
+```
+
+**Key benefits of this approach:**
+
+1. **Single source of truth** — `ActiveModelAdapter` is the only place validation logic lives
+2. **Identical behavior** — Standalone and Model-wrapped validation produce the same results
+3. **Same error messages** — "must be a valid email address" in both contexts
+4. **No duplication** — No separate constraint validation code to maintain
 
 ---
 
@@ -536,9 +668,10 @@ end
 
 | File | Purpose |
 |------|---------|
-| `lib/easy_talk/primitive.rb` | Primitive base class + ConstraintCollector DSL |
+| `lib/easy_talk/primitive.rb` | Primitive base class with schema generation and standalone validation |
 | `lib/easy_talk/type_resolver.rb` | Symbol → Ruby type resolution |
-| `spec/easy_talk/primitive_spec.rb` | Unit tests for Primitive class |
+| `spec/easy_talk/primitive_spec.rb` | Unit tests for Primitive class (schema + validation) |
+| `spec/easy_talk/type_resolver_spec.rb` | Unit tests for TypeResolver |
 | `spec/easy_talk/type_inference_spec.rb` | Unit tests for type inference |
 
 ### Modified Files
@@ -549,6 +682,7 @@ end
 | `lib/easy_talk/schema_definition.rb` | Add type inference, symbol resolution, `infer_types` DSL |
 | `lib/easy_talk/validation_adapters/active_model_adapter.rb` | **CRITICAL**: Unwrap Primitive types for validation generation |
 | `lib/easy_talk.rb` | Require new files |
+| `spec/integration/json_schema_compliance_spec.rb` | Enable root primitive tests (previously skipped) |
 
 **Note**: `lib/easy_talk/property.rb` does NOT need modification. It already handles types with `.schema` via duck typing (line 111-114).
 
@@ -588,11 +722,13 @@ This proposal is **fully backward compatible**:
 ### Unit Tests
 
 1. **Primitive class** (`spec/easy_talk/primitive_spec.rb`)
-   - Creates valid schema from block
-   - Handles all constraint types (string, numeric, common)
+   - Creates valid schema from keyword arguments
+   - Delegates constraint validation to underlying builders
+   - Raises errors for invalid constraints (via builder's VALID_OPTIONS)
    - Works with both symbol and constant type syntax
    - Generates correct JSON Schema output
    - Exposes `ruby_type` and `constraints` for ActiveModelAdapter
+   - Standalone validation via `.valid?` and `.validate` class methods
 
 2. **Type inference** (`spec/easy_talk/type_inference_spec.rb`)
    - Default conventions work correctly
@@ -613,19 +749,40 @@ This proposal is **fully backward compatible**:
    - `property :name, :string` resolves to `String` before reaching ActiveModelAdapter
    - Unknown symbols raise `ArgumentError` with helpful message
 
-5. **ActiveModel validation** (CRITICAL)
+5. **ActiveModel validation** (Model-wrapped context)
    - Primitive constraints generate correct ActiveModel validations
    - `Email` primitive with `format 'email'` validates email format
    - `PositiveInteger` primitive with `minimum 0` rejects negative numbers
    - Property-level constraints override Primitive constraints
    - Both JSON Schema AND ActiveModel validation work correctly
 
+6. **Standalone Primitive validation** (direct context)
+   - `Primitive.valid?(value)` returns boolean
+   - `Primitive.validate(value)` returns hash of error messages
+   - Uses same `ActiveModelAdapter` as Model-wrapped context
+   - Validator class is cached per Primitive subclass
+
+7. **Validation parity** (CRITICAL)
+   - Model-wrapped and standalone validation produce identical results
+   - Same error messages in both contexts
+   - Same constraint behavior (min_length, format, etc.)
+
 ### Integration Tests
 
-- Primitives work in Model properties
+- Primitives work in Model properties (Model-wrapped validation)
+- Primitives work standalone (direct validation)
+- **Both contexts produce identical validation results**
 - Inference works with Model properties
 - Symbol types work everywhere
 - Constraints merge correctly (explicit overrides inferred)
+
+### JSON Schema Compliance Tests
+
+- Root-level integer schemas pass compliance tests
+- Root-level string schemas pass compliance tests
+- Root-level boolean schemas pass compliance tests
+- Root-level number schemas pass compliance tests
+- Constraint combinations work correctly
 
 ### Edge Cases
 
@@ -694,6 +851,14 @@ EasyTalk::Property.build(:value, String, format: 'email').schema
 
 **Rejected**: Patterns like `price` → `Float` are dangerous for financial applications. Conservative defaults prevent subtle bugs.
 
+### Alternative 5: Block DSL with ConstraintCollector
+
+```ruby
+class Email < EasyTalk::Primitive(:string) { format 'email' }
+```
+
+**Rejected**: Creates duplication with builder `VALID_OPTIONS`. Each builder already defines valid constraints with type checking. A separate `ConstraintCollector` class would need to mirror all constraint methods (`format`, `pattern`, `minimum`, etc.) and keep them in sync with builders. Keyword arguments are simpler and leverage existing validation.
+
 ---
 
 ## Implementation Order
@@ -713,7 +878,7 @@ EasyTalk::Property.build(:value, String, format: 'email').schema
 
 2. **Primitive composition**: Should Primitives support composing with other Primitives?
    ```ruby
-   class NonEmptyEmail < EasyTalk::Primitive(Email) { min_length 1 }
+   class NonEmptyEmail < EasyTalk::Primitive(Email, min_length: 1)
    ```
 
 3. **Array item type inference**: Should `property :emails` infer `T::Array[Email]`?
