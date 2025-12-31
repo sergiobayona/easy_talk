@@ -386,27 +386,6 @@ Use this for documentation, OpenAPI generation, or when validation happens elsew
 
 ---
 
-## LLM function/tool schemas
-
-EasyTalk can generate function specs compatible with LLM tool calling:
-
-```ruby
-class Weather
-  include EasyTalk::Model
-
-  define_schema do
-    title "GetWeather"
-    description "Get the current weather in a given location"
-    property :location, String, description: "The city and state, e.g. San Francisco, CA"
-    property :unit, String, enum: ["celsius", "fahrenheit"], default: "fahrenheit"
-  end
-end
-
-function_spec = EasyTalk::Tools::FunctionBuilder.new(Weather)
-```
-
----
-
 ## Configuration highlights
 
 ```ruby
