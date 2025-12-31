@@ -7,6 +7,7 @@
 [![Ruby](https://img.shields.io/badge/ruby-3.2%2B-ruby.svg)](https://www.ruby-lang.org)
 [![Downloads](https://img.shields.io/gem/dt/easy_talk.svg)](https://rubygems.org/gems/easy_talk)
 [![Documentation](https://img.shields.io/badge/docs-rubydoc.info-blue.svg)](https://rubydoc.info/gems/easy_talk)
+[![GitHub stars](https://img.shields.io/github/stars/sergiobayona/easy_talk?style=social)](https://github.com/sergiobayona/easy_talk)
 
 ## Table of Contents
 
