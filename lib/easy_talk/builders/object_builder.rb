@@ -22,6 +22,11 @@ module EasyTalk
       VALID_OPTIONS = {
         properties: { type: T::Hash[T.any(Symbol, String), T.untyped], key: :properties },
         additional_properties: { type: T::Boolean, key: :additionalProperties },
+        pattern_properties: { type: T::Hash[String, T.untyped], key: :patternProperties },
+        min_properties: { type: Integer, key: :minProperties },
+        max_properties: { type: Integer, key: :maxProperties },
+        dependencies: { type: T::Hash[String, T.any(T::Array[String], T::Hash[String, T.untyped])], key: :dependencies },
+        dependent_required: { type: T::Hash[String, T::Array[String]], key: :dependentRequired },
         subschemas: { type: T::Array[T.untyped], key: :subschemas },
         required: { type: T::Array[T.any(Symbol, String)], key: :required },
         defs: { type: T.untyped, key: :$defs },
