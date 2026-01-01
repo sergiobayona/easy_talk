@@ -2,15 +2,19 @@
 
 module EasyTalk
   module ValidationAdapters
-    # Schema-level validations for object-level constraints.
+    # ActiveModel-specific schema-level validations for object-level constraints.
     #
-    # This module provides validations for JSON Schema keywords that apply
+    # This module provides ActiveModel validations for JSON Schema keywords that apply
     # to the object as a whole rather than individual properties:
     # - minProperties: minimum number of properties that must be present
     # - maxProperties: maximum number of properties that can be present
     # - dependentRequired: conditional property requirements
     #
-    module SchemaValidation
+    # This module is tightly coupled with ActiveModel and is used exclusively by
+    # ActiveModelAdapter. Other validation adapters should implement their own
+    # schema-level validation logic.
+    #
+    module ActiveModelSchemaValidation
       # Apply all applicable schema-level validations.
       #
       # @param klass [Class] The model class to apply validations to

@@ -221,6 +221,9 @@ module EasyTalk
         # Track which properties have had validations applied
         @validated_properties ||= Set.new
 
+        # Initialize mutex eagerly for thread-safe schema-level validation application
+        @schema_level_validation_lock = Mutex.new
+
         # Apply validations using the adapter system
         apply_schema_validations
 
@@ -281,13 +284,13 @@ module EasyTalk
 
       # Apply schema-level validations for object-level constraints.
       # Uses double-checked locking for thread safety.
+      # The mutex is initialized eagerly in define_schema.
       #
       # @param adapter [Class] The validation adapter class
       # @return [void]
       def apply_schema_level_validations(adapter)
         return if @schema_level_validations_applied
 
-        @schema_level_validation_lock ||= Mutex.new
         @schema_level_validation_lock.synchronize do
           return if @schema_level_validations_applied
 
