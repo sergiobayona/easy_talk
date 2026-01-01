@@ -33,6 +33,13 @@ class JsonSchemaConverter
     'default' => :default
   }.freeze
 
+  # Object-level constraint keys (apply to the object as a whole, not properties)
+  OBJECT_CONSTRAINT_KEYS = {
+    'minProperties' => :min_properties,
+    'maxProperties' => :max_properties,
+    'dependentRequired' => :dependent_required
+  }.freeze
+
   def initialize(schema, name = "TestModel_#{SecureRandom.hex(4)}")
     @schema = schema
     @name = name
@@ -49,8 +56,29 @@ class JsonSchemaConverter
     # If schema has properties, treat as object schema
     return false if @schema.key?('properties')
 
+    # If schema has object-level constraints (minProperties, maxProperties, etc.),
+    # treat as object schema - these constraints apply to objects only
+    return false if has_object_constraints?
+
     # Everything else needs wrapping (primitives, arrays, schemas with only constraints)
     true
+  end
+
+  # Check if schema is an object-constraint-only schema (no properties defined)
+  # These schemas validate any object based on property count or dependencies
+  def object_constraint_only_schema?
+    return false unless @schema.is_a?(Hash)
+    return false if @schema.key?('properties')
+    return false if @schema['type'] && @schema['type'] != 'object'
+
+    has_object_constraints?
+  end
+
+  # Check if the schema has object-level constraints
+  def has_object_constraints?
+    return false unless @schema.is_a?(Hash)
+
+    OBJECT_CONSTRAINT_KEYS.keys.any? { |key| @schema.key?(key) }
   end
 
   # Wrap test data for schemas that were wrapped
@@ -58,12 +86,15 @@ class JsonSchemaConverter
     { 'value' => data }
   end
 
-  def to_class
+  def to_class(property_names: nil)
     schema_data = @schema
     model_name = @name
 
     if needs_wrapping?
       build_wrapped_class(schema_data, model_name)
+    elsif object_constraint_only_schema? && property_names
+      # For schemas with only object-level constraints, dynamically create properties from test data
+      build_dynamic_object_class(schema_data, model_name, property_names)
     else
       build_object_class(schema_data, model_name)
     end
@@ -101,6 +132,11 @@ class JsonSchemaConverter
         title schema_data['title'] if schema_data['title']
         description schema_data['description'] if schema_data['description']
 
+        # Apply object-level constraints
+        converter.extract_object_constraints(schema_data).each do |constraint_name, constraint_value|
+          send(constraint_name, constraint_value)
+        end
+
         schema_data['properties']&.each do |prop_name, prop_def|
           safe_prop_name = converter.sanitize_property_name(prop_name)
           type, constraints = converter.extract_type_and_constraints(prop_def)
@@ -109,6 +145,34 @@ class JsonSchemaConverter
           constraints[:optional] = true unless schema_data['required']&.include?(prop_name)
 
           property safe_prop_name.to_sym, type, **constraints
+        end
+      end
+    end
+  end
+
+  # Build a class for object-constraint-only schemas with dynamic properties
+  # These schemas have minProperties/maxProperties but no defined properties
+  def build_dynamic_object_class(schema_data, model_name, property_names)
+    converter = self
+
+    Class.new do
+      include EasyTalk::Model
+
+      singleton_class.send(:define_method, :name) { model_name }
+
+      define_schema do
+        additional_properties true
+
+        # Apply object-level constraints
+        converter.extract_object_constraints(schema_data).each do |constraint_name, constraint_value|
+          send(constraint_name, constraint_value)
+        end
+
+        # Define properties dynamically based on test data keys
+        # All properties are optional since they come from dynamic test data
+        property_names.each do |prop_name|
+          safe_prop_name = converter.sanitize_property_name(prop_name.to_s)
+          property safe_prop_name.to_sym, T.nilable(T.untyped), optional: true, as: prop_name.to_s
         end
       end
     end
@@ -183,6 +247,18 @@ class JsonSchemaConverter
   def extract_constraints(prop_def)
     CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), constraints|
       constraints[ruby_key] = prop_def[json_key] if prop_def.key?(json_key)
+    end
+  end
+
+  def extract_object_constraints(schema_data)
+    return {} unless schema_data.is_a?(Hash)
+
+    OBJECT_CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), constraints|
+      # Convert decimal values to integers for minProperties/maxProperties
+      if schema_data.key?(json_key)
+        value = schema_data[json_key]
+        constraints[ruby_key] = value.is_a?(Float) ? value.to_i : value
+      end
     end
   end
 end

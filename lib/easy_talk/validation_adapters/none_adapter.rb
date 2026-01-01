@@ -25,6 +25,15 @@ module EasyTalk
     #   end
     #
     class NoneAdapter < Base
+      # Build no schema-level validations (no-op).
+      #
+      # @param klass [Class] The model class (unused)
+      # @param schema [Hash] The schema hash (unused)
+      # @return [void]
+      def self.build_schema_validations(klass, schema)
+        # Intentionally empty - no validations applied
+      end
+
       # Apply no validations (no-op).
       #
       # @return [void]

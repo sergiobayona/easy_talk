@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'uri'
+require_relative 'active_model_schema_validation'
 
 module EasyTalk
   module ValidationAdapters
@@ -24,6 +25,16 @@ module EasyTalk
     #   user.errors[:email] # => ["must be a valid email address"]
     #
     class ActiveModelAdapter < Base
+      # Build schema-level validations for object-level constraints.
+      # Delegates to ActiveModelSchemaValidation module.
+      #
+      # @param klass [Class] The model class to apply validations to
+      # @param schema [Hash] The full schema hash containing schema-level constraints
+      # @return [void]
+      def self.build_schema_validations(klass, schema)
+        ActiveModelSchemaValidation.apply(klass, schema)
+      end
+
       # Apply validations based on property type and constraints.
       #
       # @return [void]
