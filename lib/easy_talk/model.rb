@@ -280,14 +280,20 @@ module EasyTalk
       end
 
       # Apply schema-level validations for object-level constraints.
+      # Uses double-checked locking for thread safety.
       #
       # @param adapter [Class] The validation adapter class
       # @return [void]
       def apply_schema_level_validations(adapter)
         return if @schema_level_validations_applied
 
-        adapter.build_schema_validations(self, @schema_definition.schema)
-        @schema_level_validations_applied = true
+        @schema_level_validation_lock ||= Mutex.new
+        @schema_level_validation_lock.synchronize do
+          return if @schema_level_validations_applied
+
+          adapter.build_schema_validations(self, @schema_definition.schema)
+          @schema_level_validations_applied = true
+        end
       end
 
       public

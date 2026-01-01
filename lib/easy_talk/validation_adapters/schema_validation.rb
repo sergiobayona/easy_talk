@@ -27,14 +27,14 @@ module EasyTalk
       # @param klass [Class] The model class
       # @param min_count [Integer] Minimum number of properties that must be present
       def self.apply_min_properties_validation(klass, min_count)
+        define_count_method(klass)
+
         klass.validate do |record|
-          present_count = count_present_properties(record)
+          present_count = record.send(:count_present_properties)
           if present_count < min_count
             record.errors.add(:base, "must have at least #{min_count} #{min_count == 1 ? 'property' : 'properties'} present")
           end
         end
-
-        define_count_method(klass)
       end
 
       # Apply maximum properties validation.
@@ -42,14 +42,14 @@ module EasyTalk
       # @param klass [Class] The model class
       # @param max_count [Integer] Maximum number of properties that can be present
       def self.apply_max_properties_validation(klass, max_count)
+        define_count_method(klass)
+
         klass.validate do |record|
-          present_count = count_present_properties(record)
+          present_count = record.send(:count_present_properties)
           if present_count > max_count
             record.errors.add(:base, "must have at most #{max_count} #{max_count == 1 ? 'property' : 'properties'} present")
           end
         end
-
-        define_count_method(klass)
       end
 
       # Apply dependent required validation.
@@ -78,19 +78,22 @@ module EasyTalk
         end
       end
 
-      # Define the count_present_properties instance method on the class if not already defined.
+      # Define the count_present_properties private instance method on the class if not already defined.
+      # The method counts how many schema properties have non-nil/non-blank values.
       #
       # @param klass [Class] The model class
       def self.define_count_method(klass)
-        return if klass.method_defined?(:count_present_properties)
+        # Check for private methods as well with the second argument
+        return if klass.method_defined?(:count_present_properties, true)
 
-        klass.define_method(:count_present_properties) do |rec|
-          schema_props = rec.class.schema_definition.schema[:properties] || {}
+        klass.send(:define_method, :count_present_properties) do
+          schema_props = self.class.schema_definition.schema[:properties] || {}
           schema_props.keys.count do |prop|
-            value = rec.public_send(prop)
+            value = public_send(prop)
             value.present? || value == false # false is a valid present value
           end
         end
+        klass.send(:private, :count_present_properties)
       end
 
       private_class_method :define_count_method
