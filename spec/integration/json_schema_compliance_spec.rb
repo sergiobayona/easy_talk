@@ -29,8 +29,8 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
     'default.json' => 'Default keyword behavior not supported',
     'enum.json' => 'Enum validation not fully supported',
     'infinite-loop-detection.json' => 'Infinite loop detection not supported',
-    'maxProperties.json' => 'Max properties not supported',
-    'minProperties.json' => 'Min properties not supported'
+    'maxProperties.json' => 'Edge cases with non-object types not supported',
+    'minProperties.json' => 'Edge cases with non-object types not supported'
   }.freeze
 
   Dir.glob(File.join(TEST_SUITE_PATH, '*.json')).each do |file_path|
