@@ -417,4 +417,220 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       end
     end
   end
+
+  describe '.build_schema_validations' do
+    describe 'min_properties' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MinPropertiesTest'
+
+          define_schema do
+            min_properties 2
+            property :name, String, optional: true
+            property :email, String, optional: true
+            property :phone, String, optional: true
+          end
+        end
+      end
+
+      it 'fails validation when fewer than min_properties are present' do
+        instance = test_class.new(name: 'John')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:base]).to include('must have at least 2 properties present')
+      end
+
+      it 'passes validation when exactly min_properties are present' do
+        instance = test_class.new(name: 'John', email: 'john@example.com')
+        expect(instance.valid?).to be true
+      end
+
+      it 'passes validation when more than min_properties are present' do
+        instance = test_class.new(name: 'John', email: 'john@example.com', phone: '555-1234')
+        expect(instance.valid?).to be true
+      end
+
+      it 'counts false as a present value' do
+        bool_test_class = Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'BoolMinPropsTest'
+
+          define_schema do
+            min_properties 2
+            property :active, T::Boolean, optional: true
+            property :verified, T::Boolean, optional: true
+          end
+        end
+
+        instance = bool_test_class.new(active: false, verified: false)
+        expect(instance.valid?).to be true
+      end
+    end
+
+    describe 'max_properties' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MaxPropertiesTest'
+
+          define_schema do
+            max_properties 2
+            property :name, String, optional: true
+            property :email, String, optional: true
+            property :phone, String, optional: true
+          end
+        end
+      end
+
+      it 'fails validation when more than max_properties are present' do
+        instance = test_class.new(name: 'John', email: 'john@example.com', phone: '555-1234')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:base]).to include('must have at most 2 properties present')
+      end
+
+      it 'passes validation when exactly max_properties are present' do
+        instance = test_class.new(name: 'John', email: 'john@example.com')
+        expect(instance.valid?).to be true
+      end
+
+      it 'passes validation when fewer than max_properties are present' do
+        instance = test_class.new(name: 'John')
+        expect(instance.valid?).to be true
+      end
+    end
+
+    describe 'min_properties and max_properties combined' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MinMaxPropertiesTest'
+
+          define_schema do
+            min_properties 1
+            max_properties 2
+            property :name, String, optional: true
+            property :email, String, optional: true
+            property :phone, String, optional: true
+          end
+        end
+      end
+
+      it 'fails when below minimum' do
+        instance = test_class.new
+        expect(instance.valid?).to be false
+        expect(instance.errors[:base]).to include('must have at least 1 property present')
+      end
+
+      it 'fails when above maximum' do
+        instance = test_class.new(name: 'John', email: 'john@example.com', phone: '555-1234')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:base]).to include('must have at most 2 properties present')
+      end
+
+      it 'passes when within range' do
+        instance = test_class.new(name: 'John', email: 'john@example.com')
+        expect(instance.valid?).to be true
+      end
+    end
+
+    describe 'dependent_required' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'DependentRequiredTest'
+
+          define_schema do
+            property :credit_card, String, optional: true
+            property :billing_address, String, optional: true
+            property :security_code, String, optional: true
+            dependent_required('credit_card' => %w[billing_address security_code])
+          end
+        end
+      end
+
+      it 'passes when trigger property is not present' do
+        instance = test_class.new(billing_address: '123 Main St')
+        expect(instance.valid?).to be true
+      end
+
+      it 'fails when trigger is present but dependent property is missing' do
+        instance = test_class.new(credit_card: '4111111111111111')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:billing_address]).to include('is required when credit_card is present')
+        expect(instance.errors[:security_code]).to include('is required when credit_card is present')
+      end
+
+      it 'fails when trigger is present but one dependent property is missing' do
+        instance = test_class.new(credit_card: '4111111111111111', billing_address: '123 Main St')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:billing_address]).to be_empty
+        expect(instance.errors[:security_code]).to include('is required when credit_card is present')
+      end
+
+      it 'passes when trigger and all dependent properties are present' do
+        instance = test_class.new(
+          credit_card: '4111111111111111',
+          billing_address: '123 Main St',
+          security_code: '123'
+        )
+        expect(instance.valid?).to be true
+      end
+
+      it 'handles boolean trigger values correctly' do
+        bool_dep_class = Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'BoolDependentTest'
+
+          define_schema do
+            property :is_business, T::Boolean, optional: true
+            property :company_name, String, optional: true
+            dependent_required('is_business' => ['company_name'])
+          end
+        end
+
+        # false is considered "present" so dependencies should be checked
+        instance = bool_dep_class.new(is_business: false)
+        expect(instance.valid?).to be false
+        expect(instance.errors[:company_name]).to include('is required when is_business is present')
+
+        instance = bool_dep_class.new(is_business: false, company_name: 'Acme Inc')
+        expect(instance.valid?).to be true
+      end
+
+      it 'handles multiple dependency rules' do
+        multi_dep_class = Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MultiDependentTest'
+
+          define_schema do
+            property :name, String, optional: true
+            property :email, String, optional: true
+            property :phone, String, optional: true
+            dependent_required(
+              'name' => ['email'],
+              'email' => ['phone']
+            )
+          end
+        end
+
+        instance = multi_dep_class.new(name: 'John')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:email]).to include('is required when name is present')
+
+        instance = multi_dep_class.new(name: 'John', email: 'john@example.com')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:phone]).to include('is required when email is present')
+
+        instance = multi_dep_class.new(name: 'John', email: 'john@example.com', phone: '555-1234')
+        expect(instance.valid?).to be true
+      end
+    end
+  end
 end

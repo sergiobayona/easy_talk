@@ -274,6 +274,20 @@ module EasyTalk
           adapter.build_validations(self, prop_name, prop_def[:type], prop_def[:constraints])
           @validated_properties.add(prop_name)
         end
+
+        # Apply schema-level validations (min_properties, max_properties, dependent_required)
+        apply_schema_level_validations(adapter)
+      end
+
+      # Apply schema-level validations for object-level constraints.
+      #
+      # @param adapter [Class] The validation adapter class
+      # @return [void]
+      def apply_schema_level_validations(adapter)
+        return if @schema_level_validations_applied
+
+        adapter.build_schema_validations(self, @schema_definition.schema)
+        @schema_level_validations_applied = true
       end
 
       public

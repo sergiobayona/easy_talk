@@ -24,6 +24,93 @@ module EasyTalk
     #   user.errors[:email] # => ["must be a valid email address"]
     #
     class ActiveModelAdapter < Base
+      # Build schema-level validations for object-level constraints.
+      #
+      # @param klass [Class] The model class to apply validations to
+      # @param schema [Hash] The full schema hash containing schema-level constraints
+      # @return [void]
+      def self.build_schema_validations(klass, schema)
+        apply_min_properties_validation(klass, schema[:min_properties]) if schema[:min_properties]
+        apply_max_properties_validation(klass, schema[:max_properties]) if schema[:max_properties]
+        apply_dependent_required_validation(klass, schema[:dependent_required]) if schema[:dependent_required]
+      end
+
+      # Apply minimum properties validation.
+      #
+      # @param klass [Class] The model class
+      # @param min_count [Integer] Minimum number of properties that must be present
+      def self.apply_min_properties_validation(klass, min_count)
+        klass.validate do |record|
+          present_count = count_present_properties(record)
+          if present_count < min_count
+            record.errors.add(:base, "must have at least #{min_count} #{min_count == 1 ? 'property' : 'properties'} present")
+          end
+        end
+
+        # Define instance method for counting properties if not already defined
+        unless klass.method_defined?(:count_present_properties)
+          klass.define_method(:count_present_properties) do |rec|
+            schema_props = rec.class.schema_definition.schema[:properties] || {}
+            schema_props.keys.count do |prop|
+              value = rec.public_send(prop)
+              value.present? || value == false # false is a valid present value
+            end
+          end
+        end
+      end
+
+      # Apply maximum properties validation.
+      #
+      # @param klass [Class] The model class
+      # @param max_count [Integer] Maximum number of properties that can be present
+      def self.apply_max_properties_validation(klass, max_count)
+        klass.validate do |record|
+          present_count = count_present_properties(record)
+          if present_count > max_count
+            record.errors.add(:base, "must have at most #{max_count} #{max_count == 1 ? 'property' : 'properties'} present")
+          end
+        end
+
+        # Define instance method for counting properties if not already defined
+        unless klass.method_defined?(:count_present_properties)
+          klass.define_method(:count_present_properties) do |rec|
+            schema_props = rec.class.schema_definition.schema[:properties] || {}
+            schema_props.keys.count do |prop|
+              value = rec.public_send(prop)
+              value.present? || value == false # false is a valid present value
+            end
+          end
+        end
+      end
+
+      # Apply dependent required validation.
+      # When a trigger property is present, all dependent properties must also be present.
+      #
+      # @param klass [Class] The model class
+      # @param dependencies [Hash<String, Array<String>>] Map of trigger properties to required properties
+      def self.apply_dependent_required_validation(klass, dependencies)
+        dependencies.each do |trigger_property, required_properties|
+          trigger_prop = trigger_property.to_sym
+          required_props = required_properties.map(&:to_sym)
+
+          klass.validate do |record|
+            trigger_value = record.public_send(trigger_prop)
+            trigger_present = trigger_value.present? || trigger_value == false
+
+            next unless trigger_present
+
+            required_props.each do |required_prop|
+              value = record.public_send(required_prop)
+              value_present = value.present? || value == false
+
+              unless value_present
+                record.errors.add(required_prop, "is required when #{trigger_prop} is present")
+              end
+            end
+          end
+        end
+      end
+
       # Apply validations based on property type and constraints.
       #
       # @return [void]

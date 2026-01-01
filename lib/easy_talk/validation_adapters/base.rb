@@ -44,6 +44,16 @@ module EasyTalk
         new(klass, property_name, type, constraints).apply_validations
       end
 
+      # Build schema-level validations (e.g., min_properties, max_properties, dependent_required).
+      # Subclasses can override this method to implement schema-level validations.
+      #
+      # @param klass [Class] The model class to apply validations to
+      # @param schema [Hash] The full schema hash containing schema-level constraints
+      # @return [void]
+      def self.build_schema_validations(klass, schema)
+        # Default implementation does nothing - subclasses can override
+      end
+
       # Initialize a new validation adapter instance.
       #
       # @param klass [Class] The model class to apply validations to
