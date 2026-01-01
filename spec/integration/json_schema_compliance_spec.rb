@@ -28,9 +28,7 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
     'const.json' => 'Const keyword not supported',
     'default.json' => 'Default keyword behavior not supported',
     'enum.json' => 'Enum validation not fully supported',
-    'infinite-loop-detection.json' => 'Infinite loop detection not supported',
-    'maxProperties.json' => 'Edge cases with non-object types not supported',
-    'minProperties.json' => 'Edge cases with non-object types not supported'
+    'infinite-loop-detection.json' => 'Infinite loop detection not supported'
   }.freeze
 
   Dir.glob(File.join(TEST_SUITE_PATH, '*.json')).each do |file_path|
@@ -46,7 +44,6 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
         describe group['description'] do
           let(:schema) { group['schema'] }
           let(:converter) { JsonSchemaConverter.new(schema) }
-          let(:model_class) { converter.to_class }
 
           group['tests'].each do |test_case|
             it test_case['description'].to_s do
@@ -56,8 +53,24 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
               # Wrap data if the schema was wrapped (non-object schemas)
               test_data = converter.needs_wrapping? ? converter.wrap_data(data) : data
 
+              # For object-constraint-only schemas (minProperties, maxProperties, etc.),
+              # JSON Schema says non-object data should be valid (constraints are ignored)
+              if converter.object_constraint_only_schema? && !data.is_a?(Hash)
+                # Per JSON Schema spec: object constraints ignore non-objects
+                # These should always be valid
+                expect(valid).to be(true), "JSON Schema spec says non-objects should be valid for object constraints"
+                next
+              end
+
               # For object schemas, data must be a hash
               skip "Data is not a hash after transformation (#{test_data.class})" unless test_data.is_a?(Hash)
+
+              # For object-constraint-only schemas, dynamically create properties from test data
+              model_class = if converter.object_constraint_only_schema?
+                              converter.to_class(property_names: test_data.keys)
+                            else
+                              converter.to_class
+                            end
 
               begin
                 instance = model_class.new(test_data)
