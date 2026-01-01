@@ -103,8 +103,8 @@ RSpec.describe 'Payment object example' do
                 },
                 CardExpYear: {
                   type: 'integer',
-                  minimum: 2025,
-                  maximum: 2035
+                  minimum: Date.today.year,
+                  maximum: Date.today.year + 10
                 },
                 CardCVV: {
                   type: 'string',

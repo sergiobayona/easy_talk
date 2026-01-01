@@ -149,6 +149,106 @@ RSpec.describe EasyTalk::Builders::ObjectBuilder do
       end
     end
 
+    context 'with pattern_properties' do
+      let(:model_with_pattern_properties) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'ModelWithPatternProperties'
+          end
+
+          define_schema do
+            pattern_properties(
+              '^S_' => { type: 'string' },
+              '^I_' => { type: 'integer' }
+            )
+          end
+        end
+      end
+
+      it 'includes patternProperties in schema' do
+        schema = model_with_pattern_properties.json_schema
+        expect(schema['patternProperties']).to eq(
+          '^S_' => { 'type' => 'string' },
+          '^I_' => { 'type' => 'integer' }
+        )
+      end
+    end
+
+    context 'with min_properties and max_properties' do
+      let(:model_with_property_limits) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'ModelWithPropertyLimits'
+          end
+
+          define_schema do
+            min_properties 1
+            max_properties 10
+            property :name, String
+          end
+        end
+      end
+
+      it 'includes minProperties in schema' do
+        schema = model_with_property_limits.json_schema
+        expect(schema['minProperties']).to eq(1)
+      end
+
+      it 'includes maxProperties in schema' do
+        schema = model_with_property_limits.json_schema
+        expect(schema['maxProperties']).to eq(10)
+      end
+    end
+
+    context 'with dependent_required' do
+      let(:model_with_dependent_required) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'ModelWithDependentRequired'
+          end
+
+          define_schema do
+            property :credit_card, String, optional: true
+            property :billing_address, String, optional: true
+            dependent_required('credit_card' => ['billing_address'])
+          end
+        end
+      end
+
+      it 'includes dependentRequired in schema' do
+        schema = model_with_dependent_required.json_schema
+        expect(schema['dependentRequired']).to eq('credit_card' => ['billing_address'])
+      end
+    end
+
+    context 'with dependencies (legacy)' do
+      let(:model_with_dependencies) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'ModelWithDependencies'
+          end
+
+          define_schema do
+            property :name, String
+            dependencies('name' => ['credit_card'])
+          end
+        end
+      end
+
+      it 'includes dependencies in schema' do
+        schema = model_with_dependencies.json_schema
+        expect(schema['dependencies']).to eq('name' => ['credit_card'])
+      end
+    end
+
     context 'with nested EasyTalk models' do
       let(:address_model) do
         Class.new do
