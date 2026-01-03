@@ -12,6 +12,7 @@ require_relative 'builders/object_builder'
 require_relative 'schema_definition'
 require_relative 'validation_builder'
 require_relative 'error_formatter'
+require_relative 'extensions/ruby_llm_compatibility'
 
 module EasyTalk
   # The `Model` module is a mixin that provides functionality for defining and accessing the schema of a model.
@@ -38,12 +39,18 @@ module EasyTalk
   module Model
     def self.included(base)
       base.extend(ClassMethods)
+      base.extend(EasyTalk::Extensions::RubyLLMCompatibility) # Add class-level methods
 
       base.include ActiveModel::API
       base.include ActiveModel::Validations
       base.extend ActiveModel::Callbacks
       base.include(InstanceMethods)
       base.include(ErrorFormatter::InstanceMethods)
+
+      # If inheriting from RubyLLM::Tool, override schema methods to use EasyTalk's schema
+      if defined?(RubyLLM::Tool) && base < RubyLLM::Tool
+        base.include(EasyTalk::Extensions::RubyLLMToolOverrides)
+      end
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
@@ -148,6 +155,14 @@ module EasyTalk
       # to_h includes both defined and additional properties
       def to_h
         to_hash.merge(@additional_properties)
+      end
+
+      # Returns a Hash representing the schema in a format compatible with RubyLLM.
+      # Delegates to the class method. Required for RubyLLM's with_schema method.
+      #
+      # @return [Hash] The RubyLLM-compatible schema representation
+      def to_json_schema
+        self.class.to_json_schema
       end
 
       # Allow comparison with hashes
