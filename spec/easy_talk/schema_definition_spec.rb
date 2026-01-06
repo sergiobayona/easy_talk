@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'easy_talk/model'
+require 'stringio'
 
 RSpec.describe EasyTalk::SchemaDefinition do
   let(:model) do
@@ -226,6 +227,27 @@ RSpec.describe EasyTalk::SchemaDefinition do
 
       schema = json_ld_model.json_schema
       expect(schema['properties'].keys).to include('@type', '$id')
+    end
+  end
+
+  describe 'KEYWORDS constant' do
+    it 'does not cause method redefinition warnings when SchemaDefinition is loaded' do
+      # Regression test: KEYWORDS should not include any method names that have
+      # explicit implementations in SchemaDefinition (e.g., :property).
+      # This would cause "method redefined; discarding old ..." warnings.
+      warnings = []
+      original_stderr = $stderr
+      $stderr = StringIO.new
+
+      begin
+        # Force reload of SchemaDefinition to trigger any method redefinition warnings
+        load File.expand_path('../../lib/easy_talk/schema_definition.rb', __dir__)
+        warnings = $stderr.string
+      ensure
+        $stderr = original_stderr
+      end
+
+      expect(warnings).not_to include('method redefined')
     end
   end
 end
