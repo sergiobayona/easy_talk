@@ -35,10 +35,11 @@ class JsonSchemaConverter
 
   # Array-specific JSON Schema keywords that imply the schema is for arrays
   # Includes keywords from Draft 7 through Draft 2020-12 for forward compatibility
-  ARRAY_CONSTRAINT_KEYS = %w[
-    minItems maxItems uniqueItems items additionalItems contains
-    minContains maxContains prefixItems unevaluatedItems
-  ].freeze
+  # Using Set for O(1) membership lookups
+  ARRAY_CONSTRAINT_KEYS = Set.new(%w[
+                                    minItems maxItems uniqueItems items additionalItems contains
+                                    minContains maxContains prefixItems unevaluatedItems
+                                  ]).freeze
 
   # Object-level constraint keys (apply to the object as a whole, not properties)
   OBJECT_CONSTRAINT_KEYS = {
@@ -228,7 +229,7 @@ class JsonSchemaConverter
   end
 
   def has_array_constraints?(prop_def)
-    ARRAY_CONSTRAINT_KEYS.any? { |key| prop_def.key?(key) }
+    ARRAY_CONSTRAINT_KEYS.intersect?(prop_def.keys)
   end
 
   def resolve_single_type(type_name, prop_def)

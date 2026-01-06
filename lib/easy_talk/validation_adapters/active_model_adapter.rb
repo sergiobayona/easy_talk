@@ -2,7 +2,7 @@
 
 require 'uri'
 require_relative 'active_model_schema_validation'
-require_relative '../json_schema_equality'
+require 'easy_talk/json_schema_equality'
 
 module EasyTalk
   module ValidationAdapters
