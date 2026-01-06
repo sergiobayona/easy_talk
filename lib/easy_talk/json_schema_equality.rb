@@ -30,7 +30,7 @@ module EasyTalk
         when Hash
           # Convert keys to strings before sorting to handle mixed key types (Symbol/String)
           # and ensure consistent, order-independent comparison (JSON only has string keys)
-          value.map { |k, v| [k.to_s, v] }.sort.map { |k, v| [k, normalize(v, depth + 1)] }
+          value.map { |k, v| [k.to_s, normalize(v, depth + 1)] }.sort
         when Array
           value.map { |item| normalize(item, depth + 1) }
         when Integer, Float
