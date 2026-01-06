@@ -181,5 +181,23 @@ RSpec.describe EasyTalk::JsonSchemaEquality do
       normalized = described_class.normalize([1, 'foo', { 'a' => 1 }])
       expect(normalized).to eq([1.to_r, 'foo', [['a', 1.to_r]]])
     end
+
+    context 'with depth limit protection' do
+      it 'raises ArgumentError when nesting exceeds MAX_DEPTH' do
+        # Build a structure that exceeds MAX_DEPTH (100)
+        deeply_nested = (1..101).reduce('value') { |inner, _| { 'level' => inner } }
+
+        expect do
+          described_class.normalize(deeply_nested)
+        end.to raise_error(ArgumentError, /Nesting depth exceeds maximum/)
+      end
+
+      it 'accepts structures at exactly MAX_DEPTH' do
+        # Build a structure at exactly MAX_DEPTH (100)
+        deeply_nested = (1..100).reduce('value') { |inner, _| { 'level' => inner } }
+
+        expect { described_class.normalize(deeply_nested) }.not_to raise_error
+      end
+    end
   end
 end
