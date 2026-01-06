@@ -17,7 +17,7 @@ module EasyTalk
     class TupleBuilder < BaseBuilder
       extend T::Sig
 
-      # Note: additional_items is handled separately in build() since it can be a type
+      # NOTE: additional_items is handled separately in build() since it can be a type
       VALID_OPTIONS = {
         min_items: { type: Integer, key: :minItems },
         max_items: { type: Integer, key: :maxItems },

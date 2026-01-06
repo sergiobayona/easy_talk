@@ -29,6 +29,8 @@ Style/StringLiterals:
 
 Metrics/ClassLength:
   Max: 240
+  Exclude:
+    - lib/easy_talk/validation_adapters/active_model_adapter.rb
 
 Metrics/MethodLength:
   Max: 60
