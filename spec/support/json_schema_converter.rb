@@ -274,12 +274,7 @@ class JsonSchemaConverter
     items_schema = prop_def['items']
     return nil unless items_schema.is_a?(Array)
 
-    items_schema.map do |item_schema|
-      # Empty schema {} or boolean true means any type is valid
-      next T.untyped unless item_schema.is_a?(Hash) && item_schema.key?('type')
-
-      TYPE_MAPPING.fetch(item_schema['type'], T.untyped)
-    end
+    items_schema.map { |item_schema| convert_schema_to_type(item_schema) }
   end
 
   # Check if items is a tuple (array of schemas) vs a single schema

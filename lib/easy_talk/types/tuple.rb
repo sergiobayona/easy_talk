@@ -5,14 +5,13 @@ module EasyTalk
     # Represents a tuple type for arrays with positional type validation.
     #
     # A tuple is an array where each position has a specific type. This class
-    # stores the types for each position and optional additional_items constraint.
+    # stores the types for each position.
     #
     # @example Basic tuple
     #   T::Tuple[String, Integer]  # First item must be String, second must be Integer
     #
     # @example With additional_items constraint
-    #   T::Tuple[String, Integer].with_additional_items(false)  # No extra items allowed
-    #   T::Tuple[String, Integer].with_additional_items(Float)  # Extra items must be Float
+    #   property :flags, T::Tuple[T::Boolean, T::Boolean], additional_items: false
     #
     class Tuple
       extend T::Sig
@@ -21,39 +20,16 @@ module EasyTalk
       sig { returns(T::Array[T.untyped]) }
       attr_reader :types
 
-      # @return [Object, nil] The additional_items constraint (false, true, or a type)
-      sig { returns(T.untyped) }
-      attr_reader :additional_items
-
       # Creates a new Tuple instance with the given positional types.
       #
       # @param types [Array] The types for each position in the tuple
+      # @raise [ArgumentError] if types is empty or contains nil values
       sig { params(types: T.untyped).void }
       def initialize(*types)
         raise ArgumentError, 'Tuple requires at least one type' if types.empty?
+        raise ArgumentError, 'Tuple types cannot be nil' if types.any?(&:nil?)
 
-        @types = types
-        @additional_items = nil
-      end
-
-      # Returns a new Tuple with the additional_items constraint set.
-      #
-      # @param constraint [Boolean, Class] false to disallow extra items,
-      #   true to allow any, or a type to validate extra items against
-      # @return [Tuple] A new Tuple instance with the constraint
-      sig { params(constraint: T.untyped).returns(Tuple) }
-      def with_additional_items(constraint)
-        new_tuple = self.class.new(*@types)
-        new_tuple.instance_variable_set(:@additional_items, constraint)
-        new_tuple
-      end
-
-      # Checks if this tuple has an additional_items constraint.
-      #
-      # @return [Boolean] true if additional_items is set (including false)
-      sig { returns(T::Boolean) }
-      def additional_items?
-        !@additional_items.nil?
+        @types = types.freeze
       end
 
       # Returns a string representation of the tuple type.
@@ -61,7 +37,7 @@ module EasyTalk
       # @return [String] A human-readable representation
       sig { returns(String) }
       def to_s
-        type_names = @types.map { |t| t.respond_to?(:name) ? t.name : t.to_s }
+        type_names = @types.map { |t| (t.respond_to?(:name) && t.name) || t.to_s }
         "T::Tuple[#{type_names.join(', ')}]"
       end
 

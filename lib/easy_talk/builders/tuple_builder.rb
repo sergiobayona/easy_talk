@@ -30,9 +30,11 @@ module EasyTalk
       def initialize(name, type, constraints = {})
         @name = name
         @type = type
+        # Work on a copy to avoid mutating the original constraints hash
+        local_constraints = constraints.dup
         # Extract additional_items before passing to super (it's handled separately in build)
-        @additional_items_constraint = constraints.delete(:additional_items)
-        super(name, { type: 'array' }, constraints, VALID_OPTIONS)
+        @additional_items_constraint = local_constraints.delete(:additional_items)
+        super(name, { type: 'array' }, local_constraints, VALID_OPTIONS)
       end
 
       sig { returns(T::Boolean) }
@@ -51,8 +53,7 @@ module EasyTalk
         schema[:items] = build_items
 
         # Handle additional_items constraint
-        additional_items_value = resolve_additional_items
-        schema[:additionalItems] = build_additional_items_schema(additional_items_value) unless additional_items_value.nil?
+        schema[:additionalItems] = build_additional_items_schema(@additional_items_constraint) unless @additional_items_constraint.nil?
 
         schema
       end
@@ -67,16 +68,6 @@ module EasyTalk
         type.types.map.with_index do |item_type, index|
           Property.new(:"#{@name}_item_#{index}", item_type, {}).build
         end
-      end
-
-      # Resolves the additional_items value from constraints or tuple type.
-      #
-      # @return [Boolean, Class, nil] The additional_items constraint
-      sig { returns(T.untyped) }
-      def resolve_additional_items
-        return @additional_items_constraint unless @additional_items_constraint.nil?
-
-        type.additional_items if type.additional_items?
       end
 
       # Builds the additionalItems schema value.

@@ -42,9 +42,12 @@ module EasyTalk
         # Handle T.untyped - any value is valid
         return :untyped if type.is_a?(T::Types::Untyped) || type == T.untyped
 
+        # Handle union types (T.any, T.nilable)
+        return type.types.flat_map { |t| resolve_tuple_type_class(t) } if type.is_a?(T::Types::Union)
+
         if type.respond_to?(:raw_type)
           type.raw_type
-        elsif type == T::Boolean || (type.respond_to?(:name) && type.name == 'T::Boolean')
+        elsif type == T::Boolean
           [TrueClass, FalseClass]
         elsif type.is_a?(Class)
           type
@@ -65,6 +68,19 @@ module EasyTalk
         end
       end
 
+      # Generate a human-readable type name for error messages
+      def self.type_name_for_error(type_class)
+        return 'unknown' if type_class.nil?
+
+        if type_class.is_a?(Array)
+          type_class.map { |tc| tc.respond_to?(:name) ? tc.name : tc.to_s }.join(' or ')
+        elsif type_class.respond_to?(:name) && type_class.name
+          type_class.name
+        else
+          type_class.to_s
+        end
+      end
+
       # Apply validations based on property type and constraints.
       #
       # @return [void]
@@ -77,7 +93,7 @@ module EasyTalk
                      TypeIntrospection.boolean_type?(@type)
 
         # Determine if the type is an array (empty arrays should be valid)
-        is_array = type_class == Array || @type.is_a?(T::Types::TypedArray) || @type.is_a?(EasyTalk::Types::Tuple)
+        is_array = TypeIntrospection.array_type?(@type)
 
         # Skip presence validation for booleans, nilable types, and arrays
         # (empty arrays are valid - use min_items constraint if you need non-empty)
@@ -271,15 +287,11 @@ module EasyTalk
 
         apply_unique_items_validation if @constraints[:unique_items]
 
-        # Extract tuple types and additional_items from the Tuple type
+        # Extract tuple types from the Tuple type
         item_types = tuple_type.types
 
-        # Determine additional_items: constraint takes precedence over Tuple setting
-        additional_items = if @constraints.key?(:additional_items)
-                             @constraints[:additional_items]
-                           elsif tuple_type.additional_items?
-                             tuple_type.additional_items
-                           end
+        # Get additional_items from constraints
+        additional_items = @constraints[:additional_items]
 
         apply_tuple_validations(item_types, additional_items)
       end
@@ -302,7 +314,7 @@ module EasyTalk
             item = value[index]
             next if ActiveModelAdapter.type_matches?(item, type_class)
 
-            type_name = type_class.is_a?(Array) ? type_class.map(&:name).join(' or ') : type_class.name
+            type_name = ActiveModelAdapter.type_name_for_error(type_class)
             record.errors.add(prop_name, "item at index #{index} must be a #{type_name}")
           end
 
@@ -320,7 +332,7 @@ module EasyTalk
               index = resolved_item_types.length + offset
               next if ActiveModelAdapter.type_matches?(item, resolved_additional_type)
 
-              type_name = resolved_additional_type.is_a?(Array) ? resolved_additional_type.map(&:name).join(' or ') : resolved_additional_type.name
+              type_name = ActiveModelAdapter.type_name_for_error(resolved_additional_type)
               record.errors.add(prop_name, "item at index #{index} must be a #{type_name}")
             end
           end

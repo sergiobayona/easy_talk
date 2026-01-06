@@ -292,25 +292,20 @@ RSpec.describe 'Tuple Validation with T::Tuple' do
       expect { EasyTalk::Types::Tuple.new }.to raise_error(ArgumentError, 'Tuple requires at least one type')
     end
 
+    it 'raises error for nil types' do
+      expect { T::Tuple[String, nil] }.to raise_error(ArgumentError, 'Tuple types cannot be nil')
+    end
+
     it 'has a readable to_s representation' do
       tuple = T::Tuple[String, Integer]
       expect(tuple.to_s).to eq('T::Tuple[String, Integer]')
     end
 
-    describe '#with_additional_items' do
-      it 'returns a new Tuple with additional_items set' do
-        original = T::Tuple[String]
-        with_false = original.with_additional_items(false)
-
-        expect(with_false.additional_items).to eq(false)
-        expect(with_false.additional_items?).to be(true)
-        expect(original.additional_items?).to be(false) # original unchanged
-      end
-
-      it 'can set additional_items to a type' do
-        tuple = T::Tuple[String].with_additional_items(Integer)
-        expect(tuple.additional_items).to eq(Integer)
-      end
+    it 'handles anonymous classes in to_s' do
+      anonymous_class = Class.new
+      tuple = EasyTalk::Types::Tuple.new(String, anonymous_class)
+      # Should not raise and should fall back to to_s for anonymous class
+      expect(tuple.to_s).to match(/T::Tuple\[String, #<Class:0x/)
     end
   end
 end
