@@ -8,7 +8,7 @@ class JsonSchemaConverter
     'integer' => Integer,
     'number' => Float,
     'boolean' => T::Boolean,
-    'array' => T::Array[String]
+    'array' => Array  # Untyped array - item type determined by determine_array_type
   }.freeze
 
   CONSTRAINT_KEYS = {
@@ -253,7 +253,8 @@ class JsonSchemaConverter
 
   def determine_array_type(prop_def)
     items_schema = prop_def['items']
-    return T::Array[String] unless items_schema.is_a?(Hash)
+    # Use untyped Array when no items schema is specified (JSON Schema allows any items)
+    return Array unless items_schema.is_a?(Hash)
 
     item_type = TYPE_MAPPING.fetch(items_schema['type'], String)
     T::Array[item_type]
