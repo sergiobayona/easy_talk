@@ -182,6 +182,28 @@ RSpec.describe EasyTalk::JsonSchemaEquality do
       expect(normalized).to eq([1.to_r, 'foo', [['a', 1.to_r]]])
     end
 
+    context 'with mixed key types' do
+      it 'treats symbol and string keys as equivalent' do
+        expect(described_class.normalize({ a: 1 })).to eq(described_class.normalize({ 'a' => 1 }))
+      end
+
+      it 'handles hashes with mixed symbol and string keys' do
+        # This should not raise ArgumentError on Ruby 3+
+        expect { described_class.normalize({ 'a' => 1, b: 2 }) }.not_to raise_error
+      end
+
+      it 'detects duplicates with symbol vs string keys as equal' do
+        expect(described_class.duplicates?([{ a: 1 }, { 'a' => 1 }])).to be(true)
+      end
+
+      it 'detects duplicates in nested hashes with mixed key types' do
+        expect(described_class.duplicates?([
+                                             { outer: { inner: 1 } },
+                                             { 'outer' => { 'inner' => 1 } }
+                                           ])).to be(true)
+      end
+    end
+
     context 'with depth limit protection' do
       it 'raises ArgumentError when nesting exceeds MAX_DEPTH' do
         # Build a structure that exceeds MAX_DEPTH (100)
