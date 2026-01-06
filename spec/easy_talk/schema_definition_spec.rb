@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'easy_talk/model'
+require 'stringio'
 
 RSpec.describe EasyTalk::SchemaDefinition do
   let(:model) do
