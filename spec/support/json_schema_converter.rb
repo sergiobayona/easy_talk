@@ -217,9 +217,7 @@ class JsonSchemaConverter
     end
 
     # If no explicit type but has array constraints, infer array type
-    if type_value.nil? && has_array_constraints?(prop_def)
-      return determine_array_type(prop_def)
-    end
+    return determine_array_type(prop_def) if type_value.nil? && has_array_constraints?(prop_def)
 
     # Handle single type
     resolve_single_type(type_value, prop_def)
