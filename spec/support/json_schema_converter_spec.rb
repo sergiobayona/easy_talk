@@ -86,9 +86,9 @@ RSpec.describe JsonSchemaConverter do
     end
 
     context 'with array type' do
-      it 'returns T::Array[String] by default' do
+      it 'returns untyped Array by default (no item type validation)' do
         type, = converter.extract_type_and_constraints({ 'type' => 'array' })
-        expect(type).to eq(T::Array[String])
+        expect(type).to eq(Array)
       end
 
       it 'extracts item type from items schema' do
