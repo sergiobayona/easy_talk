@@ -7,7 +7,6 @@ module EasyTalk
     description
     type
     title
-    property
     required
     items
     additional_items
