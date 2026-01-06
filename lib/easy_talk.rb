@@ -10,6 +10,7 @@ module EasyTalk
   require 'easy_talk/configuration'
   require 'easy_talk/schema_methods'
   require 'easy_talk/types/composer'
+  require 'easy_talk/types/tuple'
 
   # Validation adapters
   require 'easy_talk/validation_adapters/base'

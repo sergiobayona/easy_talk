@@ -27,6 +27,7 @@ class JsonSchemaConverter
     'minItems' => :min_items,
     'maxItems' => :max_items,
     'uniqueItems' => :unique_items,
+    'additionalItems' => :additional_items,
     # Common constraints
     'enum' => :enum,
     'const' => :const,
@@ -253,17 +254,64 @@ class JsonSchemaConverter
 
   def determine_array_type(prop_def)
     items_schema = prop_def['items']
+
+    # Handle tuple-style items (array of schemas)
+    # Return untyped Array - tuple constraints are handled separately
+    return Array if items_schema.is_a?(Array)
+
     # Use untyped Array when no items schema is specified (JSON Schema allows any items)
     return Array unless items_schema.is_a?(Hash)
+
+    # Empty schema {} means any type is valid - use untyped Array
+    return Array unless items_schema.key?('type')
 
     item_type = TYPE_MAPPING.fetch(items_schema['type'], String)
     T::Array[item_type]
   end
 
-  def extract_constraints(prop_def)
-    CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), constraints|
-      constraints[ruby_key] = prop_def[json_key] if prop_def.key?(json_key)
+  # Extract tuple items constraint from array schema
+  def extract_tuple_items(prop_def)
+    items_schema = prop_def['items']
+    return nil unless items_schema.is_a?(Array)
+
+    items_schema.map do |item_schema|
+      # Empty schema {} or boolean true means any type is valid
+      next T.untyped unless item_schema.is_a?(Hash) && item_schema.key?('type')
+
+      TYPE_MAPPING.fetch(item_schema['type'], T.untyped)
     end
+  end
+
+  # Check if items is a tuple (array of schemas) vs a single schema
+  # When items is a single schema, additionalItems has no effect per JSON Schema spec
+  def items_is_tuple?(prop_def)
+    prop_def['items'].is_a?(Array)
+  end
+
+  def extract_constraints(prop_def)
+    constraints = CONSTRAINT_KEYS.each_with_object({}) do |(json_key, ruby_key), result|
+      result[ruby_key] = prop_def[json_key] if prop_def.key?(json_key)
+    end
+
+    # Add tuple items if present (items is an array of schemas)
+    tuple_items = extract_tuple_items(prop_def)
+    constraints[:items] = tuple_items if tuple_items
+
+    # Per JSON Schema spec: additionalItems only applies when items is an array (tuple)
+    # When items is a single schema, additionalItems has no effect
+    constraints.delete(:additional_items) unless items_is_tuple?(prop_def)
+
+    # Convert additionalItems schema to Ruby type if it's a schema object
+    constraints[:additional_items] = convert_schema_to_type(constraints[:additional_items]) if constraints[:additional_items].is_a?(Hash)
+
+    constraints
+  end
+
+  # Convert a JSON Schema type definition to a Ruby type
+  def convert_schema_to_type(schema)
+    return T.untyped unless schema.is_a?(Hash) && schema.key?('type')
+
+    TYPE_MAPPING.fetch(schema['type'], T.untyped)
   end
 
   def extract_object_constraints(schema_data)

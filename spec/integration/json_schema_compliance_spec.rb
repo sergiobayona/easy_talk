@@ -22,7 +22,6 @@ RSpec.describe 'JSON Schema Compliance', :json_schema_compliance do
     'propertyNames.json' => 'Property names validation not supported',
     'ref.json' => 'Complex refs not supported',
     'required.json' => 'Complex required checks not supported',
-    'additionalItems.json' => 'Additional items not supported',
     'additionalProperties.json' => 'Additional properties not supported',
     'boolean_schema.json' => 'Boolean schemas not supported',
     'const.json' => 'Const keyword not supported',

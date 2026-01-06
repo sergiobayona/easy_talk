@@ -36,6 +36,35 @@ module EasyTalk
         ActiveModelSchemaValidation.apply(klass, schema)
       end
 
+      # Helper class methods for tuple validation (defined at class level for use in validate blocks)
+      # Resolve a Sorbet type to a Ruby class for type checking
+      def self.resolve_tuple_type_class(type)
+        # Handle T.untyped - any value is valid
+        return :untyped if type.is_a?(T::Types::Untyped) || type == T.untyped
+
+        if type.respond_to?(:raw_type)
+          type.raw_type
+        elsif type == T::Boolean || (type.respond_to?(:name) && type.name == 'T::Boolean')
+          [TrueClass, FalseClass]
+        elsif type.is_a?(Class)
+          type
+        else
+          type
+        end
+      end
+
+      # Check if a value matches a type class (supports arrays for union types like Boolean)
+      def self.type_matches?(value, type_class)
+        # :untyped means any value is valid (from empty schema {} in JSON Schema)
+        return true if type_class == :untyped
+
+        if type_class.is_a?(Array)
+          type_class.any? { |tc| value.is_a?(tc) }
+        else
+          value.is_a?(type_class)
+        end
+      end
+
       # Apply validations based on property type and constraints.
       #
       # @return [void]
@@ -48,7 +77,7 @@ module EasyTalk
                      TypeIntrospection.boolean_type?(@type)
 
         # Determine if the type is an array (empty arrays should be valid)
-        is_array = type_class == Array || @type.is_a?(T::Types::TypedArray)
+        is_array = type_class == Array || @type.is_a?(T::Types::TypedArray) || @type.is_a?(EasyTalk::Types::Tuple)
 
         # Skip presence validation for booleans, nilable types, and arrays
         # (empty arrays are valid - use min_items constraint if you need non-empty)
@@ -76,6 +105,12 @@ module EasyTalk
 
       # Apply validations based on the type of the property
       def apply_type_validations(type)
+        # Check for T::Tuple first, before generic Array check
+        if type.is_a?(EasyTalk::Types::Tuple)
+          apply_tuple_type_validations(type)
+          return
+        end
+
         type_class = get_type_class(type)
 
         if type_class == String
@@ -214,8 +249,82 @@ module EasyTalk
         # Validate uniqueness within the array
         apply_unique_items_validation if @constraints[:unique_items]
 
-        # Validate array item types if using T::Array[SomeType]
-        apply_array_item_type_validation(type) if type.is_a?(T::Types::TypedArray)
+        # Check if this is a tuple (items constraint is an array of types)
+        if @constraints[:items].is_a?(::Array)
+          apply_tuple_validations(@constraints[:items], @constraints[:additional_items])
+        elsif type.is_a?(T::Types::TypedArray)
+          # Validate array item types if using T::Array[SomeType]
+          apply_array_item_type_validation(type)
+        end
+      end
+
+      # Apply validations for T::Tuple[...] types
+      def apply_tuple_type_validations(tuple_type)
+        # Apply standard array constraints (min_items, max_items, unique_items)
+        if @constraints[:min_items] || @constraints[:max_items]
+          length_options = {}
+          length_options[:minimum] = @constraints[:min_items] if @constraints[:min_items]
+          length_options[:maximum] = @constraints[:max_items] if @constraints[:max_items]
+
+          @klass.validates @property_name, length: length_options
+        end
+
+        apply_unique_items_validation if @constraints[:unique_items]
+
+        # Extract tuple types and additional_items from the Tuple type
+        item_types = tuple_type.types
+
+        # Determine additional_items: constraint takes precedence over Tuple setting
+        additional_items = if @constraints.key?(:additional_items)
+                             @constraints[:additional_items]
+                           elsif tuple_type.additional_items?
+                             tuple_type.additional_items
+                           end
+
+        apply_tuple_validations(item_types, additional_items)
+      end
+
+      # Apply tuple validation for arrays with positional type constraints
+      def apply_tuple_validations(item_types, additional_items)
+        prop_name = @property_name
+        # Pre-resolve type classes for use in validate block
+        resolved_item_types = item_types.map { |t| self.class.resolve_tuple_type_class(t) }
+        resolved_additional_type = additional_items && ![true, false].include?(additional_items) ? self.class.resolve_tuple_type_class(additional_items) : nil
+
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          next unless value.is_a?(Array)
+
+          # Validate positional items
+          resolved_item_types.each_with_index do |type_class, index|
+            next if index >= value.length # Item not present (may be valid depending on minItems)
+
+            item = value[index]
+            next if ActiveModelAdapter.type_matches?(item, type_class)
+
+            type_name = type_class.is_a?(Array) ? type_class.map(&:name).join(' or ') : type_class.name
+            record.errors.add(prop_name, "item at index #{index} must be a #{type_name}")
+          end
+
+          # Validate additional items constraint
+          next unless value.length > resolved_item_types.length
+
+          case additional_items
+          when false
+            record.errors.add(prop_name, "must have at most #{resolved_item_types.length} items")
+          when nil, true
+            # Any additional items allowed
+          else
+            # additional_items is a type - validate extra items against it
+            value[resolved_item_types.length..].each_with_index do |item, offset|
+              index = resolved_item_types.length + offset
+              next if ActiveModelAdapter.type_matches?(item, resolved_additional_type)
+
+              type_name = resolved_additional_type.is_a?(Array) ? resolved_additional_type.map(&:name).join(' or ') : resolved_additional_type.name
+              record.errors.add(prop_name, "item at index #{index} must be a #{type_name}")
+            end
+          end
+        end
       end
 
       # Apply unique items validation for arrays using JSON Schema equality semantics

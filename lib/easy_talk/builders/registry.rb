@@ -132,6 +132,7 @@ module EasyTalk
           register('oneOf', Builders::CompositionBuilder::OneOfBuilder, collection: true)
           register('T::Types::TypedArray', Builders::TypedArrayBuilder, collection: true)
           register('T::Types::Union', Builders::UnionBuilder, collection: true)
+          register('EasyTalk::Types::Tuple', Builders::TupleBuilder, collection: true)
         end
 
         private
