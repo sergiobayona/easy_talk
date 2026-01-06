@@ -33,6 +33,9 @@ class JsonSchemaConverter
     'default' => :default
   }.freeze
 
+  # Array-specific JSON Schema keywords that imply the schema is for arrays
+  ARRAY_CONSTRAINT_KEYS = %w[minItems maxItems uniqueItems items additionalItems contains].freeze
+
   # Object-level constraint keys (apply to the object as a whole, not properties)
   OBJECT_CONSTRAINT_KEYS = {
     'minProperties' => :min_properties,
@@ -213,8 +216,17 @@ class JsonSchemaConverter
       return is_nullable ? T.nilable(base_type) : base_type
     end
 
+    # If no explicit type but has array constraints, infer array type
+    if type_value.nil? && has_array_constraints?(prop_def)
+      return determine_array_type(prop_def)
+    end
+
     # Handle single type
     resolve_single_type(type_value, prop_def)
+  end
+
+  def has_array_constraints?(prop_def)
+    ARRAY_CONSTRAINT_KEYS.any? { |key| prop_def.key?(key) }
   end
 
   def resolve_single_type(type_name, prop_def)

@@ -2,6 +2,7 @@
 
 require 'uri'
 require_relative 'active_model_schema_validation'
+require_relative '../json_schema_equality'
 
 module EasyTalk
   module ValidationAdapters
@@ -217,12 +218,14 @@ module EasyTalk
         apply_array_item_type_validation(type) if type.is_a?(T::Types::TypedArray)
       end
 
-      # Apply unique items validation for arrays
+      # Apply unique items validation for arrays using JSON Schema equality semantics
       def apply_unique_items_validation
         prop_name = @property_name
         @klass.validate do |record|
           value = record.public_send(prop_name)
-          record.errors.add(prop_name, 'must contain unique items') if value && value.uniq.length != value.length
+          next unless value.is_a?(Array)
+
+          record.errors.add(prop_name, 'must contain unique items') if JsonSchemaEquality.duplicates?(value)
         end
       end
 
