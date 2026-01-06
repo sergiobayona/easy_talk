@@ -37,7 +37,7 @@ class JsonSchemaConverter
   # Includes keywords from Draft 7 through Draft 2020-12 for forward compatibility
   ARRAY_CONSTRAINT_KEYS = %w[
     minItems maxItems uniqueItems items additionalItems contains
-    minContains maxContains prefixItems
+    minContains maxContains prefixItems unevaluatedItems
   ].freeze
 
   # Object-level constraint keys (apply to the object as a whole, not properties)
