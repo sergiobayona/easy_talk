@@ -105,6 +105,139 @@ RSpec.describe 'Auto Validations' do
     end
   end
 
+  describe 'uniqueItems validation' do
+    let(:unique_items_class) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name
+          'UniqueItemsTest'
+        end
+
+        define_schema do
+          # Use T.nilable to allow nil values (optional: true only affects JSON schema required array)
+          property :tags, T.nilable(T::Array[String]), unique_items: true, optional: true
+          property :numbers, T.nilable(T::Array[Integer]), unique_items: true, optional: true
+        end
+      end
+    end
+
+    describe 'basic duplicate detection' do
+      it 'rejects arrays with duplicate strings' do
+        instance = unique_items_class.new(tags: %w[foo bar foo], numbers: [1, 2, 3])
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:tags]).to include('must contain unique items')
+      end
+
+      it 'accepts arrays with unique strings' do
+        instance = unique_items_class.new(tags: %w[foo bar baz], numbers: [1, 2, 3])
+        expect(instance.valid?).to be(true)
+        expect(instance.errors[:tags]).to be_empty
+      end
+
+      it 'rejects arrays with duplicate integers' do
+        instance = unique_items_class.new(tags: %w[foo bar], numbers: [1, 2, 1])
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:numbers]).to include('must contain unique items')
+      end
+
+      it 'accepts arrays with unique integers' do
+        instance = unique_items_class.new(tags: %w[foo bar], numbers: [1, 2, 3])
+        expect(instance.valid?).to be(true)
+        expect(instance.errors[:numbers]).to be_empty
+      end
+
+      it 'accepts empty arrays' do
+        instance = unique_items_class.new(tags: [], numbers: [])
+        expect(instance.valid?).to be(true)
+        expect(instance.errors[:tags]).to be_empty
+      end
+
+      it 'accepts nil values for optional properties' do
+        instance = unique_items_class.new(tags: nil, numbers: nil)
+        expect(instance.valid?).to be(true)
+        expect(instance.errors[:tags]).to be_empty
+      end
+    end
+
+    describe 'JSON Schema equality semantics' do
+      let(:heterogeneous_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name
+            'HeterogeneousArrayTest'
+          end
+
+          # Use a simple array property that accepts any values for testing
+          # JSON Schema equality semantics
+          attr_accessor :items
+
+          define_schema do
+            property :placeholder, String, optional: true
+          end
+
+          validate :validate_unique_items
+
+          def validate_unique_items
+            return if items.nil?
+
+            errors.add(:items, 'must contain unique items') if EasyTalk::JsonSchemaEquality.duplicates?(items)
+          end
+        end
+      end
+
+      it 'treats 1 and 1.0 as duplicates (mathematical equality)' do
+        instance = heterogeneous_class.new
+        instance.items = [1, 1.0]
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:items]).to include('must contain unique items')
+      end
+
+      it 'treats true and 1 as unique (type matters for non-numbers)' do
+        instance = heterogeneous_class.new
+        instance.items = [true, 1]
+        expect(instance.valid?).to be(true)
+      end
+
+      it 'treats false and 0 as unique (type matters for non-numbers)' do
+        instance = heterogeneous_class.new
+        instance.items = [false, 0]
+        expect(instance.valid?).to be(true)
+      end
+
+      it 'treats objects with same keys in different order as duplicates' do
+        instance = heterogeneous_class.new
+        instance.items = [{ 'a' => 1, 'b' => 2 }, { 'b' => 2, 'a' => 1 }]
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:items]).to include('must contain unique items')
+      end
+
+      it 'treats objects with different values as unique' do
+        instance = heterogeneous_class.new
+        instance.items = [{ 'a' => 1, 'b' => 2 }, { 'a' => 2, 'b' => 1 }]
+        expect(instance.valid?).to be(true)
+      end
+
+      it 'treats nested arrays with same content as duplicates' do
+        instance = heterogeneous_class.new
+        instance.items = [%w[foo bar], %w[foo bar]]
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:items]).to include('must contain unique items')
+      end
+
+      it 'treats nested objects with same content in different key order as duplicates' do
+        instance = heterogeneous_class.new
+        instance.items = [
+          { 'foo' => { 'a' => 1, 'b' => 2 } },
+          { 'foo' => { 'b' => 2, 'a' => 1 } }
+        ]
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:items]).to include('must contain unique items')
+      end
+    end
+  end
+
   describe 'boolean validations' do
     it 'validates boolean type' do
       user = user_class.new(active: 'yes') # Not a boolean
