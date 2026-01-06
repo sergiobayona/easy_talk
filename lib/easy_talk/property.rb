@@ -10,6 +10,7 @@ require_relative 'builders/string_builder'
 require_relative 'builders/temporal_builder'
 require_relative 'builders/composition_builder'
 require_relative 'builders/typed_array_builder'
+require_relative 'builders/tuple_builder'
 require_relative 'builders/union_builder'
 
 # EasyTalk module provides a DSL for building JSON Schema definitions.

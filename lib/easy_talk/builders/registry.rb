@@ -127,9 +127,10 @@ module EasyTalk
           register(Date, Builders::TemporalBuilder::DateBuilder)
           register(DateTime, Builders::TemporalBuilder::DatetimeBuilder)
           register(Time, Builders::TemporalBuilder::TimeBuilder)
-          register('anyOf', Builders::CompositionBuilder::AnyOfBuilder, collection: true)
           register('allOf', Builders::CompositionBuilder::AllOfBuilder, collection: true)
+          register('anyOf', Builders::CompositionBuilder::AnyOfBuilder, collection: true)
           register('oneOf', Builders::CompositionBuilder::OneOfBuilder, collection: true)
+          register('EasyTalk::Types::Tuple', Builders::TupleBuilder, collection: true)
           register('T::Types::TypedArray', Builders::TypedArrayBuilder, collection: true)
           register('T::Types::Union', Builders::UnionBuilder, collection: true)
         end

@@ -77,6 +77,23 @@ module EasyTalk
         type.is_a?(T::Types::TypedArray)
       end
 
+      # Check if type is any array type (plain Array, T::Array[...], or T::Tuple[...]).
+      #
+      # @param type [Object] The type to check
+      # @return [Boolean] true if the type is an array type
+      #
+      # @example
+      #   array_type?(Array)                      # => true
+      #   array_type?(T::Array[String])           # => true
+      #   array_type?(T::Tuple[String, Integer])  # => true
+      #   array_type?(String)                     # => false
+      sig { params(type: T.untyped).returns(T::Boolean) }
+      def array_type?(type)
+        return false if type.nil?
+
+        type == Array || type.is_a?(T::Types::TypedArray) || type.is_a?(EasyTalk::Types::Tuple)
+      end
+
       # Check if type is nilable (T.nilable(...)).
       #
       # @param type [Object] The type to check
@@ -146,7 +163,7 @@ module EasyTalk
         return nil if type.nil?
         return type if type.is_a?(Class)
         return type.raw_type if type.respond_to?(:raw_type)
-        return Array if typed_array?(type)
+        return Array if type.is_a?(T::Types::TypedArray) || type.is_a?(EasyTalk::Types::Tuple)
         return [TrueClass, FalseClass] if boolean_type?(type)
 
         if nilable_type?(type)

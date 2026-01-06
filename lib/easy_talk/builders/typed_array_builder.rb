@@ -5,7 +5,7 @@ require_relative 'collection_helpers'
 
 module EasyTalk
   module Builders
-    # Builder class for array properties.
+    # Builder class for homogeneous array properties (T::Array[Type]).
     class TypedArrayBuilder < BaseBuilder
       extend CollectionHelpers
       extend T::Sig

@@ -135,6 +135,8 @@ module EasyTalk
           type_to_resolve.raw_type
         elsif type_to_resolve.is_a?(T::Types::TypedArray)
           Array
+        elsif type_to_resolve.is_a?(EasyTalk::Types::Tuple)
+          Array
         elsif type_to_resolve.is_a?(Symbol) || type_to_resolve.is_a?(String)
           begin
             type_to_resolve.to_s.classify.constantize
