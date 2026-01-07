@@ -71,17 +71,17 @@ module EasyTalk
         end
       end
 
-      FORMAT_CONFIGS = {
-        'email' => { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
+      # Regex-based format validators
+      REGEX_FORMAT_CONFIGS = {
+        'email' => { with: /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/, message: 'must be a valid email address' },
         'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
         'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
         'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i,
-                    message: 'must be a valid UUID' },
-        'date' => { with: /\A\d{4}-\d{2}-\d{2}\z/, message: 'must be a valid date in YYYY-MM-DD format' },
-        'date-time' => { with: /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\z/,
-                         message: 'must be a valid ISO 8601 date-time' },
-        'time' => { with: /\A\d{2}:\d{2}:\d{2}(?:\.\d+)?\z/, message: 'must be a valid time in HH:MM:SS format' }
+                    message: 'must be a valid UUID' }
       }.freeze
+
+      # Formats that require parsing validation (not just regex)
+      PARSING_FORMATS = %w[date date-time time].freeze
 
       # Build schema-level validations for object-level constraints.
       # Delegates to ActiveModelSchemaValidation module.
@@ -112,7 +112,10 @@ module EasyTalk
 
       # Apply validations based on the type of the property
       def apply_type_validations(context)
-        return apply_tuple_type_validations(context.validation_type) if context.tuple_type?
+        if context.tuple_type?
+          apply_tuple_type_validations(context.validation_type)
+          return
+        end
 
         type_class = context.type_class
 
@@ -178,12 +181,67 @@ module EasyTalk
       # Apply format-specific validations (email, url, etc.)
       # Per JSON Schema spec, format validation only applies to string values
       def apply_format_validation(format)
-        config = FORMAT_CONFIGS[format.to_s]
+        format_str = format.to_s
+
+        # Handle parsing-based formats (date, date-time, time)
+        if PARSING_FORMATS.include?(format_str)
+          apply_parsing_format_validation(format_str)
+          return
+        end
+
+        # Handle regex-based formats
+        config = REGEX_FORMAT_CONFIGS[format_str]
         return unless config
 
         property_name = @property_name
         # Per JSON Schema spec, format validation only applies when value is a string
         @klass.validates property_name, format: config, if: -> { public_send(property_name).is_a?(String) }
+      end
+
+      # Apply parsing-based format validations for date, date-time, and time
+      def apply_parsing_format_validation(format)
+        case format
+        when 'date' then apply_date_format_validation
+        when 'date-time' then apply_datetime_format_validation
+        when 'time' then apply_time_format_validation
+        end
+      end
+
+      def apply_date_format_validation
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          next if value.blank? || !value.is_a?(String)
+
+          Date.iso8601(value)
+        rescue Date::Error
+          record.errors.add(prop_name, 'must be a valid date in YYYY-MM-DD format')
+        end
+      end
+
+      def apply_datetime_format_validation
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          next if value.blank? || !value.is_a?(String)
+
+          DateTime.iso8601(value)
+        rescue Date::Error
+          record.errors.add(prop_name, 'must be a valid ISO 8601 date-time')
+        end
+      end
+
+      def apply_time_format_validation
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          next if value.blank? || !value.is_a?(String)
+
+          Time.parse(value)
+          record.errors.add(prop_name, 'must be a valid time in HH:MM:SS format') unless value.match?(/\A\d{2}:\d{2}:\d{2}/)
+        rescue ArgumentError
+          record.errors.add(prop_name, 'must be a valid time in HH:MM:SS format')
+        end
       end
 
       # Validate integer-specific constraints
@@ -457,7 +515,7 @@ module EasyTalk
           @nilable = adapter.__send__(:nilable_type?, type)
           @validation_type = determine_validation_type(adapter, type)
           @type_class = adapter.__send__(:get_type_class, @validation_type)
-          @boolean_type = derive_boolean(@validation_type, @type_class)
+          @boolean_type = boolean_type?(@validation_type, @type_class)
           @array_type = array_type?(@validation_type)
           @tuple_type = tuple_type_class?(@validation_type)
           @model_class = derive_model_class(@type_class)
@@ -486,11 +544,11 @@ module EasyTalk
           inner || type
         end
 
-        def derive_boolean(validation_type, type_class)
+        def boolean_type?(validation_type, type_class)
           TypeIntrospection.boolean_type?(validation_type) ||
             type_class == TrueClass ||
             type_class == FalseClass ||
-            (type_class.is_a?(Array) && type_class == [TrueClass, FalseClass])
+            TypeIntrospection.boolean_union_type?(type_class)
         end
 
         def array_type?(type)
@@ -512,11 +570,12 @@ module EasyTalk
 
       # Shared min_items/max_items handling for array-like validations
       def apply_array_length_validation
-        return unless @constraints[:min_items] || @constraints[:max_items]
+        length_options = {
+          minimum: @constraints[:min_items],
+          maximum: @constraints[:max_items]
+        }.compact
 
-        length_options = {}
-        length_options[:minimum] = @constraints[:min_items] if @constraints[:min_items]
-        length_options[:maximum] = @constraints[:max_items] if @constraints[:max_items]
+        return if length_options.empty?
 
         @klass.validates @property_name, length: length_options
       end

@@ -62,6 +62,23 @@ module EasyTalk
         false
       end
 
+      # Check if a resolved type class represents a boolean union ([TrueClass, FalseClass]).
+      #
+      # This is useful when checking resolved type classes rather than raw Sorbet types.
+      # The internal representation of T::Boolean resolves to [TrueClass, FalseClass].
+      #
+      # @param type_class [Object] The resolved type class to check
+      # @return [Boolean] true if the type class is a boolean union array
+      #
+      # @example
+      #   boolean_union_type?([TrueClass, FalseClass]) # => true
+      #   boolean_union_type?(TrueClass)               # => false
+      #   boolean_union_type?(String)                  # => false
+      sig { params(type_class: T.untyped).returns(T::Boolean) }
+      def boolean_union_type?(type_class)
+        type_class.is_a?(Array) && type_class.sort_by(&:name) == [FalseClass, TrueClass].sort_by(&:name)
+      end
+
       # Check if type is a typed array (T::Array[...]).
       #
       # @param type [Object] The type to check
