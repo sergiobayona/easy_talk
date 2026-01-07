@@ -73,7 +73,7 @@ module EasyTalk
 
       # Regex-based format validators
       REGEX_FORMAT_CONFIGS = {
-        'email' => { with: /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/, message: 'must be a valid email address' },
+        'email' => { with: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/, message: 'must be a valid email address' },
         'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
         'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
         'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i,
