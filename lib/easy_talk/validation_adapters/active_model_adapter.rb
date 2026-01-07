@@ -26,6 +26,63 @@ module EasyTalk
     #   user.errors[:email] # => ["must be a valid email address"]
     #
     class ActiveModelAdapter < Base
+      # Helper class methods for tuple validation (defined at class level for use in validate blocks)
+      # Resolve a Sorbet type to a Ruby class for type checking
+      def self.resolve_tuple_type_class(type)
+        # Handle T.untyped - any value is valid
+        return :untyped if type.is_a?(T::Types::Untyped) || type == T.untyped
+
+        # Handle union types (T.any, T.nilable)
+        return type.types.flat_map { |t| resolve_tuple_type_class(t) } if type.is_a?(T::Types::Union)
+
+        if type.respond_to?(:raw_type)
+          type.raw_type
+        elsif type == T::Boolean
+          [TrueClass, FalseClass]
+        elsif type.is_a?(Class)
+          type
+        else
+          type
+        end
+      end
+
+      # Check if a value matches a type class (supports arrays for union types like Boolean)
+      def self.type_matches?(value, type_class)
+        # :untyped means any value is valid (from empty schema {} in JSON Schema)
+        return true if type_class == :untyped
+
+        if type_class.is_a?(Array)
+          type_class.any? { |tc| value.is_a?(tc) }
+        else
+          value.is_a?(type_class)
+        end
+      end
+
+      # Generate a human-readable type name for error messages
+      def self.type_name_for_error(type_class)
+        return 'unknown' if type_class.nil?
+
+        if type_class.is_a?(Array)
+          type_class.map { |tc| tc.respond_to?(:name) ? tc.name : tc.to_s }.join(' or ')
+        elsif type_class.respond_to?(:name) && type_class.name
+          type_class.name
+        else
+          type_class.to_s
+        end
+      end
+
+      FORMAT_CONFIGS = {
+        'email' => { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
+        'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
+        'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
+        'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i,
+                    message: 'must be a valid UUID' },
+        'date' => { with: /\A\d{4}-\d{2}-\d{2}\z/, message: 'must be a valid date in YYYY-MM-DD format' },
+        'date-time' => { with: /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\z/,
+                         message: 'must be a valid ISO 8601 date-time' },
+        'time' => { with: /\A\d{2}:\d{2}:\d{2}(?:\.\d+)?\z/, message: 'must be a valid time in HH:MM:SS format' }
+      }.freeze
+
       # Build schema-level validations for object-level constraints.
       # Delegates to ActiveModelSchemaValidation module.
       #
@@ -85,34 +142,13 @@ module EasyTalk
       #
       # @return [void]
       def apply_validations
-        # Determine if the type is boolean
-        type_class = get_type_class(@type)
-        is_boolean = type_class == [TrueClass, FalseClass] ||
-                     type_class == TrueClass ||
-                     type_class == FalseClass ||
-                     TypeIntrospection.boolean_type?(@type)
+        context = ValidationContext.build(self, @klass, @property_name, @type, @constraints)
 
-        # Determine if the type is an array (empty arrays should be valid)
-        is_array = TypeIntrospection.array_type?(@type)
+        apply_presence_validation unless context.skip_presence_validation?
+        apply_array_presence_validation if context.array_requires_presence_validation?
 
-        # Skip presence validation for booleans, nilable types, and arrays
-        # (empty arrays are valid - use min_items constraint if you need non-empty)
-        apply_presence_validation unless optional? || is_boolean || nilable_type? || is_array
+        apply_type_validations(context)
 
-        # For non-nilable arrays, add nil check (but allow empty arrays)
-        # Per JSON Schema: optional means the property can be omitted, but if present,
-        # null is only valid when the type includes null (T.nilable)
-        apply_array_presence_validation if is_array && !nilable_type?
-
-        if nilable_type?
-          # For nilable types, get the inner type and apply validations to it
-          inner_type = extract_inner_type(@type)
-          apply_type_validations(inner_type)
-        else
-          apply_type_validations(@type)
-        end
-
-        # Common validations for most types
         apply_enum_validation if @constraints[:enum]
         apply_const_validation if @constraints[:const]
       end
@@ -120,14 +156,10 @@ module EasyTalk
       private
 
       # Apply validations based on the type of the property
-      def apply_type_validations(type)
-        # Check for T::Tuple first, before generic Array check
-        if type.is_a?(EasyTalk::Types::Tuple)
-          apply_tuple_type_validations(type)
-          return
-        end
+      def apply_type_validations(context)
+        return apply_tuple_type_validations(context.validation_type) if context.tuple_type?
 
-        type_class = get_type_class(type)
+        type_class = context.type_class
 
         if type_class == String
           apply_string_validations
@@ -136,13 +168,11 @@ module EasyTalk
         elsif [Float, BigDecimal].include?(type_class)
           apply_number_validations
         elsif type_class == Array
-          apply_array_validations(type)
-        elsif type_class == [TrueClass,
-                             FalseClass] || [TrueClass,
-                                             FalseClass].include?(type_class) || TypeIntrospection.boolean_type?(type)
+          apply_array_validations(context.validation_type)
+        elsif context.boolean?
           apply_boolean_validations
-        elsif type_class.is_a?(Object) && type_class.include?(EasyTalk::Model)
-          apply_object_validations
+        elsif context.model_class
+          apply_object_validations(context.model_class)
         end
       end
 
@@ -193,19 +223,7 @@ module EasyTalk
       # Apply format-specific validations (email, url, etc.)
       # Per JSON Schema spec, format validation only applies to string values
       def apply_format_validation(format)
-        format_configs = {
-          'email' => { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
-          'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
-          'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
-          'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i,
-                      message: 'must be a valid UUID' },
-          'date' => { with: /\A\d{4}-\d{2}-\d{2}\z/, message: 'must be a valid date in YYYY-MM-DD format' },
-          'date-time' => { with: /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?\z/,
-                           message: 'must be a valid ISO 8601 date-time' },
-          'time' => { with: /\A\d{2}:\d{2}:\d{2}(?:\.\d+)?\z/, message: 'must be a valid time in HH:MM:SS format' }
-        }
-
-        config = format_configs[format.to_s]
+        config = FORMAT_CONFIGS[format.to_s]
         return unless config
 
         property_name = @property_name
@@ -253,14 +271,7 @@ module EasyTalk
 
       # Validate array-specific constraints
       def apply_array_validations(type)
-        # Validate array length
-        if @constraints[:min_items] || @constraints[:max_items]
-          length_options = {}
-          length_options[:minimum] = @constraints[:min_items] if @constraints[:min_items]
-          length_options[:maximum] = @constraints[:max_items] if @constraints[:max_items]
-
-          @klass.validates @property_name, length: length_options
-        end
+        apply_array_length_validation
 
         # Validate uniqueness within the array
         apply_unique_items_validation if @constraints[:unique_items]
@@ -277,13 +288,7 @@ module EasyTalk
       # Apply validations for T::Tuple[...] types
       def apply_tuple_type_validations(tuple_type)
         # Apply standard array constraints (min_items, max_items, unique_items)
-        if @constraints[:min_items] || @constraints[:max_items]
-          length_options = {}
-          length_options[:minimum] = @constraints[:min_items] if @constraints[:min_items]
-          length_options[:maximum] = @constraints[:max_items] if @constraints[:max_items]
-
-          @klass.validates @property_name, length: length_options
-        end
+        apply_array_length_validation
 
         apply_unique_items_validation if @constraints[:unique_items]
 
@@ -423,10 +428,9 @@ module EasyTalk
       end
 
       # Validate object/hash-specific constraints
-      def apply_object_validations
+      def apply_object_validations(expected_type)
         # Capture necessary variables outside the validation block's scope
         prop_name = @property_name
-        expected_type = get_type_class(@type) # Get the raw model class
 
         @klass.validate do |record|
           nested_object = record.public_send(prop_name)
@@ -481,6 +485,88 @@ module EasyTalk
           record.errors.add(prop_name, "must be equal to #{const_value}") if !value.nil? && value != const_value
         end
       end
+
+      class ValidationContext
+        attr_reader :klass, :property_name, :constraints, :validation_type, :type_class, :model_class
+
+        def self.build(adapter, klass, property_name, type, constraints)
+          constraints ||= {}
+          new(adapter, klass, property_name.to_sym, type, constraints)
+        end
+
+        def initialize(adapter, klass, property_name, type, constraints)
+          @klass = klass
+          @property_name = property_name
+          @constraints = constraints
+          @optional = adapter.__send__(:optional?)
+          @nilable = adapter.__send__(:nilable_type?, type)
+          @validation_type = determine_validation_type(adapter, type)
+          @type_class = adapter.__send__(:get_type_class, @validation_type)
+          @boolean_type = derive_boolean(@validation_type, @type_class)
+          @array_type = array_type?(@validation_type)
+          @tuple_type = tuple_type_class?(@validation_type)
+          @model_class = derive_model_class(@type_class)
+        end
+
+        def skip_presence_validation?
+          @optional || @boolean_type || @nilable || @array_type
+        end
+
+        def array_requires_presence_validation?
+          @array_type && !@nilable
+        end
+
+        def tuple_type?
+          @tuple_type
+        end
+
+        def boolean?
+          @boolean_type
+        end
+
+        private
+
+        def determine_validation_type(adapter, type)
+          inner = adapter.__send__(:extract_inner_type, type) if adapter.__send__(:nilable_type?, type)
+          inner || type
+        end
+
+        def derive_boolean(validation_type, type_class)
+          TypeIntrospection.boolean_type?(validation_type) ||
+            type_class == TrueClass ||
+            type_class == FalseClass ||
+            (type_class.is_a?(Array) && type_class == [TrueClass, FalseClass])
+        end
+
+        def array_type?(type)
+          return false if type.nil?
+
+          type == Array || TypeIntrospection.typed_array?(type) || tuple_type_class?(type)
+        end
+
+        def tuple_type_class?(type)
+          defined?(EasyTalk::Types::Tuple) && type.is_a?(EasyTalk::Types::Tuple)
+        end
+
+        def derive_model_class(type_class)
+          return unless type_class.is_a?(Class)
+
+          type_class.include?(EasyTalk::Model) ? type_class : nil
+        end
+      end
+
+      # Shared min_items/max_items handling for array-like validations
+      def apply_array_length_validation
+        return unless @constraints[:min_items] || @constraints[:max_items]
+
+        length_options = {}
+        length_options[:minimum] = @constraints[:min_items] if @constraints[:min_items]
+        length_options[:maximum] = @constraints[:max_items] if @constraints[:max_items]
+
+        @klass.validates @property_name, length: length_options
+      end
+
+      private_constant :ValidationContext
     end
   end
 end
