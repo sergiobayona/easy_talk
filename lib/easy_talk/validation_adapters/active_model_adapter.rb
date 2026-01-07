@@ -93,51 +93,6 @@ module EasyTalk
         ActiveModelSchemaValidation.apply(klass, schema)
       end
 
-      # Helper class methods for tuple validation (defined at class level for use in validate blocks)
-      # Resolve a Sorbet type to a Ruby class for type checking
-      def self.resolve_tuple_type_class(type)
-        # Handle T.untyped - any value is valid
-        return :untyped if type.is_a?(T::Types::Untyped) || type == T.untyped
-
-        # Handle union types (T.any, T.nilable)
-        return type.types.flat_map { |t| resolve_tuple_type_class(t) } if type.is_a?(T::Types::Union)
-
-        if type.respond_to?(:raw_type)
-          type.raw_type
-        elsif type == T::Boolean
-          [TrueClass, FalseClass]
-        elsif type.is_a?(Class)
-          type
-        else
-          type
-        end
-      end
-
-      # Check if a value matches a type class (supports arrays for union types like Boolean)
-      def self.type_matches?(value, type_class)
-        # :untyped means any value is valid (from empty schema {} in JSON Schema)
-        return true if type_class == :untyped
-
-        if type_class.is_a?(Array)
-          type_class.any? { |tc| value.is_a?(tc) }
-        else
-          value.is_a?(type_class)
-        end
-      end
-
-      # Generate a human-readable type name for error messages
-      def self.type_name_for_error(type_class)
-        return 'unknown' if type_class.nil?
-
-        if type_class.is_a?(Array)
-          type_class.map { |tc| tc.respond_to?(:name) ? tc.name : tc.to_s }.join(' or ')
-        elsif type_class.respond_to?(:name) && type_class.name
-          type_class.name
-        else
-          type_class.to_s
-        end
-      end
-
       # Apply validations based on property type and constraints.
       #
       # @return [void]
