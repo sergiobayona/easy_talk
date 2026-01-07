@@ -97,7 +97,7 @@ module EasyTalk
       #
       # @return [void]
       def apply_validations
-        context = ValidationContext.build(self, @klass, @property_name, @type, @constraints)
+        context = build_validation_context
 
         apply_presence_validation unless context.skip_presence_validation?
         apply_array_presence_validation if context.array_requires_presence_validation?
@@ -107,6 +107,26 @@ module EasyTalk
         apply_enum_validation if @constraints[:enum]
         apply_const_validation if @constraints[:const]
       end
+
+      # Build ValidationContext with pre-computed values from the adapter
+      def build_validation_context
+        is_optional = optional?
+        is_nilable = nilable_type?(@type)
+        validation_type = is_nilable ? extract_inner_type(@type) : @type
+        validation_type ||= @type
+        type_class = get_type_class(validation_type)
+
+        ValidationContext.new(
+          klass: @klass,
+          property_name: @property_name.to_sym,
+          constraints: @constraints || {},
+          validation_type: validation_type,
+          type_class: type_class,
+          optional: is_optional,
+          nilable: is_nilable
+        )
+      end
+      private :build_validation_context
 
       private
 
@@ -499,26 +519,26 @@ module EasyTalk
         end
       end
 
+      # Plain data object holding pre-computed validation context.
+      # All values are computed by ActiveModelAdapter and passed in,
+      # avoiding tight coupling to adapter internals.
       class ValidationContext
         attr_reader :klass, :property_name, :constraints, :validation_type, :type_class, :model_class
 
-        def self.build(adapter, klass, property_name, type, constraints)
-          constraints ||= {}
-          new(adapter, klass, property_name.to_sym, type, constraints)
-        end
+        def initialize(attrs)
+          @klass = attrs[:klass]
+          @property_name = attrs[:property_name]
+          @constraints = attrs[:constraints]
+          @validation_type = attrs[:validation_type]
+          @type_class = attrs[:type_class]
+          @optional = attrs[:optional]
+          @nilable = attrs[:nilable]
 
-        def initialize(adapter, klass, property_name, type, constraints)
-          @klass = klass
-          @property_name = property_name
-          @constraints = constraints
-          @optional = adapter.__send__(:optional?)
-          @nilable = adapter.__send__(:nilable_type?, type)
-          @validation_type = determine_validation_type(adapter, type)
-          @type_class = adapter.__send__(:get_type_class, @validation_type)
-          @boolean_type = boolean_type?(@validation_type, @type_class)
-          @array_type = array_type?(@validation_type)
-          @tuple_type = tuple_type_class?(@validation_type)
-          @model_class = derive_model_class(@type_class)
+          # Derive additional flags from the pre-computed values
+          @boolean_type = boolean_type_from_context?
+          @array_type = array_type_from_context?
+          @tuple_type = tuple_type_from_context?
+          @model_class = model_class_from_context
         end
 
         def skip_presence_validation?
@@ -539,32 +559,29 @@ module EasyTalk
 
         private
 
-        def determine_validation_type(adapter, type)
-          inner = adapter.__send__(:extract_inner_type, type) if adapter.__send__(:nilable_type?, type)
-          inner || type
+        def boolean_type_from_context?
+          TypeIntrospection.boolean_type?(@validation_type) ||
+            @type_class == TrueClass ||
+            @type_class == FalseClass ||
+            TypeIntrospection.boolean_union_type?(@type_class)
         end
 
-        def boolean_type?(validation_type, type_class)
-          TypeIntrospection.boolean_type?(validation_type) ||
-            type_class == TrueClass ||
-            type_class == FalseClass ||
-            TypeIntrospection.boolean_union_type?(type_class)
+        def array_type_from_context?
+          return false if @validation_type.nil?
+
+          @validation_type == Array ||
+            TypeIntrospection.typed_array?(@validation_type) ||
+            tuple_type_from_context?
         end
 
-        def array_type?(type)
-          return false if type.nil?
-
-          type == Array || TypeIntrospection.typed_array?(type) || tuple_type_class?(type)
+        def tuple_type_from_context?
+          defined?(EasyTalk::Types::Tuple) && @validation_type.is_a?(EasyTalk::Types::Tuple)
         end
 
-        def tuple_type_class?(type)
-          defined?(EasyTalk::Types::Tuple) && type.is_a?(EasyTalk::Types::Tuple)
-        end
+        def model_class_from_context
+          return unless @type_class.is_a?(Class)
 
-        def derive_model_class(type_class)
-          return unless type_class.is_a?(Class)
-
-          type_class.include?(EasyTalk::Model) ? type_class : nil
+          @type_class.include?(EasyTalk::Model) ? @type_class : nil
         end
       end
 
