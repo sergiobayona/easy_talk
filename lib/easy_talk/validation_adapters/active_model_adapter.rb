@@ -74,14 +74,12 @@ module EasyTalk
       # Regex-based format validators
       REGEX_FORMAT_CONFIGS = {
         'email' => { with: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/, message: 'must be a valid email address' },
-        'uri' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
-        'url' => { with: URI::DEFAULT_PARSER.make_regexp, message: 'must be a valid URL' },
         'uuid' => { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i,
                     message: 'must be a valid UUID' }
       }.freeze
 
       # Formats that require parsing validation (not just regex)
-      PARSING_FORMATS = %w[date date-time time].freeze
+      PARSING_FORMATS = %w[date date-time time uri url].freeze
 
       # Build schema-level validations for object-level constraints.
       # Delegates to ActiveModelSchemaValidation module.
@@ -224,6 +222,22 @@ module EasyTalk
         when 'date' then apply_date_format_validation
         when 'date-time' then apply_datetime_format_validation
         when 'time' then apply_time_format_validation
+        when 'uri', 'url' then apply_uri_format_validation
+        end
+      end
+
+      def apply_uri_format_validation
+        prop_name = @property_name
+        @klass.validate do |record|
+          value = record.public_send(prop_name)
+          next unless value.is_a?(String)
+
+          begin
+            uri = URI.parse(value)
+            record.errors.add(prop_name, 'must be a valid URL') unless uri.absolute?
+          rescue URI::InvalidURIError, ArgumentError
+            record.errors.add(prop_name, 'must be a valid URL')
+          end
         end
       end
 

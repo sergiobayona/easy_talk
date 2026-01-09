@@ -54,6 +54,60 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       end
     end
 
+    context 'with url format constraints' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'UrlTest'
+
+          define_schema do
+            property :website, String, format: 'url'
+          end
+        end
+      end
+
+      it 'validates url format' do
+        instance = test_class.new(website: 'not a url')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:website]).to include('must be a valid URL')
+
+        instance = test_class.new(website: 'foo http://example.com bar')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:website]).to include('must be a valid URL')
+
+        instance = test_class.new(website: 'http://example.com/%')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:website]).to include('must be a valid URL')
+
+        instance = test_class.new(website: 'https://example.com/path?query=1')
+        expect(instance.valid?).to be true
+      end
+    end
+
+    context 'with uri format constraints' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'UriTest'
+
+          define_schema do
+            property :resource, String, format: 'uri'
+          end
+        end
+      end
+
+      it 'validates uri format' do
+        instance = test_class.new(resource: 'not a uri')
+        expect(instance.valid?).to be false
+        expect(instance.errors[:resource]).to include('must be a valid URL')
+
+        instance = test_class.new(resource: 'mailto:test@example.com')
+        expect(instance.valid?).to be true
+      end
+    end
+
     context 'with integer constraints' do
       let(:test_class) do
         Class.new do
@@ -415,6 +469,48 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
         expect(employee.addresses.first).to be_a(Address)
         expect(employee.valid?).to be true
       end
+    end
+  end
+
+  describe 'URI format implementation' do
+    it 'does not emit RFC3986 make_regexp obsolete warnings when requiring the gem' do
+      require 'open3'
+      require 'rbconfig'
+
+      _stdout, stderr, status = Open3.capture3(
+        RbConfig.ruby,
+        '-w',
+        '-rbundler/setup',
+        '-Ilib',
+        '-e',
+        'require "easy_talk"'
+      )
+
+      expect(status.success?).to be true
+      expect(stderr).not_to include('URI::RFC3986_PARSER.make_regexp is obsolete')
+    end
+
+    it 'validates URI by parsing (full string)' do
+      klass = Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'UriParsingTest'
+
+        define_schema do
+          property :resource, String, format: 'uri'
+        end
+      end
+
+      instance = klass.new(resource: 'foo http://example.com bar')
+      expect(instance.valid?).to be false
+      expect(instance.errors[:resource]).to include('must be a valid URL')
+
+      instance = klass.new(resource: 'http://example.com/%')
+      expect(instance.valid?).to be false
+      expect(instance.errors[:resource]).to include('must be a valid URL')
+
+      instance = klass.new(resource: 'mailto:test@example.com')
+      expect(instance.valid?).to be true
     end
   end
 
