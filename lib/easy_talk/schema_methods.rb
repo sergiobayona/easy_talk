@@ -22,14 +22,9 @@ module EasyTalk
     def ref_template
       config = EasyTalk.configuration
 
-      # Use external ref when configured and $id available
-      if config.prefer_external_refs
-        schema_id = resolve_schema_id
-        return schema_id if schema_id
-      end
-
-      # Fall back to local $defs reference
-      "#/$defs/#{name}"
+      # Use external ref when configured and $id available, otherwise fall back to local $defs
+      schema_id = resolve_schema_id if config.prefer_external_refs
+      schema_id || "#/$defs/#{name}"
     end
 
     # Returns the JSON schema for the model.
