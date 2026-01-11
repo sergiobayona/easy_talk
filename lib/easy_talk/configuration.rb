@@ -17,7 +17,8 @@ module EasyTalk
     }.freeze
 
     attr_accessor :default_additional_properties, :nilable_is_optional, :auto_validations, :schema_version, :schema_id,
-                  :use_refs, :validation_adapter, :default_error_format, :error_type_base_uri, :include_error_codes
+                  :use_refs, :validation_adapter, :default_error_format, :error_type_base_uri, :include_error_codes,
+                  :base_schema_uri, :auto_generate_ids, :prefer_external_refs
     attr_reader :property_naming_strategy
 
     sig { void }
@@ -32,6 +33,9 @@ module EasyTalk
       @default_error_format = :flat
       @error_type_base_uri = 'about:blank'
       @include_error_codes = true
+      @base_schema_uri = nil
+      @auto_generate_ids = false
+      @prefer_external_refs = false
       self.property_naming_strategy = :identity
     end
 
