@@ -309,7 +309,9 @@ module EasyTalk
       end
 
       def additional_properties_allowed?
-        @schema_definition&.schema&.fetch(:additional_properties, false)
+        ap = @schema_definition&.schema&.fetch(:additional_properties, false)
+        # Allow if true, or if it's a schema object (Class or Hash with type)
+        ap == true || ap.is_a?(Class) || ap.is_a?(Hash)
       end
 
       # Returns the property names defined in the schema

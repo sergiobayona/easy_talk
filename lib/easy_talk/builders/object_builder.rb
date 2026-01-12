@@ -21,7 +21,7 @@ module EasyTalk
       # Required by BaseBuilder: recognized schema options for "object" types
       VALID_OPTIONS = {
         properties: { type: T::Hash[T.any(Symbol, String), T.untyped], key: :properties },
-        additional_properties: { type: T::Boolean, key: :additionalProperties },
+        additional_properties: { type: T.any(T::Boolean, Class, T::Hash[Symbol, T.untyped]), key: :additionalProperties },
         pattern_properties: { type: T::Hash[String, T.untyped], key: :patternProperties },
         min_properties: { type: Integer, key: :minProperties },
         max_properties: { type: Integer, key: :maxProperties },
@@ -59,6 +59,14 @@ module EasyTalk
           build_options_hash,    # method below merges & cleans final top-level keys
           VALID_OPTIONS
         )
+      end
+
+      # Override build to add additionalProperties after BaseBuilder validation
+      sig { override.returns(T::Hash[Symbol, T.untyped]) }
+      def build
+        result = super
+        process_additional_properties(result)
+        result
       end
 
       private
@@ -105,13 +113,60 @@ module EasyTalk
         # Populate the final "required" array from @required_properties
         merged[:required] = @required_properties.to_a if @required_properties.any?
 
-        # Add additionalProperties based on config default if not explicitly set
-        merged[:additional_properties] = EasyTalk.configuration.default_additional_properties unless merged.key?(:additional_properties)
+        # Process additionalProperties separately (don't let BaseBuilder validate it)
+        # Extract the value, process it, and we'll add it back after BaseBuilder runs
+        @additional_properties_value = merged.delete(:additional_properties)
 
         # Prune empty or nil values so we don't produce stuff like "properties": {} unnecessarily
         merged.reject! { |_k, v| v.nil? || v == {} || v == [] }
 
         merged
+      end
+
+      ##
+      # Process additionalProperties to handle schema objects.
+      # Converts type classes or constraint hashes into proper JSON Schema.
+      # Called from build() method with the final schema hash.
+      #
+      def process_additional_properties(schema_hash)
+        value = @additional_properties_value
+
+        # If not set, use config default
+        if value.nil?
+          schema_hash[:additionalProperties] = EasyTalk.configuration.default_additional_properties
+          return
+        end
+
+        # Boolean: pass through as-is
+        if value.is_a?(TrueClass) || value.is_a?(FalseClass)
+          schema_hash[:additionalProperties] = value
+          return
+        end
+
+        # Class type: build schema
+        if value.is_a?(Class)
+          schema_hash[:additionalProperties] = build_additional_properties_schema(value, {})
+          return
+        end
+
+        # Hash with type + constraints: build schema with constraints
+        return unless value.is_a?(Hash)
+
+        type = value[:type] || value['type']
+        constraints = value.except(:type, 'type')
+        schema_hash[:additionalProperties] = build_additional_properties_schema(type, constraints)
+      end
+
+      ##
+      # Builds a JSON Schema for additionalProperties from a type and constraints.
+      # Uses the Property builder to generate the schema.
+      #
+      def build_additional_properties_schema(type, constraints)
+        return {} unless type
+
+        # Use Property builder to generate schema for the type
+        property = EasyTalk::Property.new(:_additional, type, constraints)
+        property.as_json
       end
 
       ##

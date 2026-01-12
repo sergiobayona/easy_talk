@@ -30,8 +30,16 @@ module EasyTalk
     end
 
     EasyTalk::KEYWORDS.each do |keyword|
-      define_method(keyword) do |*values|
-        @schema[keyword] = values.size > 1 ? values : values.first
+      if keyword == :additional_properties
+        # Special handling for additional_properties to support type + constraints syntax
+        define_method(keyword) do |*args|
+          value = parse_additional_properties_args(args)
+          @schema[keyword] = value
+        end
+      else
+        define_method(keyword) do |*values|
+          @schema[keyword] = values.size > 1 ? values : values.first
+        end
       end
     end
 
@@ -89,6 +97,36 @@ module EasyTalk
     sig { params(strategy: T.any(Symbol, T.proc.params(arg0: T.untyped).returns(Symbol))).void }
     def property_naming_strategy(strategy)
       @property_naming_strategy = EasyTalk::NamingStrategies.derive_strategy(strategy)
+    end
+
+    private
+
+    # Parses arguments for additional_properties to support multiple syntaxes:
+    # - additional_properties true/false (boolean)
+    # - additional_properties String (type class)
+    # - additional_properties Integer, minimum: 0, maximum: 100 (type + constraints)
+    sig { params(args: T::Array[T.untyped]).returns(T.untyped) }
+    def parse_additional_properties_args(args)
+      return args.first if args.empty?
+
+      # Single boolean argument
+      first_arg = args.first
+      return first_arg if args.size == 1 && (first_arg.is_a?(TrueClass) || first_arg.is_a?(FalseClass))
+
+      # Single type class (String, Integer, custom model, etc.)
+      return first_arg if args.size == 1 && first_arg.is_a?(Class)
+
+      # Type + constraints: additional_properties Integer, minimum: 0, maximum: 100
+      # args = [Integer, { minimum: 0, maximum: 100 }] or [Integer, minimum: 0, maximum: 100]
+      if args.size >= 1 && args.first.is_a?(Class)
+        type = args.first
+        # Merge all hash arguments as constraints
+        constraints = args[1..].select { |arg| arg.is_a?(Hash) }.reduce({}, :merge)
+        return { type:, **constraints }
+      end
+
+      # Fallback: return as-is
+      args.first
     end
   end
 end
