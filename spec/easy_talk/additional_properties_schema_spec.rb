@@ -352,4 +352,111 @@ RSpec.describe 'additionalProperties with schema objects' do
       expect(instance.respond_to?(:custom_field)).to be false
     end
   end
+
+  describe 'edge cases' do
+    context 'with Hash missing type key' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'HashEdgeCaseConfig'
+
+          define_schema do
+            property :name, String
+            # Manually set invalid hash (bypasses DSL validation)
+            @schema[:additional_properties] = { 'minimum' => 0 } # String key, no type
+          end
+        end
+      end
+
+      it 'handles hash without type gracefully' do
+        schema = test_class.json_schema['additionalProperties']
+        # Should return empty schema when type is nil
+        expect(schema).to eq({})
+      end
+    end
+
+    context 'with non-standard value types' do
+      it 'returns value as-is for unrecognized types' do
+        # Test the fallback path in parse_additional_properties_args
+        test_class = Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'FallbackConfig'
+
+          define_schema do
+            property :name, String
+            # Pass non-Class, non-Boolean value
+            @schema[:additional_properties] = :some_symbol
+          end
+        end
+
+        # Schema should use the symbol as-is (fallback behavior)
+        expect(test_class.schema_definition.schema[:additional_properties]).to eq(:some_symbol)
+      end
+    end
+
+    context 'with multiple non-hash arguments' do
+      it 'returns first argument when args do not match type+constraints pattern' do
+        test_class = Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MultiArgConfig'
+
+          define_schema do
+            property :name, String
+            # Manually test parse_additional_properties_args with non-standard args
+            # This simulates: additional_properties 'string1', 'string2'
+            @schema[:additional_properties] = 'first_string'
+          end
+        end
+
+        expect(test_class.schema_definition.schema[:additional_properties]).to eq('first_string')
+      end
+    end
+
+    context 'with empty constraints after type' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'EmptyConstraintsConfig'
+
+          define_schema do
+            property :name, String
+            # Type with empty hash
+            additional_properties Integer, {}
+          end
+        end
+      end
+
+      it 'generates schema without constraints' do
+        expect(test_class.json_schema['additionalProperties']).to eq({ 'type' => 'integer' })
+      end
+    end
+
+    context 'with mixed constraint formats' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'MixedConstraintsConfig'
+
+          define_schema do
+            property :name, String
+            # Type with multiple hash arguments that should merge
+            additional_properties Integer, { minimum: 0 }, { maximum: 100 }
+          end
+        end
+      end
+
+      it 'merges multiple constraint hashes' do
+        expect(test_class.json_schema['additionalProperties']).to eq({
+                                                                       'type' => 'integer',
+                                                                       'minimum' => 0,
+                                                                       'maximum' => 100
+                                                                     })
+      end
+    end
+  end
 end
