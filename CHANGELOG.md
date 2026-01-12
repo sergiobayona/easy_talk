@@ -1,3 +1,92 @@
+## [3.3.0] - 2026-01-12
+
+### Added
+
+- **Schema Objects in additionalProperties**: Extended `additionalProperties` to support type constraints and schema objects (#160)
+  - New syntax: `additional_properties Integer, minimum: 0, maximum: 100`
+  - Three supported forms: boolean, type class, or type with constraints
+  - Generates full JSON Schema for additional properties validation
+  - New methods: `ObjectBuilder#process_additional_properties`, `ObjectBuilder#build_additional_properties_schema`
+  - Fully backwards compatible with existing boolean usage
+
+- **External $ref Support via $id**: Enhanced schema referencing with external URI support (#158)
+  - New configuration options:
+    - `base_schema_uri` - Base URI for auto-generating $id values
+    - `auto_generate_ids` - Enable automatic $id generation (default: false)
+    - `prefer_external_refs` - Use external URI in $ref when model has $id (default: false)
+  - Three-level schema ID resolution: explicit per-model → auto-generated → global
+  - Dynamic $ref templates conditionally use external URIs or local `#/$defs/ModelName` format
+  - Supports composition types (T::OneOf, T::AnyOf, T::AllOf) with external refs
+
+- **T::Tuple Type for Positional Array Validation**: New tuple type for JSON Schema tuple support (#154, #155)
+  - New syntax: `property :coords, T::Tuple[Float, Float]`
+  - Generates JSON Schema with `items` as array of schemas
+  - Supports `additional_items: false`, `true`, or a type constraint
+  - Combines with array constraints: `min_items`, `max_items`, `unique_items`
+  - ActiveModel validation for runtime type checking at each position
+  - New files: `lib/easy_talk/types/tuple.rb`, `lib/easy_talk/builders/tuple_builder.rb`
+
+- **Object-Level JSON Schema Keywords**: Support for schema-wide object constraints (#148, #151)
+  - New keywords: `patternProperties`, `minProperties`, `maxProperties`, `dependencies`, `dependentRequired`
+  - ActiveModel validators for object-level constraints via `ActiveModelSchemaValidation` module
+  - Auto-defined `count_present_properties` private method on model classes
+  - Thread-safe validator application with double-checked locking
+
+### Changed
+
+- **Format Validation Enhancements**: Improved format validation accuracy and security (#157, #156, #144)
+  - **Scope Fix**: Format and pattern validations now only apply to string values (per JSON Schema spec)
+  - **URI/URL Validation**: Uses `URI.parse()` with `.absolute?` check instead of regex
+  - **Parsing-Based Validators**: Date, DateTime, and Time formats now use parsing instead of regex
+  - **Email Validation**: Replaced ReDoS-vulnerable regex with simple linear-time pattern
+  - New validation methods: `apply_uri_format_validation`, `apply_date_format_validation`, `apply_datetime_format_validation`, `apply_time_format_validation`
+
+- **JSON Schema Equality for uniqueItems**: Implements correct JSON Schema equality semantics for array uniqueness (#152)
+  - Objects with same keys/values in different order are equal
+  - Numbers are mathematically equal (1 == 1.0)
+  - Type matters for non-numbers (true != 1, false != 0)
+  - New module: `EasyTalk::JsonSchemaEquality` with `normalize()` and `duplicates?()` methods
+  - MAX_DEPTH = 100 limit to prevent SystemStackError on deeply nested structures
+
+- **Array Presence Validation**: Required array properties now properly reject nil values (#140)
+  - New method: `apply_array_presence_validation()` for array-specific nil checks
+  - Rejects nil but allows empty arrays `[]`
+  - Aligns with JSON Schema spec: 'optional' means property can be omitted, not that nil is accepted
+
+### Fixed
+
+- **Default Additional Properties Configuration**: Fixed `default_additional_properties` config option being ignored (#142)
+  - Both `ObjectBuilder` and `SchemaDefinition` now use configured default
+  - Added schema hash duplication to prevent mutation side effects
+
+- **Property Name Validation**: Fixed validation incorrectly applying to JSON output name (`:as` constraint) instead of Ruby property name (#143)
+  - `validate_property_name()` now validates Ruby name only
+  - Allows using `:as` for JSON-LD (@type, @id), JSON Schema ($id, $ref), and other special JSON keys
+
+- **Method Redefinition Warning**: Fixed "method redefined" warning for `:property` keyword (#153)
+  - Removed `:property` from `KEYWORDS` constant since it has dedicated implementation
+
+### Internal
+
+- **Type Introspection Improvements**: Enhanced type checking capabilities (#156)
+  - New helper methods: `array_type?()`, `boolean_union_type?()`, extracted `boolean_type?()`
+  - Improved encapsulation and testability
+
+- **ValidationContext Decoupling**: Refactored validation adapter internals (#150)
+  - New plain data class `ValidationContext` for pre-computed validation values
+  - Replaces `__send__` usage with direct value passing
+  - Improved encapsulation and testability
+
+- **Code Coverage Integration**: Added SimpleCov and Codecov for test coverage tracking
+  - Local HTML reports via SimpleCov
+  - CI badge reporting via Codecov
+  - Coverage uploads on Ruby 3.4.7 builds only
+
+- **Test Infrastructure**: Comprehensive test expansion (~1800 lines of new tests)
+  - New test files: `external_ref_spec.rb`, `additional_properties_schema_spec.rb`, `tuple_validation_spec.rb`, `json_schema_equality_spec.rb`
+  - Enhanced builder test coverage
+  - Improved JSON Schema compliance testing
+
 ## [3.2.0] - 2025-12-28
 
 ### Added

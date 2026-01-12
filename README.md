@@ -34,10 +34,11 @@ EasyTalk makes the schema definition the single source of truth, so you can:
   property :tags, T::Array[String], min_items: 1
   ```
 
-- **Use a richer type system than “string/integer/object”**  
+- **Use a richer type system than "string/integer/object"**
   EasyTalk supports Sorbet-style types and composition:
   - `T.nilable(Type)` for nullable fields
   - `T::Array[Type]` for typed arrays
+  - `T::Tuple[Type1, Type2, ...]` for fixed-position typed arrays
   - `T::Boolean`
   - `T::AnyOf`, `T::OneOf`, `T::AllOf` for schema composition
 
@@ -130,12 +131,18 @@ user.errors        # => ActiveModel::Errors
 | `format` | String | `property :email, String, format: "email"` |
 | `pattern` | String | `property :zip, String, pattern: '^\d{5}$'` |
 | `enum` | Any | `property :status, String, enum: ["active", "inactive"]` |
-| `min_items` / `max_items` | Array | `property :tags, T::Array[String], min_items: 1` |
-| `unique_items` | Array | `property :ids, T::Array[Integer], unique_items: true` |
+| `min_items` / `max_items` | Array, Tuple | `property :tags, T::Array[String], min_items: 1` |
+| `unique_items` | Array, Tuple | `property :ids, T::Array[Integer], unique_items: true` |
+| `additional_items` | Tuple | `property :coords, T::Tuple[Float, Float], additional_items: false` |
 | `optional` | Any | `property :nickname, String, optional: true` |
 | `default` | Any | `property :role, String, default: "user"` |
 | `description` | Any | `property :name, String, description: "Full name"` |
 | `title` | Any | `property :name, String, title: "User Name"` |
+
+**Object-level constraints** (applied in `define_schema` block):
+- `min_properties` / `max_properties` - Minimum/maximum number of properties
+- `pattern_properties` - Schema for properties matching regex patterns
+- `dependent_required` - Conditional property requirements
 
 When `auto_validations` is enabled (default), these constraints automatically generate corresponding ActiveModel validations.
 
@@ -225,6 +232,82 @@ class Order
     property :line_items, T::Array[Address], min_items: 1
   end
 end
+```
+
+---
+
+### Tuple arrays (fixed-position types)
+
+Use `T::Tuple` for arrays where each position has a specific type (e.g., coordinates, CSV rows, database records):
+
+```ruby
+class GeoLocation
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    # Fixed: [latitude, longitude]
+    property :coordinates, T::Tuple[Float, Float]
+  end
+end
+
+location = GeoLocation.new(
+  name: 'Office',
+  coordinates: [40.7128, -74.0060]
+)
+```
+
+**Generated JSON Schema:**
+
+```json
+{
+  "properties": {
+    "coordinates": {
+      "type": "array",
+      "items": [
+        { "type": "number" },
+        { "type": "number" }
+      ]
+    }
+  }
+}
+```
+
+**Mixed-type tuples:**
+
+```ruby
+class DataRow
+  include EasyTalk::Model
+
+  define_schema do
+    # Fixed: [name, age, active]
+    property :row, T::Tuple[String, Integer, T::Boolean]
+  end
+end
+```
+
+**Controlling extra items:**
+
+```ruby
+define_schema do
+  # Reject extra items (strict tuple)
+  property :rgb, T::Tuple[Integer, Integer, Integer], additional_items: false
+
+  # Allow extra items of specific type
+  property :header_values, T::Tuple[String], additional_items: Integer
+
+  # Allow any extra items (default)
+  property :flexible, T::Tuple[String, Integer]
+end
+```
+
+**Tuple validation:**
+
+```ruby
+model = GeoLocation.new(coordinates: [40.7, "invalid"])
+model.valid?  # => false
+model.errors[:coordinates]
+# => ["item at index 1 must be a Float"]
 ```
 
 ---
@@ -396,6 +479,9 @@ EasyTalk.configure do |config|
   config.schema_version = :none
   config.schema_id = nil
   config.use_refs = false
+  config.base_schema_uri = nil                 # Base URI for auto-generating $id
+  config.auto_generate_ids = false             # Auto-generate $id from base_schema_uri
+  config.prefer_external_refs = false          # Use external URI in $ref when available
   config.property_naming_strategy = :identity  # :snake_case, :camel_case, :pascal_case
 
   # Validations
@@ -424,6 +510,198 @@ EasyTalk.configure do |config|
   config.schema_version = :draft202012
   config.schema_id = "https://example.com/schemas/user.json"
   config.use_refs = true  # Use $ref/$defs for nested models
+end
+```
+
+#### External schema references
+
+Use external URIs in `$ref` for modular, reusable schemas:
+
+```ruby
+EasyTalk.configure do |config|
+  config.use_refs = true
+  config.prefer_external_refs = true
+  config.base_schema_uri = 'https://example.com/schemas'
+  config.auto_generate_ids = true
+end
+
+class Address
+  include EasyTalk::Model
+
+  define_schema do
+    property :street, String
+    property :city, String
+  end
+end
+
+class Customer
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    property :address, Address
+  end
+end
+
+Customer.json_schema
+# =>
+# {
+#   "properties": {
+#     "address": { "$ref": "https://example.com/schemas/address" }
+#   },
+#   "$defs": {
+#     "Address": {
+#       "$id": "https://example.com/schemas/address",
+#       "properties": { "street": {...}, "city": {...} }
+#     }
+#   }
+# }
+```
+
+**Explicit schema IDs:**
+
+```ruby
+class Address
+  include EasyTalk::Model
+
+  define_schema do
+    schema_id 'https://example.com/schemas/address'
+    property :street, String
+  end
+end
+```
+
+**Per-property ref control:**
+
+```ruby
+class Customer
+  include EasyTalk::Model
+
+  define_schema do
+    property :address, Address, ref: false  # Inline instead of ref
+    property :billing, Address              # Uses ref (global setting)
+  end
+end
+```
+
+### Additional properties with types
+
+Beyond boolean values, `additional_properties` now supports type constraints for dynamic properties:
+
+```ruby
+class Config
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+
+    # Allow any string-typed additional properties
+    additional_properties String
+  end
+end
+
+config = Config.new(name: 'app')
+config.label = 'Production'  # Dynamic property
+config.as_json
+# => { 'name' => 'app', 'label' => 'Production' }
+```
+
+**With constraints:**
+
+```ruby
+class StrictConfig
+  include EasyTalk::Model
+
+  define_schema do
+    property :id, Integer
+    # Integer values between 0 and 100 only
+    additional_properties Integer, minimum: 0, maximum: 100
+  end
+end
+
+StrictConfig.json_schema
+# =>
+# {
+#   "properties": { "id": { "type": "integer" } },
+#   "additionalProperties": {
+#     "type": "integer",
+#     "minimum": 0,
+#     "maximum": 100
+#   }
+# }
+```
+
+**Nested models as additional properties:**
+
+```ruby
+class Person
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    additional_properties Address  # All additional properties must be Address objects
+  end
+end
+```
+
+### Object-level constraints
+
+Apply schema-wide constraints to limit or validate object structure:
+
+```ruby
+class StrictObject
+  include EasyTalk::Model
+
+  define_schema do
+    property :required1, String
+    property :required2, String
+    property :optional1, String, optional: true
+    property :optional2, String, optional: true
+
+    # Require at least 2 properties
+    min_properties 2
+    # Allow at most 3 properties
+    max_properties 3
+  end
+end
+
+obj = StrictObject.new(required1: 'a')
+obj.valid?  # => false (only 1 property, needs at least 2)
+```
+
+**Pattern properties:**
+
+```ruby
+class DynamicConfig
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+
+    # Properties matching /^env_/ must be strings
+    pattern_properties(
+      '^env_' => { type: 'string' }
+    )
+  end
+end
+```
+
+**Dependent required:**
+
+```ruby
+class ShippingInfo
+  include EasyTalk::Model
+
+  define_schema do
+    property :name, String
+    property :credit_card, String, optional: true
+    property :billing_address, String, optional: true
+
+    # If credit_card is present, billing_address is required
+    dependent_required(
+      'credit_card' => ['billing_address']
+    )
+  end
 end
 ```
 
