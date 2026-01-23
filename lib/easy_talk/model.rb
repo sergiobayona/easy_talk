@@ -48,9 +48,9 @@ module EasyTalk
       base.include(ErrorFormatter::InstanceMethods)
 
       # If inheriting from RubyLLM::Tool, override schema methods to use EasyTalk's schema
-      if defined?(RubyLLM::Tool) && base < RubyLLM::Tool
-        base.include(EasyTalk::Extensions::RubyLLMToolOverrides)
-      end
+      return unless defined?(RubyLLM::Tool) && base < RubyLLM::Tool
+
+      base.include(EasyTalk::Extensions::RubyLLMToolOverrides)
     end
 
     # Instance methods mixed into models that include EasyTalk::Model
