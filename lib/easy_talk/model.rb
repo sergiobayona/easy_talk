@@ -220,7 +220,7 @@ module EasyTalk
       #     property :name, String
       #   end
       def define_schema(options = {}, &)
-        raise ArgumentError, 'The class must have a name' unless name.present?
+        raise ArgumentError, 'The class must have a name' if name.blank?
 
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.klass = self # Pass the model class to the schema definition
@@ -321,6 +321,13 @@ module EasyTalk
       # @return [SchemaDefinition] The unvalidated schema definition for the model.
       def schema_definition
         @schema_definition ||= {}
+      end
+
+      # Returns an ActiveModel::Type adapter for this schema class.
+      #
+      # @return [EasyTalk::ActiveModelType]
+      def to_type
+        EasyTalk::ActiveModelType.new(self)
       end
 
       def additional_properties_allowed?

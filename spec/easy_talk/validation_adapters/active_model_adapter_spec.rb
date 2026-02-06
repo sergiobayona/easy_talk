@@ -108,6 +108,42 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
       end
     end
 
+    context 'with time format constraints when Time.zone is nil' do
+      let(:test_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'TimeFormatTest'
+
+          define_schema do
+            property :start_time, String, format: 'time'
+          end
+        end
+      end
+
+      around do |example|
+        next example.run unless Time.respond_to?(:zone=)
+
+        original_zone = Time.zone
+        Time.zone = nil
+        example.run
+      ensure
+        Time.zone = original_zone
+      end
+
+      it 'does not raise when Time.zone is nil' do
+        instance = test_class.new(start_time: '12:34:56')
+        expect { instance.valid? }.not_to raise_error
+        expect(instance.errors[:start_time]).to be_empty
+      end
+
+      it 'adds an error for invalid time strings' do
+        instance = test_class.new(start_time: 'not-a-time')
+        expect { instance.valid? }.not_to raise_error
+        expect(instance.errors[:start_time]).to include('must be a valid time in HH:MM:SS format')
+      end
+    end
+
     context 'with integer constraints' do
       let(:test_class) do
         Class.new do

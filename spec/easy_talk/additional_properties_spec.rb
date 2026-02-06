@@ -55,7 +55,7 @@ RSpec.describe 'additional properties' do
         end
 
         it 'allows getting additional properties' do
-          instance.instance_variable_set('@additional_properties', { 'custom_field' => 'value' })
+          instance.instance_variable_set(:@additional_properties, { 'custom_field' => 'value' })
           expect(instance.custom_field).to eq('value')
         end
 

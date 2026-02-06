@@ -11,6 +11,7 @@ module EasyTalk
   require 'easy_talk/schema_methods'
   require 'easy_talk/types/composer'
   require 'easy_talk/types/tuple'
+  require "easy_talk/active_model_type"
 
   # Validation adapters
   require 'easy_talk/validation_adapters/base'

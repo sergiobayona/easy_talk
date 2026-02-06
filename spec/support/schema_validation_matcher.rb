@@ -140,7 +140,7 @@ module EasyTalk
       end
 
       def analyze_error_coverage
-        schema_error_paths = @schema_result.errors.map { |e| e[:pointer] }.compact
+        schema_error_paths = @schema_result.errors.filter_map { |e| e[:pointer] }
         active_model_attrs = @active_model_result.errors.map { |e| e[:attribute] }
 
         # Schema errors not covered by ActiveModel
@@ -153,7 +153,7 @@ module EasyTalk
       end
 
       def path_to_attribute(pointer)
-        pointer.gsub(%r{^/}, '').gsub('/', '.')
+        pointer.gsub(%r{^/}, '').tr('/', '.')
       end
 
       def build_comparison_message(expectation)

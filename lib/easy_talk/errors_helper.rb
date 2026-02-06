@@ -6,6 +6,8 @@ module EasyTalk
   module ErrorHelper
     extend T::Sig
 
+    BOOLEAN_VALUES = [true, false].freeze
+
     def self.raise_constraint_error(property_name:, constraint_name:, expected:, got:)
       message = "Error in property '#{property_name}': Constraint '#{constraint_name}' expects #{expected}, " \
                 "but received #{got.inspect} (#{got.class})."
@@ -93,7 +95,7 @@ module EasyTalk
 
     def self.validate_single_type_element(property_name, constraint_name, inner_type, element, index)
       # Skip if element is a boolean (booleans are valid in many contexts)
-      return if [true, false].include?(element)
+      return if BOOLEAN_VALUES.include?(element)
 
       if TypeIntrospection.boolean_type?(inner_type)
         raise_array_constraint_error(
@@ -118,9 +120,9 @@ module EasyTalk
       return if value.nil?
 
       if TypeIntrospection.boolean_type?(value_type)
-        return if value.is_a?(Array) && value.all? { |v| [true, false].include?(v) }
+        return if value.is_a?(Array) && value.all? { |v| BOOLEAN_VALUES.include?(v) }
 
-        unless [true, false].include?(value)
+        unless BOOLEAN_VALUES.include?(value)
           raise_constraint_error(
             property_name: property_name,
             constraint_name: constraint_name,

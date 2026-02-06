@@ -91,7 +91,7 @@ module EasyTalk
       # This handles the case where an attribute has multiple errors.
       def find_and_consume_detail(details_by_attr, attribute)
         detail_list = details_by_attr[attribute]
-        return {} if detail_list.nil? || detail_list.empty?
+        return {} if detail_list.blank?
 
         detail_list.shift || {}
       end

@@ -167,6 +167,22 @@ user.errors        # => ActiveModel::Errors
 
 ---
 
+## Rails ActiveRecord integration (optional)
+
+If you're storing EasyTalk schemas in JSON/JSONB columns, you can use the
+ActiveModel::Type adapter to avoid custom `serialize` coders:
+
+```ruby
+class Space < ApplicationRecord
+  attribute :prompt_settings, ConversationSettings::SpaceSettings.to_type
+end
+```
+
+This keeps EasyTalk as the single schema source of truth while improving
+Rails integration and allowing best-effort type casting.
+
+---
+
 ## Property constraints
 
 | Constraint | Applies to | Example |

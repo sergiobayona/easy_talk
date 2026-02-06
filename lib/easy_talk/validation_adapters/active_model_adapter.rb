@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'uri'
+require 'time'
 require_relative 'active_model_schema_validation'
 require 'easy_talk/json_schema_equality'
 
@@ -271,7 +272,8 @@ module EasyTalk
           value = record.public_send(prop_name)
           next if value.blank? || !value.is_a?(String)
 
-          Time.parse(value)
+          time_zone = Time.respond_to?(:zone) ? Time.zone : nil
+          (time_zone || Time).parse(value)
           record.errors.add(prop_name, 'must be a valid time in HH:MM:SS format') unless value.match?(/\A\d{2}:\d{2}:\d{2}/)
         rescue ArgumentError
           record.errors.add(prop_name, 'must be a valid time in HH:MM:SS format')
@@ -353,7 +355,7 @@ module EasyTalk
         prop_name = @property_name
         # Pre-resolve type classes for use in validate block
         resolved_item_types = item_types.map { |t| self.class.resolve_tuple_type_class(t) }
-        resolved_additional_type = additional_items && ![true, false].include?(additional_items) ? self.class.resolve_tuple_type_class(additional_items) : nil
+        resolved_additional_type = additional_items && [true, false].exclude?(additional_items) ? self.class.resolve_tuple_type_class(additional_items) : nil
 
         @klass.validate do |record|
           value = record.public_send(prop_name)
@@ -470,7 +472,7 @@ module EasyTalk
         prop_name = @property_name
         @klass.validate do |record|
           value = record.public_send(prop_name)
-          record.errors.add(prop_name, 'must be a boolean') if value && ![true, false].include?(value)
+          record.errors.add(prop_name, 'must be a boolean') if value && [true, false].exclude?(value)
         end
       end
 
