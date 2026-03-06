@@ -142,9 +142,7 @@ module EasyTalk
         properties_to_include = (self.class.schema_definition.schema[:properties] || {}).keys
         return {} if properties_to_include.empty?
 
-        properties_to_include.each_with_object({}) do |prop, hash|
-          hash[prop.to_s] = send(prop)
-        end
+        properties_to_include.to_h { |prop| [prop.to_s, send(prop)] }
       end
 
       # Override as_json to include both defined and additional properties
@@ -170,9 +168,7 @@ module EasyTalk
         case other
         when Hash
           # Convert both to comparable format for comparison
-          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.each_with_object({}) do |prop, hash|
-            hash[prop] = send(prop)
-          end
+          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.to_h { |prop| [prop, send(prop)] }
 
           # Handle both symbol and string keys in the other hash
           other_normalized = other.transform_keys(&:to_sym)

@@ -65,7 +65,7 @@ module EasyTalk
 
     # Matcher that checks if ActiveModel validations and JSON Schema validations agree
     class MatchingValidationsMatcher
-      ValidationResult = Struct.new(:valid, :errors, keyword_init: true)
+      ValidationResult = Struct.new(:valid, :errors)
 
       def initialize(data)
         @data = data

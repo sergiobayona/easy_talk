@@ -121,7 +121,7 @@ module EasyTalk
       if args.size >= 1 && args.first.is_a?(Class)
         type = args.first
         # Merge all hash arguments as constraints
-        constraints = args[1..].select { |arg| arg.is_a?(Hash) }.reduce({}, :merge)
+        constraints = args[1..].grep(Hash).reduce({}, :merge)
         return { type:, **constraints }
       end
 
