@@ -90,9 +90,7 @@ module EasyTalk
         properties_to_include = (self.class.schema_definition.schema[:properties] || {}).keys
         return {} if properties_to_include.empty?
 
-        properties_to_include.each_with_object({}) do |prop, hash|
-          hash[prop.to_s] = send(prop)
-        end
+        properties_to_include.to_h { |prop| [prop.to_s, send(prop)] }
       end
 
       # Convert to JSON-compatible hash including additional properties.
@@ -117,9 +115,7 @@ module EasyTalk
       def ==(other)
         case other
         when Hash
-          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.each_with_object({}) do |prop, hash|
-            hash[prop] = send(prop)
-          end
+          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.to_h { |prop| [prop, send(prop)] }
           other_normalized = other.transform_keys(&:to_sym)
           self_hash == other_normalized
         else

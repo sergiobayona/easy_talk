@@ -284,9 +284,7 @@ module EasyTalk
       # Adds $defs entries for all collected ref models.
       #
       def add_ref_model_defs(schema_hash)
-        definitions = @ref_models.each_with_object({}) do |model, acc|
-          acc[model.name] = EasyTalk.deep_dup(model.schema)
-        end
+        definitions = @ref_models.to_h { |model| [model.name, EasyTalk.deep_dup(model.schema)] }
 
         existing_defs = schema_hash[:defs] || {}
         schema_hash[:defs] = existing_defs.merge(definitions)
@@ -309,9 +307,7 @@ module EasyTalk
       #
       def add_defs_from_subschema(schema_hash, subschema)
         # Build up a hash of class_name => schema for each sub-item
-        definitions = subschema.items.each_with_object({}) do |item, acc|
-          acc[item.name] = EasyTalk.deep_dup(item.schema)
-        end
+        definitions = subschema.items.to_h { |item| [item.name, EasyTalk.deep_dup(item.schema)] }
         # Merge or create :defs
         existing_defs = schema_hash[:defs] || {}
         schema_hash[:defs] = existing_defs.merge(definitions)
