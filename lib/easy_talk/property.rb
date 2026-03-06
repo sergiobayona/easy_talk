@@ -112,9 +112,8 @@ module EasyTalk
         args = is_collection ? [name, type, constraints] : [name, constraints]
         builder_class.new(*args).build
       elsif type.respond_to?(:schema)
-        # merge the top-level constraints from *this* property
-        # e.g. :title, :description, :default, etc
-        type.schema.merge!(constraints)
+        # Return a new hash so we don't mutate the cached schema on the nested model
+        type.schema.merge(constraints)
       else
         raise UnknownTypeError,
               "Unknown type '#{type.inspect}' for property '#{name}'. " \
