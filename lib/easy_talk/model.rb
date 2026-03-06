@@ -66,7 +66,7 @@ module EasyTalk
           # Only apply default if attribute was NOT provided at all
           unless provided_keys.include?(prop_name)
             default_value = prop_definition.dig(:constraints, :default)
-            public_send("#{prop_name}=", default_value) unless default_value.nil?
+            public_send("#{prop_name}=", default_value.dup) unless default_value.nil?
           end
 
           # Re-read current_value after potential default assignment
