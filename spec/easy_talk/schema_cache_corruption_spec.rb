@@ -10,6 +10,7 @@ RSpec.describe 'schema cache corruption via merge!' do
   let(:address) do
     Class.new do
       include EasyTalk::Model
+
       def self.name = 'Address'
 
       define_schema do
@@ -28,6 +29,7 @@ RSpec.describe 'schema cache corruption via merge!' do
     # First parent references Address with a custom title
     parent_a = Class.new do
       include EasyTalk::Model
+
       def self.name = 'ParentA'
 
       define_schema do
@@ -41,8 +43,8 @@ RSpec.describe 'schema cache corruption via merge!' do
 
     # Address schema should be unchanged
     expect(addr.schema).to eq(original_schema),
-      "Address.schema was mutated by ParentA. " \
-      "Expected no :title key, but got: #{addr.schema.inspect}"
+                           "Address.schema was mutated by ParentA. " \
+                           "Expected no :title key, but got: #{addr.schema.inspect}"
   end
 
   it 'produces correct schemas for both parent models independently' do
@@ -50,6 +52,7 @@ RSpec.describe 'schema cache corruption via merge!' do
 
     parent_a = Class.new do
       include EasyTalk::Model
+
       def self.name = 'ParentA'
 
       define_schema do
@@ -59,6 +62,7 @@ RSpec.describe 'schema cache corruption via merge!' do
 
     parent_b = Class.new do
       include EasyTalk::Model
+
       def self.name = 'ParentB'
 
       define_schema do
@@ -71,9 +75,9 @@ RSpec.describe 'schema cache corruption via merge!' do
     work_schema = parent_b.json_schema['properties']['work']
 
     expect(home_schema['title']).to eq('Home Address'),
-      "ParentA's :home property should have title 'Home Address', got '#{home_schema['title']}'"
+                                    "ParentA's :home property should have title 'Home Address', got '#{home_schema['title']}'"
     expect(work_schema['title']).to eq('Work Address'),
-      "ParentB's :work property should have title 'Work Address', got '#{work_schema['title']}'"
+                                    "ParentB's :work property should have title 'Work Address', got '#{work_schema['title']}'"
   end
 
   it 'does not leak constraints between unrelated models using the same nested type' do
@@ -82,6 +86,7 @@ RSpec.describe 'schema cache corruption via merge!' do
     # ParentA adds a description constraint
     parent_a = Class.new do
       include EasyTalk::Model
+
       def self.name = 'ParentA'
 
       define_schema do
@@ -94,6 +99,7 @@ RSpec.describe 'schema cache corruption via merge!' do
     # ParentB uses the same nested model with NO description
     parent_b = Class.new do
       include EasyTalk::Model
+
       def self.name = 'ParentB'
 
       define_schema do
@@ -104,6 +110,6 @@ RSpec.describe 'schema cache corruption via merge!' do
     place_schema = parent_b.json_schema['properties']['place']
 
     expect(place_schema).not_to have_key('description'),
-      "ParentA's description leaked into ParentB's schema: #{place_schema.inspect}"
+                                "ParentA's description leaked into ParentB's schema: #{place_schema.inspect}"
   end
 end
