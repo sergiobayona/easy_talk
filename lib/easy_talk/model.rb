@@ -88,7 +88,7 @@ module EasyTalk
         return if provided_keys.include?(prop_name)
 
         default_value = prop_definition.dig(:constraints, :default)
-        public_send("#{prop_name}=", default_value) unless default_value.nil?
+        public_send("#{prop_name}=", default_value.dup) unless default_value.nil?
       end
 
       def instantiate_nested_models(prop_name, defined_type, current_value)
