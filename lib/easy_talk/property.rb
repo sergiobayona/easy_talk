@@ -112,8 +112,8 @@ module EasyTalk
         args = is_collection ? [name, type, constraints] : [name, constraints]
         builder_class.new(*args).build
       elsif type.respond_to?(:schema)
-        # Return a new hash so we don't mutate the cached schema on the nested model
-        type.schema.merge(constraints)
+        # deep_dup so nested hashes in the cached schema aren't shared with the result
+        EasyTalk.deep_dup(type.schema).merge(constraints)
       else
         raise UnknownTypeError,
               "Unknown type '#{type.inspect}' for property '#{name}'. " \

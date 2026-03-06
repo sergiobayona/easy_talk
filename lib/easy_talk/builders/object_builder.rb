@@ -41,7 +41,7 @@ module EasyTalk
         # Keep a reference to the original schema definition
         @schema_definition = schema_definition
         # Deep duplicate the raw schema hash so we can mutate it safely
-        @original_schema = deep_dup(schema_definition.schema)
+        @original_schema = EasyTalk.deep_dup(schema_definition.schema)
 
         # We'll collect required property names in this Set
         @required_properties = Set.new
@@ -70,24 +70,6 @@ module EasyTalk
       end
 
       private
-
-      ##
-      # Deep duplicates a hash, including nested hashes.
-      # This prevents mutations from leaking back to the original schema.
-      #
-      def deep_dup(obj)
-        case obj
-        when Hash
-          obj.transform_values { |v| deep_dup(v) }
-        when Array
-          obj.map { |v| deep_dup(v) }
-        when Class, Module
-          # Don't duplicate Class or Module objects - they represent types
-          obj
-        else
-          obj.duplicable? ? obj.dup : obj
-        end
-      end
 
       ##
       # Main aggregator: merges the top-level schema keys (like :properties, :subschemas)
@@ -303,7 +285,7 @@ module EasyTalk
       #
       def add_ref_model_defs(schema_hash)
         definitions = @ref_models.each_with_object({}) do |model, acc|
-          acc[model.name] = deep_dup(model.schema)
+          acc[model.name] = EasyTalk.deep_dup(model.schema)
         end
 
         existing_defs = schema_hash[:defs] || {}
@@ -328,7 +310,7 @@ module EasyTalk
       def add_defs_from_subschema(schema_hash, subschema)
         # Build up a hash of class_name => schema for each sub-item
         definitions = subschema.items.each_with_object({}) do |item, acc|
-          acc[item.name] = deep_dup(item.schema)
+          acc[item.name] = EasyTalk.deep_dup(item.schema)
         end
         # Merge or create :defs
         existing_defs = schema_hash[:defs] || {}

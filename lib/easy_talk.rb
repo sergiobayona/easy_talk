@@ -68,4 +68,23 @@ module EasyTalk
   def self.configure_nilable_behavior(nilable_is_optional = false)
     configuration.nilable_is_optional = nilable_is_optional
   end
+
+  # Deep duplicates a value, recursing into Hashes and Arrays.
+  # Class and Module objects are returned as-is since they represent types
+  # and cannot (and should not) be duplicated.
+  #
+  # @param obj [Object] The value to deep duplicate.
+  # @return [Object] A deep copy of obj.
+  def self.deep_dup(obj)
+    case obj
+    when Hash
+      obj.transform_values { |v| deep_dup(v) }
+    when Array
+      obj.map { |v| deep_dup(v) }
+    when Class, Module
+      obj
+    else
+      obj.duplicable? ? obj.dup : obj
+    end
+  end
 end
