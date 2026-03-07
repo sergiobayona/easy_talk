@@ -17,6 +17,8 @@ module EasyTalk
         'OneOfBuilder' => 'oneOf'
       }.freeze
 
+      VALID_OPTIONS = %i[title description optional as validate ref].freeze
+
       sig { params(name: Symbol, type: T.untyped, constraints: T::Hash[Symbol, T.untyped]).void }
       # Initializes a new instance of the CompositionBuilder class.
       #
@@ -24,6 +26,7 @@ module EasyTalk
       # @param type [Class] The type of the composition.
       # @param constraints [Hash] The constraints for the composition.
       def initialize(name, type, constraints)
+        EasyTalk.assert_valid_property_options(name, constraints, VALID_OPTIONS)
         @composer_type = self.class.name.split('::').last
         @name = name
         @type = type
