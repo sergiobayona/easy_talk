@@ -216,15 +216,15 @@ RSpec.describe EasyTalk::Model do
 
   # Test for the unified schema generation approach
   context 'with unified schema generation' do
-    it 'has build_schema as a public class method' do
+    it 'has build_schema as a class method defined in SchemaBase' do
       test_class = Class.new do
         include EasyTalk::Model
 
         def self.name = 'TestClass'
       end
 
-      expect(test_class.respond_to?(:build_schema)).to be true
-      expect(test_class.method(:build_schema).owner).to eq(EasyTalk::Model::ClassMethods)
+      expect(test_class.respond_to?(:build_schema, true)).to be true
+      expect(test_class.method(:build_schema).owner).to eq(EasyTalk::SchemaBase::ClassMethods)
     end
   end
 end

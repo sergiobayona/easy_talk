@@ -8,8 +8,7 @@ require 'active_support/time'
 require 'active_support/concern'
 require 'active_support/json'
 require 'active_model'
-require_relative 'builders/object_builder'
-require_relative 'schema_definition'
+require_relative 'schema_base'
 require_relative 'validation_builder'
 require_relative 'error_formatter'
 require_relative 'extensions/ruby_llm_compatibility'
@@ -55,104 +54,15 @@ module EasyTalk
 
     # Instance methods mixed into models that include EasyTalk::Model
     module InstanceMethods
+      include SchemaBase::InstanceMethods
+
       def initialize(attributes = {})
         @additional_properties = {}
         provided_keys = attributes.keys.to_set(&:to_sym)
 
-        super # Perform initial mass assignment
+        super # Perform initial mass assignment via ActiveModel::API
 
-        schema_def = self.class.schema_definition
-        return unless schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
-
-        (schema_def.schema[:properties] || {}).each do |prop_name, prop_definition|
-          process_property_initialization(prop_name, prop_definition, provided_keys)
-        end
-      end
-
-      private
-
-      def process_property_initialization(prop_name, prop_definition, provided_keys)
-        defined_type = prop_definition[:type]
-        nilable_type = defined_type.respond_to?(:nilable?) && defined_type.nilable?
-
-        apply_default_value(prop_name, prop_definition, provided_keys)
-
-        current_value = public_send(prop_name)
-        return if nilable_type && current_value.nil?
-
-        defined_type = T::Utils::Nilable.get_underlying_type(defined_type) if nilable_type
-        instantiate_nested_models(prop_name, defined_type, current_value)
-      end
-
-      def apply_default_value(prop_name, prop_definition, provided_keys)
-        return if provided_keys.include?(prop_name)
-
-        default_value = prop_definition.dig(:constraints, :default)
-        public_send("#{prop_name}=", EasyTalk.deep_dup(default_value)) unless default_value.nil?
-      end
-
-      def instantiate_nested_models(prop_name, defined_type, current_value)
-        # Single nested model: convert Hash to model instance
-        if defined_type.is_a?(Class) && defined_type.include?(EasyTalk::Model) && current_value.is_a?(Hash)
-          public_send("#{prop_name}=", defined_type.new(current_value))
-          return
-        end
-
-        # Array of nested models: convert Hash items to model instances
-        instantiate_array_items(prop_name, defined_type, current_value)
-      end
-
-      def instantiate_array_items(prop_name, defined_type, current_value)
-        return unless defined_type.is_a?(T::Types::TypedArray) && current_value.is_a?(Array)
-
-        item_type = defined_type.type.respond_to?(:raw_type) ? defined_type.type.raw_type : nil
-        return unless item_type.is_a?(Class) && item_type.include?(EasyTalk::Model)
-
-        instantiated = current_value.map { |item| item.is_a?(Hash) ? item_type.new(item) : item }
-        public_send("#{prop_name}=", instantiated)
-      end
-
-      public
-
-      def method_missing(method_name, *args)
-        method_string = method_name.to_s
-        if method_string.end_with?('=')
-          property_name = method_string.chomp('=')
-          if self.class.additional_properties_allowed?
-            @additional_properties[property_name] = args.first
-          else
-            super
-          end
-        elsif self.class.additional_properties_allowed? && @additional_properties.key?(method_string)
-          @additional_properties[method_string]
-        else
-          super
-        end
-      end
-
-      def respond_to_missing?(method_name, include_private = false)
-        return super unless self.class.additional_properties_allowed?
-
-        method_string = method_name.to_s
-        method_string.end_with?('=') || @additional_properties.key?(method_string) || super
-      end
-
-      # Add to_hash method to convert defined properties to hash
-      def to_hash
-        properties_to_include = (self.class.schema_definition.schema[:properties] || {}).keys
-        return {} if properties_to_include.empty?
-
-        properties_to_include.to_h { |prop| [prop.to_s, send(prop)] }
-      end
-
-      # Override as_json to include both defined and additional properties
-      def as_json(_options = {})
-        to_hash.merge(@additional_properties)
-      end
-
-      # to_h includes both defined and additional properties
-      def to_h
-        to_hash.merge(@additional_properties)
+        initialize_schema_properties(provided_keys)
       end
 
       # Returns a Hash representing the schema in a format compatible with RubyLLM.
@@ -162,37 +72,11 @@ module EasyTalk
       def to_json_schema
         self.class.to_json_schema
       end
-
-      # Allow comparison with hashes
-      def ==(other)
-        case other
-        when Hash
-          # Convert both to comparable format for comparison
-          self_hash = (self.class.schema_definition.schema[:properties] || {}).keys.to_h { |prop| [prop, send(prop)] }
-
-          # Handle both symbol and string keys in the other hash
-          other_normalized = other.transform_keys(&:to_sym)
-          self_hash == other_normalized
-        else
-          super
-        end
-      end
     end
 
     # Module containing class-level methods for defining and accessing the schema of a model.
     module ClassMethods
-      include SchemaMethods
-
-      # Returns the schema for the model.
-      #
-      # @return [Schema] The schema for the model.
-      def schema
-        @schema ||= if defined?(@schema_definition) && @schema_definition
-                      build_schema(@schema_definition)
-                    else
-                      {}
-                    end
-      end
+      include SchemaBase::ClassMethods
 
       # Define the schema for the model using the provided block.
       #
@@ -216,20 +100,10 @@ module EasyTalk
       #     property :name, String
       #   end
       def define_schema(options = {}, &)
-        raise ArgumentError, 'The class must have a name' unless name.present?
-
-        clear_schema_state!
-
-        @schema_definition = SchemaDefinition.new(name)
-        @schema_definition.klass = self # Pass the model class to the schema definition
-        @schema_definition.instance_eval(&)
+        super(&)
 
         # Store validation options for this model
         @validation_options = normalize_validation_options(options)
-
-        # Define accessors immediately based on schema_definition
-        defined_properties = (@schema_definition.schema[:properties] || {}).keys
-        attr_accessor(*defined_properties)
 
         # Initialize mutex eagerly for thread-safe schema-level validation application
         @schema_level_validation_lock = Mutex.new
@@ -245,8 +119,7 @@ module EasyTalk
       # Reset all memoized schema state and clear previously registered
       # ActiveModel validators so a second define_schema call is never ignored.
       def clear_schema_state!
-        @schema = nil
-        @json_schema = nil
+        super
         @schema_level_validations_applied = false
         @validated_properties = Set.new
 
@@ -321,37 +194,6 @@ module EasyTalk
           adapter.build_schema_validations(self, @schema_definition.schema)
           @schema_level_validations_applied = true
         end
-      end
-
-      public
-
-      # Returns the unvalidated schema definition for the model.
-      #
-      # @return [SchemaDefinition] The unvalidated schema definition for the model.
-      def schema_definition
-        @schema_definition ||= {}
-      end
-
-      def additional_properties_allowed?
-        ap = @schema_definition&.schema&.fetch(:additional_properties, false)
-        # Allow if true, or if it's a schema object (Class or Hash with type)
-        ap == true || ap.is_a?(Class) || ap.is_a?(Hash)
-      end
-
-      # Returns the property names defined in the schema
-      #
-      # @return [Array<Symbol>] Array of property names as symbols
-      def properties
-        (@schema_definition&.schema&.dig(:properties) || {}).keys
-      end
-
-      # Builds the schema using the provided schema definition.
-      # This is the convergence point for all schema generation.
-      #
-      # @param schema_definition [SchemaDefinition] The schema definition.
-      # @return [Schema] The validated schema.
-      def build_schema(schema_definition)
-        Builders::ObjectBuilder.new(schema_definition).build
       end
     end
   end
