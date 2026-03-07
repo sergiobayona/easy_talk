@@ -60,22 +60,22 @@ module EasyTalk
         @additional_properties = {}
         provided_keys = Set.new
 
-        schema_def = self.class.schema_definition
-        assign_schema_attributes(attributes, schema_def, provided_keys) if schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
-
+        assign_schema_attributes(attributes, provided_keys)
         initialize_schema_properties(provided_keys)
       end
 
       private
 
-      def assign_schema_attributes(attributes, schema_def, provided_keys)
-        (schema_def.schema[:properties] || {}).each_key do |prop_name|
-          if attributes.key?(prop_name)
+      def assign_schema_attributes(attributes, provided_keys)
+        defined_properties = self.class.properties.to_set
+
+        attributes.each do |key, value|
+          prop_name = key.to_sym
+          if defined_properties.include?(prop_name)
             provided_keys << prop_name
-            public_send("#{prop_name}=", attributes[prop_name])
-          elsif attributes.key?(prop_name.to_s)
-            provided_keys << prop_name
-            public_send("#{prop_name}=", attributes[prop_name.to_s])
+            public_send("#{prop_name}=", value)
+          elsif self.class.additional_properties_allowed?
+            @additional_properties[key.to_s] = value
           end
         end
       end

@@ -91,6 +91,15 @@ RSpec.describe 'EasyTalk::Schema shared behavior from SchemaBase' do
       expect(instance.respond_to?(:extra_field=)).to be true
     end
 
+    it 'accepts additional properties during initialization' do
+      instance = schema_class.new(name: 'Test', extra_field: 'hello', another: 42)
+
+      expect(instance.name).to eq('Test')
+      expect(instance.extra_field).to eq('hello')
+      expect(instance.another).to eq(42)
+      expect(instance.as_json).to include('extra_field' => 'hello', 'another' => 42)
+    end
+
     it 'raises NoMethodError for unknown properties when additional_properties is false' do
       strict_class = Class.new do
         include EasyTalk::Schema
