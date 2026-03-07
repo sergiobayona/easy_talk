@@ -438,18 +438,22 @@ RSpec.describe 'CompositionBuilder option validation' do
 
       valid_options.each do |option|
         it "accepts the '#{option}' option" do
-          value = option == :optional ? true : (option == :ref ? true : "test #{option}")
-          expect {
+          value = if option == :optional
+                    true
+                  else
+                    (option == :ref ? true : "test #{option}")
+end
+          expect do
             builder_class.new(:field, composer_type, { option => value })
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
       invalid_options.each do |option, value|
         it "rejects the '#{option}' option with UnknownOptionError" do
-          expect {
+          expect do
             builder_class.new(:field, composer_type, { option => value })
-          }.to raise_error(EasyTalk::UnknownOptionError, /Unknown option '#{option}'/)
+          end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option '#{option}'/)
         end
       end
     end

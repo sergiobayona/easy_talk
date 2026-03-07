@@ -356,8 +356,18 @@ RSpec.describe EasyTalk::TypeIntrospection do
     end
 
     context 'with unrecognized types' do
-      it 'returns nil' do
+      it 'returns nil for an arbitrary object' do
         expect(described_class.get_type_class(Object.new)).to be_nil
+      end
+
+      it 'returns nil for a non-nilable union like T.any(Integer, Float)' do
+        union = T.any(Integer, Float)
+        expect(described_class.get_type_class(union)).to be_nil
+      end
+
+      it 'returns nil for a composition type like T::AnyOf' do
+        composer = T::AnyOf[Integer, String]
+        expect(described_class.get_type_class(composer)).to be_nil
       end
     end
   end
