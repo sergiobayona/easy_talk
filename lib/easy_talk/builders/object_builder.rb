@@ -232,7 +232,7 @@ module EasyTalk
         elsif prop_type.is_a?(EasyTalk::Types::Composer)
           collect_ref_models(prop_type.items, constraints)
         # Handle typed arrays with EasyTalk model items
-        elsif typed_array?(prop_type)
+        elsif TypeIntrospection.typed_array?(prop_type)
           extract_inner_types(prop_type).each { |inner_type| collect_ref_models(inner_type, constraints) }
         # Handle nilable types
         elsif nilable_with_model?(prop_type)
@@ -254,12 +254,8 @@ module EasyTalk
         EasyTalk.configuration.use_refs
       end
 
-      def typed_array?(prop_type)
-        prop_type.is_a?(T::Types::TypedArray)
-      end
-
       def extract_inner_types(prop_type)
-        return [] unless typed_array?(prop_type)
+        return [] unless TypeIntrospection.typed_array?(prop_type)
 
         if prop_type.type.is_a?(EasyTalk::Types::Composer)
           prop_type.type.items
