@@ -9,10 +9,12 @@ module EasyTalk
     class NullBuilder < BaseBuilder
       extend T::Sig
 
+      VALID_OPTIONS = {}.freeze
+
       # Initializes a new instance of the NullBuilder class.
-      sig { params(name: Symbol, _constraints: T::Hash[Symbol, T.untyped]).void }
-      def initialize(name, _constraints = {})
-        super(name, { type: 'null' }, {}, {})
+      sig { params(name: Symbol, constraints: T::Hash[Symbol, T.untyped]).void }
+      def initialize(name, constraints = {})
+        super(name, { type: 'null' }, constraints, VALID_OPTIONS)
       end
     end
   end
