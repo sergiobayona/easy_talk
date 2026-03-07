@@ -10,10 +10,10 @@ RSpec.describe EasyTalk::Builders::NullBuilder do
         expect(builder.build).to eq({ type: 'null' })
       end
 
-      it 'returns type null when constraints are provided' do
-        # NullBuilder ignores constraints since null type has no constraints
-        builder = described_class.new(:value, { some_option: 'ignored' })
-        expect(builder.build).to eq({ type: 'null' })
+      it 'rejects unknown constraints' do
+        expect do
+          described_class.new(:value, { some_option: 'ignored' })
+        end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option 'some_option'/)
       end
     end
 
@@ -21,6 +21,37 @@ RSpec.describe EasyTalk::Builders::NullBuilder do
       it 'returns type null' do
         builder = described_class.new(:value, {})
         expect(builder.build).to eq({ type: 'null' })
+      end
+    end
+
+    context 'with common options' do
+      %i[title description optional].each do |option|
+        it "accepts the '#{option}' option" do
+          value = option == :optional ? true : "test #{option}"
+          expect do
+            described_class.new(:value, { option => value })
+          end.not_to raise_error
+        end
+      end
+    end
+
+    context 'with invalid options' do
+      {
+        minimum: 0,
+        maximum: 100,
+        min_length: 1,
+        max_length: 10,
+        format: 'email',
+        pattern: '^[a-z]+$',
+        enum: [nil],
+        const: nil,
+        default: nil
+      }.each do |option, value|
+        it "rejects the '#{option}' option with UnknownOptionError" do
+          expect do
+            described_class.new(:value, { option => value })
+          end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option '#{option}'/)
+        end
       end
     end
 

@@ -10,8 +10,11 @@ module EasyTalk
       extend CollectionHelpers
       extend T::Sig
 
+      VALID_OPTIONS = %i[title description optional as validate].freeze
+
       sig { params(name: Symbol, type: T.untyped, constraints: T::Hash[Symbol, T.untyped]).void }
       def initialize(name, type, constraints)
+        EasyTalk.assert_valid_property_options(name, constraints, VALID_OPTIONS)
         @name = name
         @type = type
         @constraints = constraints

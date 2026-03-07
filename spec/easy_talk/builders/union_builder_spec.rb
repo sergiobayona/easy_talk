@@ -197,4 +197,42 @@ RSpec.describe EasyTalk::Builders::UnionBuilder do
       expect(builder.instance_variable_get(:@context)).to eq({})
     end
   end
+
+  describe 'option validation' do
+    let(:union_type) { T.any(String, Integer) }
+
+    %i[title description optional].each do |option|
+      it "accepts the '#{option}' option" do
+        value = option == :optional ? true : "test #{option}"
+        expect do
+          described_class.new(:field, union_type, { option => value })
+        end.not_to raise_error
+      end
+    end
+
+    {
+      min_length: 1,
+      max_length: 10,
+      format: 'email',
+      pattern: '^[a-z]+$',
+      minimum: 0,
+      maximum: 100,
+      exclusive_minimum: 0,
+      exclusive_maximum: 100,
+      multiple_of: 5,
+      min_items: 1,
+      max_items: 10,
+      unique_items: true,
+      enum: %w[a b],
+      const: 'fixed',
+      default: 'value',
+      ref: true
+    }.each do |option, value|
+      it "rejects the '#{option}' option with UnknownOptionError" do
+        expect do
+          described_class.new(:field, union_type, { option => value })
+        end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option '#{option}'/)
+      end
+    end
+  end
 end
