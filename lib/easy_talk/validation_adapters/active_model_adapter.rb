@@ -440,9 +440,9 @@ module EasyTalk
 
       # Validate boolean-specific constraints
       def apply_boolean_validations
-        # For boolean values, validate inclusion in [true, false]
-        # If not optional, don't allow nil (equivalent to presence validation for booleans)
-        if optional?
+        # For boolean values, validate inclusion in [true, false].
+        # allow_nil? covers both optional and T.nilable — nil is explicitly permitted in both cases.
+        if allow_nil?
           @klass.validates @property_name, inclusion: { in: [true, false] }, allow_nil: true
         else
           @klass.validates @property_name, inclusion: { in: [true, false] }
