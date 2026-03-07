@@ -152,10 +152,10 @@ RSpec.describe 'Type resolution baseline behavior' do
         expect(result).to eq(String)
       end
 
-      it 'falls back to String for unrecognized Symbol/String' do
+      it 'returns nil for unrecognized Symbol/String' do
         a = adapter(String)
         result = a.send(:get_type_class, :completely_unknown_type_xyz)
-        expect(result).to eq(String)
+        expect(result).to be_nil
       end
     end
   end

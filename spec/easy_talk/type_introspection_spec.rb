@@ -350,14 +350,14 @@ RSpec.describe EasyTalk::TypeIntrospection do
         expect(described_class.get_type_class('integer')).to eq(Integer)
       end
 
-      it 'falls back to String for an unknown type name' do
-        expect(described_class.get_type_class(:completely_unknown_xyz)).to eq(String)
+      it 'returns nil for an unknown type name' do
+        expect(described_class.get_type_class(:completely_unknown_xyz)).to be_nil
       end
     end
 
     context 'with unrecognized types' do
-      it 'falls back to String' do
-        expect(described_class.get_type_class(Object.new)).to eq(String)
+      it 'returns nil' do
+        expect(described_class.get_type_class(Object.new)).to be_nil
       end
     end
   end
