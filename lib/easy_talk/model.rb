@@ -218,18 +218,7 @@ module EasyTalk
       def define_schema(options = {}, &)
         raise ArgumentError, 'The class must have a name' unless name.present?
 
-        # Reset memoized state so a second call is never silently ignored.
-        @schema = nil
-        @json_schema = nil
-        @schema_level_validations_applied = false
-        @validated_properties = Set.new
-
-        # If redefining an existing schema, purge the previously registered
-        # ActiveModel validators so stale constraints don't carry over.
-        if instance_variable_defined?(:@schema_definition) && @schema_definition
-          reset_callbacks(:validate)
-          _validators.clear
-        end
+        clear_schema_state!
 
         @schema_definition = SchemaDefinition.new(name)
         @schema_definition.klass = self # Pass the model class to the schema definition
@@ -242,8 +231,6 @@ module EasyTalk
         defined_properties = (@schema_definition.schema[:properties] || {}).keys
         attr_accessor(*defined_properties)
 
-        # @validated_properties was already reset above; nothing to do here.
-
         # Initialize mutex eagerly for thread-safe schema-level validation application
         @schema_level_validation_lock = Mutex.new
 
@@ -254,6 +241,20 @@ module EasyTalk
       end
 
       private
+
+      # Reset all memoized schema state and clear previously registered
+      # ActiveModel validators so a second define_schema call is never ignored.
+      def clear_schema_state!
+        @schema = nil
+        @json_schema = nil
+        @schema_level_validations_applied = false
+        @validated_properties = Set.new
+
+        return unless @schema_definition
+
+        reset_callbacks(:validate)
+        _validators.clear
+      end
 
       # Normalize validation options from various input formats.
       #
