@@ -184,11 +184,7 @@ module EasyTalk
         return [TrueClass, FalseClass] if boolean_type?(type)
 
         if type.is_a?(Symbol) || type.is_a?(String)
-          return begin
-            type.to_s.classify.constantize
-          rescue StandardError
-            String
-          end
+          return type.to_s.classify.safe_constantize || String
         end
 
         if nilable_type?(type)

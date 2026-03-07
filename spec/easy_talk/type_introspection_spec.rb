@@ -205,6 +205,22 @@ RSpec.describe EasyTalk::TypeIntrospection do
         expect(described_class.get_type_class(nil)).to be_nil
       end
     end
+
+    context 'with Symbol/String inputs' do
+      it 'constantizes a known type name' do
+        expect(described_class.get_type_class(:string)).to eq(String)
+      end
+
+      it 'falls back to String for an unknown type name' do
+        expect(described_class.get_type_class(:completely_unknown_xyz)).to eq(String)
+      end
+    end
+
+    context 'with unrecognized types' do
+      it 'falls back to String' do
+        expect(described_class.get_type_class(Object.new)).to eq(String)
+      end
+    end
   end
 
   describe '.extract_inner_type' do
