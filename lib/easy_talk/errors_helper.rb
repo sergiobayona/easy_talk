@@ -25,7 +25,7 @@ module EasyTalk
       raise UnknownOptionError, message
     end
 
-    def self.extract_inner_type(type_info)
+    def self.extract_element_type(type_info)
       # No change needed here
       if type_info.respond_to?(:type) && type_info.type.respond_to?(:raw_type)
         type_info.type.raw_type
@@ -49,7 +49,7 @@ module EasyTalk
     def self.validate_typed_array_values(property_name:, constraint_name:, type_info:, array_value:)
       # Raise error if value is not an array but type expects one
       unless array_value.is_a?(Array)
-        inner_type = extract_inner_type(type_info)
+        inner_type = extract_element_type(type_info)
         expected_desc = TypeIntrospection.boolean_type?(inner_type) ? 'Boolean (true or false)' : inner_type.to_s
         raise_constraint_error(
           property_name: property_name,
@@ -59,7 +59,7 @@ module EasyTalk
         )
       end
 
-      inner_type = extract_inner_type(type_info)
+      inner_type = extract_element_type(type_info)
       array_value.each_with_index do |element, index|
         validate_array_element(
           property_name: property_name,
@@ -153,7 +153,7 @@ module EasyTalk
       # Handle Sorbet type objects
       elsif value_type.class.ancestors.include?(T::Types::Base)
         # Extract the inner type
-        inner_type = extract_inner_type(value_type)
+        inner_type = extract_element_type(value_type)
 
         if inner_type.is_a?(Array)
           # For union types, check if the value matches any of the allowed types

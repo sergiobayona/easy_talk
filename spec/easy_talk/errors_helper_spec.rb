@@ -72,30 +72,30 @@ RSpec.describe EasyTalk::ErrorHelper do
     end
   end
 
-  describe '.extract_inner_type' do
+  describe '.extract_element_type' do
     context 'with typed array' do
       it 'extracts the raw type from typed array' do
         type_info = T::Array[String]
-        expect(described_class.extract_inner_type(type_info)).to eq(String)
+        expect(described_class.extract_element_type(type_info)).to eq(String)
       end
 
       it 'extracts Integer from typed array' do
         type_info = T::Array[Integer]
-        expect(described_class.extract_inner_type(type_info)).to eq(Integer)
+        expect(described_class.extract_element_type(type_info)).to eq(Integer)
       end
     end
 
     context 'with boolean type' do
       it 'returns T::Boolean for boolean typed arrays' do
         type_info = T::Array[T::Boolean]
-        expect(described_class.extract_inner_type(type_info)).to eq(T::Boolean)
+        expect(described_class.extract_element_type(type_info)).to eq(T::Boolean)
       end
     end
 
     context 'with union types' do
       it 'extracts both types from union' do
         type_info = T.any(String, Integer)
-        result = described_class.extract_inner_type(type_info)
+        result = described_class.extract_element_type(type_info)
         expect(result).to include(String)
         expect(result).to include(Integer)
       end
@@ -103,7 +103,7 @@ RSpec.describe EasyTalk::ErrorHelper do
 
     context 'with fallback' do
       it 'returns Object when type cannot be extracted' do
-        expect(described_class.extract_inner_type(Object.new)).to eq(Object)
+        expect(described_class.extract_element_type(Object.new)).to eq(Object)
       end
     end
   end
