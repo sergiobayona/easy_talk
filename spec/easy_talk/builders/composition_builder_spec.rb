@@ -385,6 +385,81 @@ RSpec.describe EasyTalk::Builders::CompositionBuilder::OneOfBuilder do
   end
 end
 
+RSpec.describe 'CompositionBuilder option validation' do
+  let(:sample_model) do
+    Class.new do
+      include EasyTalk::Model
+
+      def self.name
+        'SampleModel'
+      end
+
+      define_schema do
+        property :field, String
+      end
+    end
+  end
+
+  # Composition types should accept these options (common to all builders)
+  valid_options = %i[title description optional ref]
+
+  # These type-specific options should be rejected on composition types
+  invalid_options = {
+    min_length: 1,
+    max_length: 10,
+    format: 'email',
+    pattern: '^[a-z]+$',
+    minimum: 0,
+    maximum: 100,
+    exclusive_minimum: 0,
+    exclusive_maximum: 100,
+    multiple_of: 5,
+    min_items: 1,
+    max_items: 10,
+    unique_items: true,
+    enum: %w[a b],
+    const: 'fixed',
+    default: 'value'
+  }
+
+  {
+    'AllOfBuilder' => EasyTalk::Builders::CompositionBuilder::AllOfBuilder,
+    'AnyOfBuilder' => EasyTalk::Builders::CompositionBuilder::AnyOfBuilder,
+    'OneOfBuilder' => EasyTalk::Builders::CompositionBuilder::OneOfBuilder
+  }.each do |builder_name, builder_class|
+    context builder_name do
+      let(:composer_type) do
+        case builder_name
+        when 'AllOfBuilder' then T::AllOf[sample_model]
+        when 'AnyOfBuilder' then T::AnyOf[sample_model]
+        when 'OneOfBuilder' then T::OneOf[sample_model]
+        end
+      end
+
+      valid_options.each do |option|
+        it "accepts the '#{option}' option" do
+          value = if option == :optional
+                    true
+                  else
+                    (option == :ref ? true : "test #{option}")
+end
+          expect do
+            builder_class.new(:field, composer_type, { option => value })
+          end.not_to raise_error
+        end
+      end
+
+      invalid_options.each do |option, value|
+        it "rejects the '#{option}' option with UnknownOptionError" do
+          expect do
+            builder_class.new(:field, composer_type, { option => value })
+          end.to raise_error(EasyTalk::UnknownOptionError, /Unknown option '#{option}'/)
+        end
+      end
+    end
+  end
+end
+
 RSpec.describe 'CompositionBuilder initialization' do
   let(:sample_model) do
     Class.new do

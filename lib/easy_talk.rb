@@ -58,6 +58,8 @@ module EasyTalk
   end
 
   def self.assert_valid_property_options(property_name, options, *valid_keys)
+    return if options.nil?
+
     valid_keys.flatten!
     options.each_key do |k|
       next if valid_keys.include?(k)

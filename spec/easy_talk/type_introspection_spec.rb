@@ -350,14 +350,24 @@ RSpec.describe EasyTalk::TypeIntrospection do
         expect(described_class.get_type_class('integer')).to eq(Integer)
       end
 
-      it 'falls back to String for an unknown type name' do
-        expect(described_class.get_type_class(:completely_unknown_xyz)).to eq(String)
+      it 'returns nil for an unknown type name' do
+        expect(described_class.get_type_class(:completely_unknown_xyz)).to be_nil
       end
     end
 
     context 'with unrecognized types' do
-      it 'falls back to String' do
-        expect(described_class.get_type_class(Object.new)).to eq(String)
+      it 'returns nil for an arbitrary object' do
+        expect(described_class.get_type_class(Object.new)).to be_nil
+      end
+
+      it 'returns nil for a non-nilable union like T.any(Integer, Float)' do
+        union = T.any(Integer, Float)
+        expect(described_class.get_type_class(union)).to be_nil
+      end
+
+      it 'returns nil for a composition type like T::AnyOf' do
+        composer = T::AnyOf[Integer, String]
+        expect(described_class.get_type_class(composer)).to be_nil
       end
     end
   end
