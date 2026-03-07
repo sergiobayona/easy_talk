@@ -2,6 +2,7 @@
 
 require 'simplecov'
 require 'simplecov-cobertura'
+require 'pry-byebug'
 
 SimpleCov.start do
   add_filter '/spec/'

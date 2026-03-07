@@ -183,9 +183,7 @@ module EasyTalk
         return Array if type.is_a?(T::Types::TypedArray) || type.is_a?(EasyTalk::Types::Tuple)
         return [TrueClass, FalseClass] if boolean_type?(type)
 
-        if type.is_a?(Symbol) || type.is_a?(String)
-          return type.to_s.classify.safe_constantize || String
-        end
+        return type.to_s.classify.safe_constantize || String if type.is_a?(Symbol) || type.is_a?(String)
 
         if nilable_type?(type)
           inner = extract_inner_type(type)

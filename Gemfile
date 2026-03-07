@@ -5,6 +5,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'json_schemer', '>= 2.0'
+gem 'pry-byebug'
 gem 'rake', '>= 13.1'
 gem 'rspec', '>= 3.0'
 gem 'rspec-json_expectations', '>= 2.0'

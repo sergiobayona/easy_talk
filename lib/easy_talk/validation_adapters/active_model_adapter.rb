@@ -414,16 +414,23 @@ module EasyTalk
         # Get inner type from T::Types::TypedArray (uses .type, which returns T::Types::Simple)
         inner_type_wrapper = type.type
         inner_type = inner_type_wrapper.respond_to?(:raw_type) ? inner_type_wrapper.raw_type : inner_type_wrapper
+        is_boolean = TypeIntrospection.boolean_type?(inner_type)
         prop_name = @property_name
-        is_easy_talk_model = inner_type.is_a?(Class) && inner_type.include?(EasyTalk::Model)
+        is_easy_talk_model = !is_boolean && inner_type.is_a?(Class) && inner_type.include?(EasyTalk::Model)
 
         @klass.validate do |record|
           value = record.public_send(prop_name)
           next unless value.is_a?(Array)
 
           value.each_with_index do |item, index|
-            unless item.is_a?(inner_type)
-              record.errors.add(prop_name, "item at index #{index} must be a #{inner_type}")
+            type_match = if is_boolean
+                           [true, false].include?(item)
+                         else
+                           item.is_a?(inner_type)
+                         end
+            unless type_match
+              type_label = is_boolean ? 'Boolean' : inner_type.to_s
+              record.errors.add(prop_name, "item at index #{index} must be a #{type_label}")
               next
             end
 
@@ -600,6 +607,7 @@ module EasyTalk
 
         return if length_options.empty?
 
+        length_options[:allow_nil] = true if allow_nil?
         @klass.validates @property_name, length: length_options
       end
 
