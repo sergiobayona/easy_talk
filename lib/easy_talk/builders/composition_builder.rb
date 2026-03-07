@@ -26,7 +26,7 @@ module EasyTalk
       # @param type [Class] The type of the composition.
       # @param constraints [Hash] The constraints for the composition.
       def initialize(name, type, constraints)
-        EasyTalk.assert_valid_property_options(name, constraints || {}, VALID_OPTIONS)
+        EasyTalk.assert_valid_property_options(name, constraints, VALID_OPTIONS)
         @composer_type = self.class.name.split('::').last
         @name = name
         @type = type
