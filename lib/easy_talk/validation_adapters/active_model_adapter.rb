@@ -128,6 +128,12 @@ module EasyTalk
 
       private
 
+      # Returns true if nil should be allowed by ActiveModel validators.
+      # This is the case when the property is optional or declared T.nilable.
+      def allow_nil?
+        optional? || nilable_type?
+      end
+
       # Apply validations based on the type of the property
       def apply_type_validations(context)
         if context.tuple_type?
@@ -185,7 +191,7 @@ module EasyTalk
         length_options[:maximum] = @constraints[:max_length] if valid_length_constraint?(:max_length)
         return unless length_options.any?
 
-        length_options[:allow_nil] = optional? || nilable_type?
+        length_options[:allow_nil] = allow_nil?
         @klass.validates @property_name, length: length_options
       rescue ArgumentError
         # Silently ignore invalid length constraints
@@ -297,7 +303,7 @@ module EasyTalk
         options[:less_than_or_equal_to] = @constraints[:maximum] if @constraints[:maximum].is_a?(Numeric)
         options[:greater_than] = @constraints[:exclusive_minimum] if @constraints[:exclusive_minimum].is_a?(Numeric)
         options[:less_than] = @constraints[:exclusive_maximum] if @constraints[:exclusive_maximum].is_a?(Numeric)
-        options[:allow_nil] = true if optional? || nilable_type?
+        options[:allow_nil] = true if allow_nil?
 
         @klass.validates @property_name, numericality: options
 
@@ -520,7 +526,7 @@ module EasyTalk
         @klass.validates @property_name, inclusion: {
           in: @constraints[:enum],
           message: "must be one of: #{@constraints[:enum].join(', ')}",
-          allow_nil: optional? || nilable_type?
+          allow_nil: allow_nil?
         }
       end
 
