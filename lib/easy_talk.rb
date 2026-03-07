@@ -21,6 +21,7 @@ module EasyTalk
   # Builder registry for pluggable type support
   require 'easy_talk/builders/registry'
 
+  require 'easy_talk/schema_base'
   require 'easy_talk/model'
   require 'easy_talk/schema'
   require 'easy_talk/property'
