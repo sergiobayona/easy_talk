@@ -78,11 +78,14 @@ RSpec.describe 'validating json' do
       expect(jim.errors[:email]).to eq(["can't be blank"])
     end
 
-    it 'validates an empty email hash' do
+    it 'validates an empty email hash by propagating nested model errors' do
       jim = user.new(name: 'Jim', age: 30, height: 5.9, email: {})
       expect(jim.valid?).to be false
-      expect(jim.errors.size).to eq(1)
-      expect(jim.errors['email']).to eq(["can't be blank"])
+      # An empty hash is auto-instantiated to Email.new({}), which is an object (not nil),
+      # so the outer presence validation is satisfied. The nested model's own validation
+      # fires instead and its errors are propagated with a dotted-path prefix.
+      expect(jim.errors[:'email.address']).to eq(["can't be blank"])
+      expect(jim.errors[:'email.verified']).to eq(["can't be blank"])
     end
   end
 
