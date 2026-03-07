@@ -65,7 +65,7 @@ module EasyTalk
           # Handle default values
           if value.nil? && !attributes.key?(prop_name) && !attributes.key?(prop_name.to_s)
             default_value = prop_definition.dig(:constraints, :default)
-            value = default_value unless default_value.nil?
+            value = EasyTalk.deep_dup(default_value) unless default_value.nil?
           end
 
           # Handle nested EasyTalk::Schema or EasyTalk::Model objects
