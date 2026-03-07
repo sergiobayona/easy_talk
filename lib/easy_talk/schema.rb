@@ -60,7 +60,11 @@ module EasyTalk
         return unless schema_def.respond_to?(:schema) && schema_def.schema.is_a?(Hash)
 
         (schema_def.schema[:properties] || {}).each do |prop_name, prop_definition|
-          value = attributes[prop_name] || attributes[prop_name.to_s]
+          value = if attributes.key?(prop_name)
+                    attributes[prop_name]
+                  else
+                    attributes[prop_name.to_s]
+                  end
 
           # Handle default values
           if value.nil? && !attributes.key?(prop_name) && !attributes.key?(prop_name.to_s)
