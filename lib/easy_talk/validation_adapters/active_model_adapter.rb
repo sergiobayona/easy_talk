@@ -297,6 +297,7 @@ module EasyTalk
         options[:less_than_or_equal_to] = @constraints[:maximum] if @constraints[:maximum].is_a?(Numeric)
         options[:greater_than] = @constraints[:exclusive_minimum] if @constraints[:exclusive_minimum].is_a?(Numeric)
         options[:less_than] = @constraints[:exclusive_maximum] if @constraints[:exclusive_maximum].is_a?(Numeric)
+        options[:allow_nil] = true if optional? || nilable_type?
 
         @klass.validates @property_name, numericality: options
 
@@ -519,7 +520,7 @@ module EasyTalk
         @klass.validates @property_name, inclusion: {
           in: @constraints[:enum],
           message: "must be one of: #{@constraints[:enum].join(', ')}",
-          allow_nil: optional?
+          allow_nil: optional? || nilable_type?
         }
       end
 
