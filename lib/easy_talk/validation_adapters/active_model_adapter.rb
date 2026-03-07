@@ -489,33 +489,22 @@ module EasyTalk
         @klass.validate do |record|
           nested_object = record.public_send(prop_name)
 
-          # Only validate if the nested object is present
+          # Nil is handled by the outer presence validation — nothing to do here.
           next unless nested_object
 
-          # Check if the object is of the expected type (e.g., an actual Email instance)
           if nested_object.is_a?(expected_type)
-            # Check if this object appears to be empty (created from an empty hash)
-            # by checking if all defined properties are nil/blank
-            properties = expected_type.schema_definition.schema[:properties] || {}
-            all_properties_blank = properties.keys.all? do |property|
-              value = nested_object.public_send(property)
-              value.nil? || (value.respond_to?(:empty?) && value.empty?)
-            end
+            # Delegate entirely to the nested model's own validity.
+            # The outer presence validation already handles the nil case, so there
+            # is no need for a secondary "blank" heuristic here.
+            next if nested_object.valid?
 
-            if all_properties_blank
-              # Treat as blank and add a presence error to the parent field
-              record.errors.add(prop_name, "can't be blank")
-            elsif !nested_object.valid?
-              # If it's the correct type and not empty, validate it
-              # Merge errors from the nested object into the parent
-              nested_object.errors.each do |error|
-                # Prefix the attribute name (e.g., 'email.address')
-                nested_key = "#{prop_name}.#{error.attribute}"
-                record.errors.add(nested_key.to_sym, error.message)
-              end
+            # Propagate nested errors into the parent with a dotted-path prefix.
+            nested_object.errors.each do |error|
+              nested_key = "#{prop_name}.#{error.attribute}"
+              record.errors.add(nested_key.to_sym, error.message)
             end
           else
-            # If present but not the correct type, add a type error
+            # Value is present but is not the expected type.
             record.errors.add(prop_name, "must be a valid #{expected_type.name}")
           end
         end
