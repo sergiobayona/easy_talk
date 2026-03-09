@@ -266,12 +266,11 @@ RSpec.describe EasyTalk::ValidationAdapters::ActiveModelAdapter do
         end
       end
 
-      # Per JSON Schema: optional means the property can be omitted from the object,
-      # but if present, null is still invalid unless type includes null
-      it 'rejects nil for optional non-nilable array properties' do
+      # In Ruby, an omitted property is indistinguishable from nil.
+      # Optional means the property can be absent, so nil must be accepted.
+      it 'accepts nil for optional array properties' do
         instance = test_class.new(tags: nil)
-        expect(instance.valid?).to be false
-        expect(instance.errors[:tags]).to include("can't be blank")
+        expect(instance.valid?).to be true
       end
 
       it 'validates empty arrays as valid' do

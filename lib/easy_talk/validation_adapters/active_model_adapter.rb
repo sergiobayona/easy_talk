@@ -559,7 +559,7 @@ module EasyTalk
         end
 
         def array_requires_presence_validation?
-          @array_type && !@nilable
+          @array_type && !@nilable && !@optional
         end
 
         def tuple_type?
