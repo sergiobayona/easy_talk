@@ -528,4 +528,146 @@ RSpec.describe 'Auto Validations' do
       expect(instance.errors[:nilable_bio]).to include('is too short (minimum is 10 characters)')
     end
   end
+
+  # Regression: PR #168
+  describe 'nilable boolean validations' do
+    let(:model) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'FlagModel'
+
+        define_schema do
+          property :enabled, T.nilable(T::Boolean)
+        end
+      end
+    end
+
+    it 'accepts nil — nil is explicitly allowed by T.nilable' do
+      instance = model.new(enabled: nil)
+      expect(instance.valid?).to be(true),
+                                 "Expected nil to be valid for T.nilable(T::Boolean), " \
+                                 "but got errors: #{instance.errors[:enabled]}"
+    end
+
+    it 'still accepts true' do
+      expect(model.new(enabled: true).valid?).to be(true)
+    end
+
+    it 'still accepts false' do
+      expect(model.new(enabled: false).valid?).to be(true)
+    end
+
+    it 'still rejects non-boolean values' do
+      instance = model.new(enabled: 'yes')
+      expect(instance.valid?).to be(false)
+      expect(instance.errors[:enabled]).not_to be_empty
+    end
+
+    context 'required T::Boolean (non-nilable) still rejects nil' do
+      let(:required_model) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'RequiredFlagModel'
+
+          define_schema do
+            property :enabled, T::Boolean
+          end
+        end
+      end
+
+      it 'rejects nil for a required boolean property' do
+        instance = required_model.new(enabled: nil)
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:enabled]).not_to be_empty
+      end
+    end
+  end
+
+  # Regression: PR #166
+  describe 'nilable properties with constraints allow nil' do
+    context 'enum constraint on a nilable property' do
+      let(:model) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'StatusModel'
+
+          define_schema do
+            property :status, T.nilable(String), enum: %w[active inactive]
+          end
+        end
+      end
+
+      it 'accepts nil — nil is explicitly allowed by T.nilable' do
+        instance = model.new(status: nil)
+        expect(instance.valid?).to be(true),
+                                   "Expected nil to be valid for T.nilable(String) with enum, " \
+                                   "but got errors: #{instance.errors[:status]}"
+      end
+
+      it 'still rejects values outside the enum' do
+        instance = model.new(status: 'unknown')
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:status]).not_to be_empty
+      end
+
+      it 'still accepts values inside the enum' do
+        expect(model.new(status: 'active').valid?).to be(true)
+      end
+    end
+
+    context 'minimum/maximum constraint on a nilable integer property' do
+      let(:model) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'AgeModel'
+
+          define_schema do
+            property :age, T.nilable(Integer), minimum: 0, maximum: 150
+          end
+        end
+      end
+
+      it 'accepts nil — nil is explicitly allowed by T.nilable' do
+        instance = model.new(age: nil)
+        expect(instance.valid?).to be(true),
+                                   "Expected nil to be valid for T.nilable(Integer) with minimum/maximum, " \
+                                   "but got errors: #{instance.errors[:age]}"
+      end
+
+      it 'still rejects values below minimum' do
+        instance = model.new(age: -1)
+        expect(instance.valid?).to be(false)
+        expect(instance.errors[:age]).not_to be_empty
+      end
+
+      it 'still accepts values within range' do
+        expect(model.new(age: 30).valid?).to be(true)
+      end
+    end
+
+    context 'minimum constraint on a nilable float property' do
+      let(:model) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'ScoreModel'
+
+          define_schema do
+            property :score, T.nilable(Float), minimum: 0.0
+          end
+        end
+      end
+
+      it 'accepts nil — nil is explicitly allowed by T.nilable' do
+        instance = model.new(score: nil)
+        expect(instance.valid?).to be(true),
+                                   "Expected nil to be valid for T.nilable(Float) with minimum, " \
+                                   "but got errors: #{instance.errors[:score]}"
+      end
+    end
+  end
 end

@@ -102,6 +102,128 @@ RSpec.describe 'validating json' do
     expect(jim.errors[:age]).to eq(['is not a number'])
   end
 
+  # Regression: PR #167
+  describe 'nested model blank validation' do
+    let(:config_class) do
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'Config'
+
+        define_schema do
+          property :timeout, Integer, optional: true
+          property :retries, Integer, optional: true
+        end
+      end
+    end
+
+    let(:task_class) do
+      config = config_class
+      Class.new do
+        include EasyTalk::Model
+
+        def self.name = 'Task'
+
+        define_schema do
+          property :config, config
+        end
+      end
+    end
+
+    describe 'nested model with all-optional properties' do
+      it 'is valid on its own when all properties are nil' do
+        instance = config_class.new
+        expect(instance.valid?).to be(true),
+                                   "Config.new should be valid (all properties are optional) " \
+                                   "but got errors: #{instance.errors.full_messages}"
+      end
+
+      it 'parent is valid when nested model is valid — even if all nested properties are nil' do
+        nested = config_class.new
+        expect(nested.valid?).to be(true)
+
+        parent = task_class.new(config: nested)
+        expect(parent.valid?).to be(true),
+                                 "Parent should be valid when nested model is valid, " \
+                                 "but got errors: #{parent.errors.full_messages}"
+      end
+    end
+
+    describe 'nested model with a mix of optional and required properties' do
+      let(:address_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Address'
+
+          define_schema do
+            property :street, String
+            property :unit,   String, optional: true
+          end
+        end
+      end
+
+      let(:user_class) do
+        addr = address_class
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'User'
+
+          define_schema do
+            property :address, addr
+          end
+        end
+      end
+
+      it "propagates the nested model errors rather than reporting \"can't be blank\"" do
+        nested = address_class.new(street: nil, unit: nil)
+        expect(nested.valid?).to be(false)
+
+        parent = user_class.new(address: nested)
+        parent.valid?
+
+        expect(parent.errors.full_messages).not_to include("Config can't be blank")
+        expect(parent.errors.attribute_names.map(&:to_s)).to include(match(/address/))
+      end
+    end
+
+    describe 'nested model with no declared properties' do
+      let(:empty_model_class) do
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'EmptyModel'
+
+          define_schema {}
+        end
+      end
+
+      let(:wrapper_class) do
+        inner = empty_model_class
+        Class.new do
+          include EasyTalk::Model
+
+          def self.name = 'Wrapper'
+
+          define_schema do
+            property :inner, inner
+          end
+        end
+      end
+
+      it 'does not report can\'t be blank for a model with no properties' do
+        nested = empty_model_class.new
+        expect(nested.valid?).to be(true)
+
+        parent = wrapper_class.new(inner: nested)
+        expect(parent.valid?).to be(true),
+                                 "A nested model with no properties should not be 'blank', " \
+                                 "but got errors: #{parent.errors.full_messages}"
+      end
+    end
+  end
+
   # JSON Schema Compliance Gap: Type Coercion
   # Per JSON Schema spec, a string "30" should NOT be valid for type: integer.
   # Currently, EasyTalk uses ActiveModel's numericality validation which coerces
