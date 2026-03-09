@@ -1,3 +1,28 @@
+## [3.3.2] - 2026-03-09
+
+### Fixed
+
+- **Schema Cache Corruption**: Fixed schema cache corruption when nested models have constraints (#163)
+- **Mutable Default Values (Model)**: Fixed mutable default values (arrays, hashes) being shared across `EasyTalk::Model` instances (#165)
+- **Nilable Properties Rejecting Nil**: Fixed nilable properties incorrectly rejecting `nil` in ActiveModel validations (#166)
+- **Nested Model Blank False Positive**: Fixed nested model blank false positive in `apply_object_validations` (#167)
+- **Nilable Boolean Validation**: Fixed `T.nilable(T::Boolean)` rejecting `nil` in ActiveModel validations (#168)
+- **Schema False Value Discard**: Fixed `EasyTalk::Schema` silently discarding `false` values on initialization (#169)
+- **Mutable Default Values (Schema)**: Fixed mutable default values shared across `EasyTalk::Schema` instances (#170)
+- **Double-Call Stale Schema**: Fixed `define_schema` double-call leaving stale schema and validators (#171)
+- **Incorrect Fallback String**: Fixed incorrect fallback string in type introspection for composition types (#175)
+- **Optional Array Nil Rejection**: Fixed optional array properties incorrectly rejecting `nil` (#177)
+
+### Added
+
+- **Option Validation for UnionBuilder and NullBuilder**: Added constraint option validation to `UnionBuilder` and `NullBuilder`, raising errors on unsupported options (#176)
+
+### Internal
+
+- **SchemaBase Extraction**: Extracted `SchemaBase` module to eliminate duplication between `Model` and `Schema` (#172)
+- **Type Introspection Consolidation**: Consolidated type introspection logic into the `TypeIntrospection` module, removing duplicate checks from adapters and helpers (#173, #174)
+- **Test Suite Consolidation**: Consolidated standalone bug-fix specs into the regular test suite for better organization
+
 ## [3.3.1] - 2026-02-03
 
 ### Added
